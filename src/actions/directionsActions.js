@@ -20,7 +20,7 @@ import {
   reverse_geocode,
   forward_geocode,
   parseGeocodeResponse,
-} from 'utils/nominatim'
+} from 'utils/photon'
 
 import {
   VALHALLA_OSM_URL,
