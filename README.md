@@ -19,3 +19,17 @@ Runs the app in hot-reload mode on [http://localhost:3000](http://localhost:3000
 Builds and bundles the minified app for production to the `./build` folder.
 
 Your app is ready to be deployed!
+
+## Get started with Docker
+```bash
+git clone https://github.com/nilsnolde/valhalla-app.git
+cd valhalla-app
+docker compose up --build
+```
+
+## Customization
+Edit `.env` to manage
+- Nominatim API server
+- Valhalla API server
+- Tile server
+- Map start location
