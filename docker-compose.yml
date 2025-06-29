@@ -1,7 +1,7 @@
-version: '3.8'
 services:
   valhalla-app:
-    image: gisops/valhalla-app:test
+    build:
+      context: .
     container_name: valhalla-app
     ports:
       - 80:80
