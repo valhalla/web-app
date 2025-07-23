@@ -1,3 +1,6 @@
+> [!NOTE]
+> This repository is currently widely unmaintained. We're looking for dedicated OSS heroes with a proven OSS background who would be willing to help or even take over maintenance. The promise is a place in the glorious hall of Valhalla! In case of interest, open an issue or email nilsnolde+github@proton.me.
+
 # Valhalla Demo App
 
 ![valhalla_screenshot](https://user-images.githubusercontent.com/10322094/144841673-18ec0772-129d-443e-a040-5172480b0f92.png)
