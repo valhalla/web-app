@@ -728,7 +728,7 @@ export const settingsInit = {
   closure_factor: 9,
   service_penalty: 15,
   service_factor: 1,
-  exclude_unpaved: 1,
+  exclude_unpaved: false,
   shortest: false,
   exclude_cash_only_tolls: false,
   bicycle_type: 'Hybrid',
