@@ -1043,7 +1043,6 @@ export const settings_general = {
       ferryCost,
       useLivingStreets,
       useTracks,
-      excludeUnpaved,
     ],
     boolean: [
       ignoreClosures,
