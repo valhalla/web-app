@@ -929,8 +929,6 @@ export const settings_general = {
   truck: {
     numeric: [
       turnPenalityCost,
-      countryCrossingPenality,
-      countryCrossingCost,
       useHighways,
       useTollways,
       tollBoothCost,
@@ -955,8 +953,6 @@ export const settings_general = {
   car: {
     numeric: [
       turnPenalityCost,
-      countryCrossingPenality,
-      countryCrossingCost,
       useHighways,
       useTollways,
       tollBoothCost,
@@ -978,8 +974,6 @@ export const settings_general = {
   bus: {
     numeric: [
       turnPenalityCost,
-      countryCrossingPenality,
-      countryCrossingCost,
       useHighways,
       useLivingStreets,
       useTollways,
@@ -1020,8 +1014,6 @@ export const settings_general = {
     numeric: [
       useFerry,
       useLivingStreets,
-      countryCrossingCost,
-      countryCrossingPenality,
       turnPenalityCost,
       servicePenalty,
       serviceFactor,
@@ -1032,8 +1024,6 @@ export const settings_general = {
   motorcycle: {
     numeric: [
       turnPenalityCost,
-      countryCrossingPenality,
-      countryCrossingCost,
       useHighways,
       useTrails,
       useTollways,
