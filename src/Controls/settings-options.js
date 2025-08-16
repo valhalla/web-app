@@ -359,7 +359,7 @@ const ignoreRestrictions = {
 const ignoreAccess = {
   name: 'Ignore Access',
   description:
-    'If set to true, Will ignore mode-specific access tags. Especially useful for matching GPS traces to the road network regardless of restrictions.',
+    'If set to true, will ignore mode-specific access tags. Especially useful for matching GPS traces to the road network regardless of restrictions.',
   param: 'ignore_access',
 }
 
@@ -405,14 +405,8 @@ const serviceFactor = {
 const excludeUnpaved = {
   name: 'Exclude Unpaved',
   description:
-    'This value indicates the whether or not the path may include unpaved roads. If exclude_unpaved is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed.',
+    'This value indicates whether or not the path may include unpaved roads. If set to true, a route is allowed to start and end with unpaved roads, but is not allowed to have them in the middle, otherwise they are allowed.',
   param: 'exclude_unpaved',
-  unit: 'Yes/No',
-  settings: {
-    min: 0,
-    max: 1,
-    step: 1,
-  },
 }
 
 const shortest = {
@@ -734,7 +728,7 @@ export const settingsInit = {
   closure_factor: 9,
   service_penalty: 15,
   service_factor: 1,
-  exclude_unpaved: 1,
+  exclude_unpaved: false,
   shortest: false,
   exclude_cash_only_tolls: false,
   bicycle_type: 'Hybrid',
@@ -937,12 +931,12 @@ export const settings_general = {
       ferryCost,
       useLivingStreets,
       useTracks,
-      excludeUnpaved,
     ],
     boolean: [
       ignoreClosures,
       ignoreRestrictions,
       ignoreAccess,
+      excludeUnpaved,
       excludeCashOnlyTolls,
       includeHOV3,
       includeHOV2,
@@ -961,12 +955,12 @@ export const settings_general = {
       ferryCost,
       useLivingStreets,
       useTracks,
-      excludeUnpaved,
     ],
     boolean: [
       ignoreClosures,
       ignoreRestrictions,
       ignoreAccess,
+      excludeUnpaved,
       excludeCashOnlyTolls,
     ],
     enum: [],
@@ -982,12 +976,12 @@ export const settings_general = {
       useFerry,
       ferryCost,
       useTracks,
-      excludeUnpaved,
     ],
     boolean: [
       ignoreClosures,
       ignoreRestrictions,
       ignoreAccess,
+      excludeUnpaved,
       excludeCashOnlyTolls,
     ],
     enum: [],
@@ -1033,7 +1027,6 @@ export const settings_general = {
       ferryCost,
       useLivingStreets,
       useTracks,
-      excludeUnpaved,
     ],
     boolean: [
       ignoreClosures,
