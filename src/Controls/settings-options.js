@@ -58,8 +58,8 @@ const axleLoad = {
   },
 }
 
-const countryCrossingPenality = {
-  name: 'Border penalty',
+const countryCrossingPenalty = {
+  name: 'Border Penalty',
   param: 'country_crossing_penalty',
   description:
     'A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries. The default penalty is 0.',
@@ -72,7 +72,7 @@ const countryCrossingPenality = {
 }
 
 const countryCrossingCost = {
-  name: 'Border cost',
+  name: 'Border Cost',
   param: 'country_crossing_cost',
   description:
     'A cost applied when encountering an international border. This cost is added to the estimated and elapsed times. The default cost is 600 seconds.',
@@ -84,8 +84,8 @@ const countryCrossingCost = {
   },
 }
 
-const turnPenalityCost = {
-  name: 'Turn penalty',
+const turnPenaltyCost = {
+  name: 'Turn Penalty',
   param: 'maneuver_penalty',
   description:
     'A penalty applied when transitioning between roads that do not have consistent naming–in other words, no road names in common. This penalty can be used to create simpler routes that tend to have fewer maneuvers or narrative guidance instructions. The default maneuver penalty is five seconds.',
@@ -791,7 +791,7 @@ export const profile_settings = {
       servicePenalty,
       serviceFactor,
       countryCrossingCost,
-      countryCrossingPenality,
+      countryCrossingPenalty,
       useTruckRoutes,
     ],
     boolean: [hazardousMaterials, shortest, ignoreHierarchies],
@@ -811,7 +811,7 @@ export const profile_settings = {
       gateCost,
       gatePenalty,
       countryCrossingCost,
-      countryCrossingPenality,
+      countryCrossingPenalty,
     ],
     boolean: [
       shortest,
@@ -838,7 +838,7 @@ export const profile_settings = {
       servicePenalty,
       serviceFactor,
       countryCrossingCost,
-      countryCrossingPenality,
+      countryCrossingPenalty,
     ],
     boolean: [
       shortest,
@@ -874,7 +874,7 @@ export const profile_settings = {
       gateCost,
       gatePenalty,
       countryCrossingCost,
-      countryCrossingPenality,
+      countryCrossingPenalty,
     ],
     boolean: [shortest, ignoreHierarchies],
     enum: [],
@@ -906,7 +906,7 @@ export const profile_settings = {
       gateCost,
       gatePenalty,
       countryCrossingCost,
-      countryCrossingPenality,
+      countryCrossingPenalty,
     ],
     boolean: [
       shortest,
@@ -922,9 +922,7 @@ export const profile_settings = {
 export const settings_general = {
   truck: {
     numeric: [
-      turnPenalityCost,
-      countryCrossingPenality,
-      countryCrossingCost,
+      turnPenaltyCost,
       useHighways,
       useTollways,
       tollBoothCost,
@@ -948,9 +946,7 @@ export const settings_general = {
   },
   car: {
     numeric: [
-      turnPenalityCost,
-      countryCrossingPenality,
-      countryCrossingCost,
+      turnPenaltyCost,
       useHighways,
       useTollways,
       tollBoothCost,
@@ -971,9 +967,7 @@ export const settings_general = {
   },
   bus: {
     numeric: [
-      turnPenalityCost,
-      countryCrossingPenality,
-      countryCrossingCost,
+      turnPenaltyCost,
       useHighways,
       useLivingStreets,
       useTollways,
@@ -1014,9 +1008,7 @@ export const settings_general = {
     numeric: [
       useFerry,
       useLivingStreets,
-      countryCrossingCost,
-      countryCrossingPenality,
-      turnPenalityCost,
+      turnPenaltyCost,
       servicePenalty,
       serviceFactor,
     ],
@@ -1025,9 +1017,7 @@ export const settings_general = {
   },
   motorcycle: {
     numeric: [
-      turnPenalityCost,
-      countryCrossingPenality,
-      countryCrossingCost,
+      turnPenaltyCost,
       useHighways,
       useTrails,
       useTollways,
