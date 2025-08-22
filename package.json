@@ -4,6 +4,7 @@
   "private": false,
   "homepage": "https://valhalla.openstreetmap.de",
   "dependencies": {
+    "@dwayneparton/geojson-to-gpx": "^0.2.0",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@geoman-io/leaflet-geoman-free": "^2.13.1",

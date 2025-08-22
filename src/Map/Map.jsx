@@ -37,6 +37,7 @@ const OSMTiles = L.tileLayer(process.env.REACT_APP_TILE_SERVER_URL, {
   attribution:
     '<a href="https://map.project-osrm.org/about.html" target="_blank">About this service and privacy policy</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 })
+import distMarkers from 'utils/distMarkers'
 
 const convertDDToDMS = (decimalDegrees) =>
   [
@@ -417,7 +418,7 @@ class Map extends React.Component {
     this.addIsochrones()
 
     if (!R.equals(this.props.coordinates, prevProps.coordinates)) {
-      this.zoomToCoordinates()
+      //      this.zoomToCoordinates()
     }
     if (
       prevProps.directions.zoomObj.timeNow <
@@ -636,6 +637,62 @@ class Map extends React.Component {
     `
   }
 
+  /*
+  addDistMarkers = (coords)=>{
+    distMarkerLayer.clearLayers()
+    let totalDist=0.0
+    let distmarkersegs=[]
+    let distmarkerSegIdx=0;
+    let markerDist=1000;
+    for (let i = 0; i < coords.length - 1; i++) {
+      const start = coords[i]
+      const end = coords[i + 1]
+      let segDist=start.distanceTo(end)
+      if (totalDist+segDist>markerDist){
+        distmarkersegs[distmarkerSegIdx]={coodIdx:i,dist:totalDist+markerDist}
+
+
+      }
+
+    }
+
+    for (const coord of coords) {
+      L.marker(coord, {
+        icon: ExtraMarkers.icon({
+          icon: 'fa-number',
+          markerColor: 'blue',
+          shape: 'circle',
+          prefix: 'fa',
+          number: '1',
+        }),
+      }).addTo(distMarkerLayer)
+    }
+  }
+  */
+
+  addDistMarkers = (distmarkers) => {
+    for (let index = 0; index < distmarkers.length; index++) {
+      const wpMarker = ExtraMarkers.icon({
+        icon: 'fa-number',
+        markerColor: '#FFBF00',
+        //shape: 'star',
+        prefix: 'fa',
+        number: (index + 1).toString(),
+        svg: true,
+        shape: 'square',
+        iconSize: [25, 45],
+        iconColor: 'black',
+      })
+      const crds = distmarkers[index].geometry.coordinates
+      L.marker([crds[1], crds[0]], {
+        icon: wpMarker,
+        draggable: false,
+        index: index,
+        pmIgnore: true,
+      }).addTo(routeMarkersLayer)
+    }
+  }
+
   addRoutes = () => {
     const { results } = this.props.directions
     routeLineStringLayer.clearLayers()
@@ -674,6 +731,8 @@ class Map extends React.Component {
         return
       }
       const coords = response.decodedGeometry
+      const dist = distMarkers(coords)
+      this.addDistMarkers(dist)
       const summary = response.trip.summary
       L.polyline(coords, {
         color: '#FFF',

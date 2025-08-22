@@ -11,6 +11,7 @@ import Maneuvers from './Maneuvers'
 import { VALHALLA_OSM_URL } from 'utils/valhalla'
 import jsonFormat from 'json-format'
 import { jsonConfig } from 'Controls/settings-options'
+import GeoJsonToGpx from '@dwayneparton/geojson-to-gpx'
 
 class OutputControl extends React.Component {
   static propTypes = {
@@ -96,6 +97,23 @@ class OutputControl extends React.Component {
     })
   }
 
+  exportToGPX = (e) => {
+    const { results } = this.props
+    const coordinates = results[VALHALLA_OSM_URL].data.decodedGeometry
+    const dataAsGeojson = jsonFormat(
+      L.polyline(coordinates).toGeoJSON(),
+      jsonConfig
+    )
+    e.preventDefault()
+    const formattedData = GeoJsonToGpx(JSON.parse(dataAsGeojson))
+    const gpxString = new XMLSerializer().serializeToString(formattedData)
+    downloadFile({
+      data: gpxString,
+      fileName: 'valhalla-directions_' + this.dateNow() + '.gpx',
+      fileType: 'text/xml',
+    })
+  }
+
   render() {
     const { results, successful } = this.props
 
@@ -146,6 +164,14 @@ class OutputControl extends React.Component {
                   >
                     <Icon circular name={'download'} />
                     <div className={'pa1 b f6'}>{'GeoJSON'}</div>
+                  </div>
+                  <div
+                    className={'ml2 flex pointer'}
+                    style={{ alignSelf: 'center' }}
+                    onClick={this.exportToGPX}
+                  >
+                    <Icon circular name={'download'} />
+                    <div className={'pa1 b f6'}>{'GPX'}</div>
                   </div>
                 </div>
               </div>
@@ -204,6 +230,14 @@ class OutputControl extends React.Component {
                 >
                   <Icon circular name={'download'} />
                   <div className={'pa1 b f6'}>{'GeoJSON'}</div>
+                </div>
+                <div
+                  className={'ml2 flex pointer'}
+                  style={{ alignSelf: 'center' }}
+                  onClick={this.exportToGPX}
+                >
+                  <Icon circular name={'download'} />
+                  <div className={'pa1 b f6'}>{'GPX'}</div>
                 </div>
               </div>
             </div>
