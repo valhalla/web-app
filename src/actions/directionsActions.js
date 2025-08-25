@@ -158,24 +158,15 @@ export const fetchReverseGeocodePerma = (object) => (dispatch) => {
   dispatch(requestGeocodeResults({ index: object.index, reverse: true }))
 
   const { index } = object
-  const { permaLast } = object
   const { lng, lat } = object.latLng
 
   if (index > 1) {
-    dispatch(doAddWaypoint(true, permaLast))
+    dispatch(doAddWaypoint(true))
   }
 
   reverse_geocode(lng, lat)
     .then((response) => {
-      dispatch(
-        processGeocodeResponse(
-          response.data,
-          index,
-          true,
-          [lng, lat],
-          permaLast
-        )
-      )
+      dispatch(processGeocodeResponse(response.data, index, true, [lng, lat]))
     })
     .catch((error) => {
       console.log(error) //eslint-disable-line
@@ -248,7 +239,7 @@ export const fetchGeocode = (object) => (dispatch) => {
 }
 
 const processGeocodeResponse =
-  (data, index, reverse, lngLat, permaLast) => (dispatch) => {
+  (data, index, reverse, lngLat) => (dispatch, getState) => {
     const addresses = parseGeocodeResponse(data, lngLat)
     // if no address can be found
     if (addresses.length === 0) {
@@ -271,10 +262,9 @@ const processGeocodeResponse =
           addressindex: 0,
         })
       )
-      if (permaLast === undefined) {
-        dispatch(makeRequest())
-        dispatch(updatePermalink())
-      } else if (permaLast) {
+
+      const { pendingGeocodes } = getState().directions
+      if (pendingGeocodes === 0) {
         dispatch(makeRequest())
         dispatch(updatePermalink())
       }

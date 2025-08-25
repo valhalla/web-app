@@ -94,8 +94,6 @@ class MainControl extends React.Component {
         const latLng = { lat: next, lng: current }
         const payload = {
           latLng,
-          fromPerma: true,
-          permaLast: i === coordinates.length / 2 - 1,
           index: i,
         }
         processedCoords.push([latLng.lat, latLng.lng])
