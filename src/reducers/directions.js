@@ -31,6 +31,7 @@ const initialState = {
     timeNow: -1,
   },
   selectedAddresses: '',
+  pendingGeocodes: 0,
   results: {
     [VALHALLA_OSM_URL]: {
       data: {},
@@ -117,6 +118,7 @@ export const directions = (state = initialState, action) => {
               }
             : waypoint
         ),
+        pendingGeocodes: state.pendingGeocodes - 1,
       }
 
     case REQUEST_GEOCODE_RESULTS:
@@ -127,6 +129,7 @@ export const directions = (state = initialState, action) => {
             ? { ...waypoint, isFetching: true }
             : waypoint
         ),
+        pendingGeocodes: state.pendingGeocodes + 1,
       }
 
     case UPDATE_TEXTINPUT:
