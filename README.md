@@ -1,5 +1,5 @@
 > [!NOTE]
-> This repository is currently widely unmaintained. We're looking for dedicated OSS heroes with a proven OSS background who would be willing to help or even take over maintenance. The promise is a place in the glorious hall of Valhalla! In case of interest, open an issue or email nilsnolde+github@proton.me.
+> This repository is currently widely unmaintained. We're looking for dedicated OSS heroes who would be willing to help/contribute. The promise is a place in the glorious hall of Valhalla! In case of interest, open an issue or email nilsnolde+github@proton.me.
 
 # Valhalla Demo App
 
