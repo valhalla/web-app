@@ -925,6 +925,7 @@ class Map extends React.Component {
                           ', ' +
                           this.state.latLng.lat.toFixed(6)
                         }
+                        data-testid="dd-button"
                       />
                     }
                   />
@@ -954,6 +955,7 @@ class Map extends React.Component {
                           ', ' +
                           this.state.latLng.lng.toFixed(6)
                         }
+                        data-testid="latlng-button"
                       />
                     }
                   />
@@ -983,6 +985,7 @@ class Map extends React.Component {
                           convertDDToDMS(this.state.latLng.lng) +
                           ' E'
                         }
+                        data-testid="dms-button"
                       />
                     }
                   />
@@ -1063,6 +1066,7 @@ class Map extends React.Component {
                       loading={this.state.isHeightLoading}
                       icon="resize vertical"
                       content={this.state.elevation}
+                      data-testid="elevation-button"
                     />
                   }
                 />
@@ -1078,7 +1082,12 @@ class Map extends React.Component {
             </React.Fragment>
           ) : activeTab === 0 ? (
             <React.Fragment>
-              <Button.Group size="small" basic vertical>
+              <Button.Group
+                data-testid="button-group-right-context"
+                size="small"
+                basic
+                vertical
+              >
                 <Button compact index={0} onClick={this.handleAddWaypoint}>
                   Directions from here
                 </Button>
@@ -1120,7 +1129,7 @@ class Map extends React.Component {
             pauseOnHover
             theme="light"
           />
-          <div id="map" className="map-style" />
+          <div id="map" className="map-style" data-testid="map" />
           <button
             className="ui primary button"
             id="osm-button"
