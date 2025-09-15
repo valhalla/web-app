@@ -151,7 +151,10 @@ class OutputControl extends React.Component {
               </div>
 
               {this.state.showResults[i] ? (
-                <div className={'flex-column'}>
+                <div
+                  data-testid={`maneuvers-list-${i}`}
+                  className={'flex-column'}
+                >
                   <Maneuvers legs={legs} idx={i} />
                 </div>
               ) : null}

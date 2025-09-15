@@ -44,6 +44,7 @@ export const ProfilePicker = ({
             group={group}
             style={{ padding: '.5em' }}
             onClick={handleUpdateProfile}
+            data-testid={`profile-button-` + profile}
           />
         }
       />

@@ -168,6 +168,7 @@ class Waypoint extends React.Component {
                   this.fetchGeocodeResults(event.key)
                 }}
                 placeholder="Hit enter for search..."
+                data-testid={'waypoint-input-' + index}
               />
             }
           />

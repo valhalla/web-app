@@ -47,7 +47,10 @@
     "fix": "yarn fix:js && yarn fix:other",
     "prettier": "prettier \"**/*.{json,md,scss,yaml,yml}\"",
     "test:other": "yarn prettier --list-different",
-    "test:js": "eslint --debug --ignore-path .gitignore --ignore-path .prettierignore \"**/*.{js,jsx}\""
+    "test:js": "eslint --debug --ignore-path .gitignore --ignore-path .prettierignore \"**/*.{js,jsx}\"",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed"
   },
   "lint-staged": {
     "*.{js,jsx}": [
@@ -74,7 +77,10 @@
     "not op_mini all"
   ],
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.4.0",
     "babel-eslint": "^10.0.2",
+    "dotenv": "^17.2.2",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-config-react": "^1.1.7",

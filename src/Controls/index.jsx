@@ -213,6 +213,7 @@ class MainControl extends React.Component {
           icon
           style={{ float: 'right', marginLeft: '5px' }}
           onClick={this.handleDirectionsToggle}
+          data-testid="close-directions-button"
         >
           <Icon name="close" />
         </Button>
@@ -236,6 +237,7 @@ class MainControl extends React.Component {
             position: 'absolute',
           }}
           onClick={this.handleDirectionsToggle}
+          data-testid="open-directions-button"
         >
           {activeTab === 0 ? 'Directions' : 'Isochrones'}
         </Button>
