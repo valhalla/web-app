@@ -23,6 +23,25 @@ Builds and bundles the minified app for production to the `./build` folder.
 
 Your app is ready to be deployed!
 
+## Testing
+
+This project includes end-to-end tests using [Playwright](https://playwright.dev/) to ensure the application works correctly across different scenarios.
+
+### Running Tests
+
+```bash
+# Run all e2e tests in headless mode
+npm run test:e2e
+
+# Run tests with visible browser (useful for debugging)
+npm run test:e2e:headed
+
+# Open Playwright Test UI for interactive testing
+npm run test:e2e:ui
+```
+
+Tests automatically start the development server if it's not already running.
+
 ## Get started with Docker
 ```bash
 git clone https://github.com/nilsnolde/valhalla-app.git
