@@ -2,9 +2,6 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { connect } from 'react-redux'
 import L from 'leaflet'
-import * as $ from 'jquery'
-import 'jquery-ui-bundle'
-import 'jquery-ui-bundle/jquery-ui.css'
 
 import '@geoman-io/leaflet-geoman-free'
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css'
@@ -32,6 +29,7 @@ import {
 } from 'utils/valhalla'
 import { colorMappings, buildHeightgraphData } from 'utils/heightgraph'
 import formatDuration from 'utils/date_time'
+import makeResizable from 'utils/resizable'
 import './Map.css'
 const OSMTiles = L.tileLayer(process.env.REACT_APP_TILE_SERVER_URL, {
   attribution:
@@ -312,29 +310,29 @@ class Map extends React.Component {
     this.hg.addTo(this.map)
     const hg = this.hg
     // Added title property to heightgraph-toggle element to show "Height Graph" tooltip
-    $('.heightgraph-toggle').prop('title', 'Height Graph')
-    $('.heightgraph').resizable({
-      handles: 'w, n, nw',
-      minWidth: 380,
-      minHeight: 140,
-      stop: function (event, ui) {
-        // Remove the size/position of the UI element (.heightgraph .leaflet-control) because
-        // it should be sized dynamically based on its contents. Giving it a fixed size causes
-        // the toggle icon to be in the wrong place when the height graph is minimized.
-        ui.element.css({ width: '', height: '', left: '', top: '' })
-      },
-      resize: function (event, ui) {
-        if (
-          ui.originalPosition.left !== ui.position.left ||
-          ui.originalPosition.top !== ui.position.top
-        ) {
-          // left/upper edge was dragged => only keep size change since we're sticking to the right/bottom
-          ui.position.left = 0
-          ui.position.top = 0
-        }
-        hg.resize(ui.size)
-      },
-    })
+    document
+      .querySelector('.heightgraph-toggle')
+      .setAttribute('title', 'Height Graph')
+
+    const heightgraphEl = document.querySelector('.heightgraph')
+    if (heightgraphEl) {
+      this.heightgraphResizer = makeResizable(heightgraphEl, {
+        handles: 'w, n, nw',
+        minWidth: 380,
+        minHeight: 140,
+        applyInlineSize: false,
+        onResize: ({ width, height }) => {
+          hg.resize({ width, height })
+        },
+        onStop: () => {
+          // Clear inline size/position if any
+          heightgraphEl.style.width = ''
+          heightgraphEl.style.height = ''
+          heightgraphEl.style.left = ''
+          heightgraphEl.style.top = ''
+        },
+      })
+    }
 
     // this.map.on('moveend', () => {
     //   dispatch(doUpdateBoundingBox(this.map.getBounds()))
@@ -437,6 +435,15 @@ class Map extends React.Component {
     if (!isochrones.successful) {
       isoPolygonLayer.clearLayers()
       isoLocationsLayer.clearLayers()
+    }
+  }
+
+  componentWillUnmount() {
+    if (
+      this.heightgraphResizer &&
+      typeof this.heightgraphResizer.destroy === 'function'
+    ) {
+      this.heightgraphResizer.destroy()
     }
   }
 
