@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useCallback, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { Divider } from 'semantic-ui-react'
@@ -25,120 +25,122 @@ import {
   doUpdateDateTime,
 } from 'actions/commonActions'
 
-class DirectionsControl extends React.Component {
-  static propTypes = {
-    profile: PropTypes.string.isRequired,
-    dispatch: PropTypes.func.isRequired,
-    loading: PropTypes.bool,
-    dateTime: PropTypes.shape({
-      type: PropTypes.number,
-      value: PropTypes.string,
-    }),
-  }
+const DirectionsControl = ({ profile, dispatch, loading, dateTime }) => {
+  const prevPropsRef = useRef()
 
-  handleUpdateProfile = (event, data) => {
-    const { dispatch } = this.props
-    dispatch(updateProfile({ profile: data.valhalla_profile }))
-    dispatch(resetSettings())
-    dispatch(updatePermalink())
-  }
+  const handleUpdateProfile = useCallback(
+    (event, data) => {
+      dispatch(updateProfile({ profile: data.valhalla_profile }))
+      dispatch(resetSettings())
+      dispatch(updatePermalink())
+    },
+    [dispatch]
+  )
 
-  handleAddWaypoint = (event, data) => {
-    const { dispatch } = this.props
-    dispatch(doAddWaypoint())
-  }
+  const handleAddWaypoint = useCallback(
+    (event, data) => {
+      dispatch(doAddWaypoint())
+    },
+    [dispatch]
+  )
 
-  handleRemoveWaypoints = () => {
-    const { dispatch } = this.props
+  const handleRemoveWaypoints = useCallback(() => {
     dispatch(doRemoveWaypoint())
     dispatch(clearRoutes())
-  }
+  }, [dispatch])
 
-  componentDidUpdate = (prevProps) => {}
+  const handleSettings = useCallback(() => {
+    dispatch(doShowSettings())
+  }, [dispatch])
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    const { dispatch } = this.props
-    if (this.props.profile !== nextProps.profile) {
+  const handleDateTime = useCallback(
+    (type, value) => {
+      dispatch(doUpdateDateTime(type, value))
+    },
+    [dispatch]
+  )
+
+  useEffect(() => {
+    if (prevPropsRef.current && prevPropsRef.current.profile !== profile) {
       dispatch(makeRequest())
     }
-  }
+  }, [profile, dispatch])
 
-  handleSettings = () => {
-    const { dispatch } = this.props
-    dispatch(doShowSettings())
-  }
-
-  handleDateTime = (type, value) => {
-    const { dispatch } = this.props
-    dispatch(doUpdateDateTime(type, value))
-  }
-
-  shouldComponentUpdate(nextProps) {
-    const { dateTime, profile } = this.props
-    const shouldUpdate =
-      dateTime.type !== nextProps.dateTime.type ||
-      dateTime.value !== nextProps.dateTime.value ||
-      profile !== nextProps.profile
-    if (shouldUpdate) {
-      this.props.dispatch(makeRequest())
+  useEffect(() => {
+    if (
+      prevPropsRef.current &&
+      (prevPropsRef.current.dateTime.type !== dateTime.type ||
+        prevPropsRef.current.dateTime.value !== dateTime.value ||
+        prevPropsRef.current.profile !== profile)
+    ) {
+      dispatch(makeRequest())
     }
-    return shouldUpdate
-  }
+  }, [dateTime.type, dateTime.value, profile, dispatch])
 
-  render() {
-    const { profile, loading, dateTime } = this.props
-    return (
-      <React.Fragment>
-        <div className="flex flex-column content-between">
-          <div>
-            <div className="pa2 flex flex-row justify-between">
-              <ProfilePicker
-                group={'directions'}
-                profiles={[
-                  'bicycle',
-                  'pedestrian',
-                  'car',
-                  'truck',
-                  'bus',
-                  'motor_scooter',
-                  'motorcycle',
-                ]}
-                loading={loading}
-                popupContent={[
-                  'Bicycle',
-                  'Pedestrian',
-                  'Car',
-                  'Truck',
-                  'Bus',
-                  'Motor Scooter',
-                  'Motorcycle',
-                ]}
-                activeProfile={profile}
-                handleUpdateProfile={this.handleUpdateProfile}
-              />
-              <SettingsButton handleSettings={this.handleSettings} />
-            </div>
-            <div className="flex flex-wrap justify-between">
-              <Waypoints />
-            </div>
-            <div className="pa2 flex flex-wrap justify-between">
-              <Settings
-                handleAddWaypoint={this.handleAddWaypoint}
-                handleRemoveWaypoints={this.handleRemoveWaypoints}
-              />
-            </div>
-            <DateTimePicker
-              type={dateTime.type}
-              value={dateTime.value}
-              onChange={this.handleDateTime}
-            />
-          </div>
-          <Divider fitted />
-          <SettingsFooter />
+  useEffect(() => {
+    prevPropsRef.current = { profile, dateTime }
+  })
+
+  return (
+    <div className="flex flex-column content-between">
+      <div>
+        <div className="pa2 flex flex-row justify-between">
+          <ProfilePicker
+            group={'directions'}
+            profiles={[
+              'bicycle',
+              'pedestrian',
+              'car',
+              'truck',
+              'bus',
+              'motor_scooter',
+              'motorcycle',
+            ]}
+            loading={loading}
+            popupContent={[
+              'Bicycle',
+              'Pedestrian',
+              'Car',
+              'Truck',
+              'Bus',
+              'Motor Scooter',
+              'Motorcycle',
+            ]}
+            activeProfile={profile}
+            handleUpdateProfile={handleUpdateProfile}
+          />
+          <SettingsButton handleSettings={handleSettings} />
         </div>
-      </React.Fragment>
-    )
-  }
+        <div className="flex flex-wrap justify-between">
+          <Waypoints />
+        </div>
+        <div className="pa2 flex flex-wrap justify-between">
+          <Settings
+            handleAddWaypoint={handleAddWaypoint}
+            handleRemoveWaypoints={handleRemoveWaypoints}
+          />
+        </div>
+        <DateTimePicker
+          type={dateTime.type}
+          value={dateTime.value}
+          onChange={handleDateTime}
+        />
+      </div>
+      <Divider fitted />
+      <SettingsFooter />
+    </div>
+  )
+}
+
+// PropTypes for the functional component
+DirectionsControl.propTypes = {
+  profile: PropTypes.string.isRequired,
+  dispatch: PropTypes.func.isRequired,
+  loading: PropTypes.bool,
+  dateTime: PropTypes.shape({
+    type: PropTypes.number,
+    value: PropTypes.string,
+  }),
 }
 
 const mapStateToProps = (state) => {
