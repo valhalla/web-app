@@ -19,7 +19,6 @@ const store = createStore(
 
 render(
   <Provider store={store}>
-    {' '}
     <App />
   </Provider>,
   document.getElementById('valhalla-app-root')

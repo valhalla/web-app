@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useCallback, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { Divider } from 'semantic-ui-react'
@@ -15,76 +15,79 @@ import {
   updatePermalink,
   resetSettings,
 } from 'actions/commonActions'
-import { clearIsos, makeIsochronesRequest } from 'actions/isochronesActions'
+import { makeIsochronesRequest } from 'actions/isochronesActions'
 
-class IsochronesControl extends React.Component {
-  static propTypes = {
-    profile: PropTypes.string.isRequired,
-    loading: PropTypes.bool,
-    dispatch: PropTypes.func.isRequired,
-  }
+const IsochronesControl = ({ profile, loading, dispatch }) => {
+  const prevPropsRef = useRef()
 
-  handleUpdateProfile = (event, data) => {
-    const { dispatch } = this.props
-    dispatch(updateProfile({ profile: data.valhalla_profile }))
-    dispatch(resetSettings())
-    dispatch(updatePermalink())
-  }
+  const handleUpdateProfile = useCallback(
+    (event, data) => {
+      dispatch(updateProfile({ profile: data.valhalla_profile }))
+      dispatch(resetSettings())
+      dispatch(updatePermalink())
+    },
+    [dispatch]
+  )
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    const { dispatch } = this.props
-    if (this.props.profile !== nextProps.profile) {
+  useEffect(() => {
+    if (prevPropsRef.current && prevPropsRef.current.profile !== profile) {
       dispatch(makeIsochronesRequest())
     }
-  }
+  }, [profile, dispatch])
 
-  handleRemoveIsos = () => {
-    const { dispatch } = this.props
-    dispatch(clearIsos())
-  }
+  useEffect(() => {
+    prevPropsRef.current = { profile }
+  })
 
-  handleSettings = () => {
-    const { dispatch } = this.props
+  const handleSettings = useCallback(() => {
     dispatch(doShowSettings())
-  }
+  }, [dispatch])
 
-  render() {
-    const { profile, loading } = this.props
-    return (
-      <React.Fragment>
-        <div className="flex flex-column content-between">
-          <div className="pa2 flex flex-row justify-between">
-            <ProfilePicker
-              group={'directions'}
-              loading={loading}
-              profiles={[
-                'bicycle',
-                'pedestrian',
-                'car',
-                'truck',
-                'bus',
-                'motor_scooter',
-              ]}
-              popupContent={[
-                'Bicycle',
-                'Pedestrian',
-                'Car',
-                'Truck',
-                'Bus',
-                'Motor Scooter',
-              ]}
-              activeProfile={profile}
-              handleUpdateProfile={this.handleUpdateProfile}
-            />
-            <SettingsButton handleSettings={this.handleSettings} />
-          </div>
-          <Waypoints />
-          <Divider fitted />
-          <SettingsFooter />
+  // handleRemoveIsos = () => {
+  //   const { dispatch } = this.props
+  //   dispatch(clearIsos())
+  // }
+
+  return (
+    <React.Fragment>
+      <div className="flex flex-column content-between">
+        <div className="pa2 flex flex-row justify-between">
+          <ProfilePicker
+            group={'directions'}
+            loading={loading}
+            profiles={[
+              'bicycle',
+              'pedestrian',
+              'car',
+              'truck',
+              'bus',
+              'motor_scooter',
+            ]}
+            popupContent={[
+              'Bicycle',
+              'Pedestrian',
+              'Car',
+              'Truck',
+              'Bus',
+              'Motor Scooter',
+            ]}
+            activeProfile={profile}
+            handleUpdateProfile={handleUpdateProfile}
+          />
+          <SettingsButton handleSettings={handleSettings} />
         </div>
-      </React.Fragment>
-    )
-  }
+        <Waypoints />
+        <Divider fitted />
+        <SettingsFooter />
+      </div>
+    </React.Fragment>
+  )
+}
+
+IsochronesControl.propTypes = {
+  profile: PropTypes.string.isRequired,
+  loading: PropTypes.bool,
+  dispatch: PropTypes.func.isRequired,
 }
 
 const mapStateToProps = (state) => {

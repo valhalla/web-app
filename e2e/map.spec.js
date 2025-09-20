@@ -472,7 +472,6 @@ test.describe('Left drawer', () => {
 
     await page.getByTestId('profile-button-pedestrian').click()
 
-    // currently, there is a bug where we are sending two requests instead of one
-    expect(routeRequests.length).toBe(3)
+    expect(routeRequests.length).toBe(2)
   })
 })
