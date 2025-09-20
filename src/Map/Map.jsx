@@ -124,7 +124,6 @@ const Map = ({
   showDirectionsPanel,
   showSettings,
 }) => {
-  // State hooks
   const [showPopup, setShowPopup] = useState(false)
   const [isLocateLoading, setIsLocateLoading] = useState(false)
   const [isHeightLoading, setIsHeightLoading] = useState(false)
@@ -135,13 +134,11 @@ const Map = ({
   const [elevation, setElevation] = useState('')
   const [heightPayload, setHeightPayload] = useState(null)
 
-  // Refs for persistent objects
   const mapRef = useRef(null)
   const layerControlRef = useRef(null)
   const hgRef = useRef(null)
   const heightgraphResizerRef = useRef(null)
 
-  // Helper functions
   const updateExcludePolygons = useCallback(() => {
     const excludePolygons = []
     excludePolygonsLayer.eachLayer((layer) => {
@@ -159,21 +156,15 @@ const Map = ({
         value,
       })
     )
-  }, [dispatch])
+  }, [])
 
-  const updateWaypointPosition = useCallback(
-    (object) => {
-      dispatch(fetchReverseGeocode(object))
-    },
-    [dispatch]
-  )
+  const updateWaypointPosition = useCallback((object) => {
+    dispatch(fetchReverseGeocode(object))
+  }, [])
 
-  const updateIsoPosition = useCallback(
-    (coord) => {
-      dispatch(fetchReverseGeocodeIso(coord.lng, coord.lat))
-    },
-    [dispatch]
-  )
+  const updateIsoPosition = useCallback((coord) => {
+    dispatch(fetchReverseGeocodeIso(coord.lng, coord.lat))
+  }, [])
 
   const handleCopy = useCallback(() => {
     setHasCopied(true)
@@ -514,7 +505,7 @@ const Map = ({
         mapRef.current.remove()
       }
     }
-  }, [getHeightData, showDirectionsPanel, updateExcludePolygons])
+  }, [])
 
   // Map update functions
   const zoomToCoordinates = useCallback(() => {
