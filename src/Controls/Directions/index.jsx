@@ -61,12 +61,6 @@ const DirectionsControl = ({ profile, dispatch, loading, dateTime }) => {
   )
 
   useEffect(() => {
-    if (prevPropsRef.current && prevPropsRef.current.profile !== profile) {
-      dispatch(makeRequest())
-    }
-  }, [profile, dispatch])
-
-  useEffect(() => {
     if (
       prevPropsRef.current &&
       (prevPropsRef.current.dateTime.type !== dateTime.type ||
