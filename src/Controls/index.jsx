@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import Drawer from 'react-modern-drawer'
@@ -32,28 +32,21 @@ const pairwise = (arr, func) => {
   }
 }
 
-class MainControl extends React.Component {
-  static propTypes = {
-    dispatch: PropTypes.func.isRequired,
-    message: PropTypes.object,
-    activeDataset: PropTypes.string,
-    activeTab: PropTypes.number,
-    showDirectionsPanel: PropTypes.bool,
-    lastUpdate: PropTypes.object,
-  }
+export const MainControl = (props) => {
+  const { activeTab } = props
+  const [lastUpdate, setLastUpdate] = React.useState(null)
+  const prevMessageRef = React.useRef(null)
 
-  async getLastUpdate() {
+  const getLastUpdate = async () => {
     const response = await fetch(`${VALHALLA_OSM_URL}/status`)
     const data = await response.json()
-    this.setState({
-      lastUpdate: new Date(data.tileset_last_modified * 1000),
-    })
+    setLastUpdate(new Date(data.tileset_last_modified * 1000))
   }
 
-  componentDidMount = () => {
-    const { dispatch } = this.props
+  useEffect(() => {
+    const { dispatch } = props
 
-    this.getLastUpdate()
+    getLastUpdate()
 
     toast.success(
       'Welcome to Valhalla! Global Routing Service - funded by FOSSGIS e.V.',
@@ -75,16 +68,13 @@ class MainControl extends React.Component {
       dispatch(updateProfile({ profile: params.profile }))
     }
 
-    let activeTab
     if (
       window.location.pathname === '/' ||
       window.location.pathname === '/directions'
     ) {
-      activeTab = 0
-      dispatch(updateTab({ activeTab }))
+      dispatch(updateTab({ activeTab: 0 }))
     } else if (window.location.pathname === '/isochrones') {
-      activeTab = 1
-      dispatch(updateTab({ activeTab }))
+      dispatch(updateTab({ activeTab: 1 }))
     }
 
     if ('wps' in params && params.wps.length > 0) {
@@ -147,11 +137,17 @@ class MainControl extends React.Component {
       dispatch(zoomTo(processedCoords))
       dispatch(resetSettings())
     }
-  }
+  }, [])
 
-  componentDidUpdate = (prevProps) => {
-    const { message } = this.props
-    if (message.receivedAt > prevProps.message.receivedAt) {
+  useEffect(() => {
+    const { message } = props
+    if (!message) {
+      return
+    }
+
+    const prevReceivedAt = prevMessageRef.current
+
+    if (prevReceivedAt != null && message.receivedAt > prevReceivedAt) {
       toast[message.type](message.description, {
         position: 'bottom-center',
         autoClose: 5000,
@@ -163,19 +159,21 @@ class MainControl extends React.Component {
         theme: 'light',
       })
     }
-  }
 
-  handleTabChange = (event, data) => {
-    const { dispatch } = this.props
-    const activeTab = data.activeIndex
+    prevMessageRef.current = message.receivedAt
+  }, [props.message])
 
-    dispatch(updateTab({ activeTab }))
+  const handleTabChange = (event, data) => {
+    const { dispatch } = props
+    const newActiveTab = data.activeIndex
+
+    dispatch(updateTab({ activeTab: newActiveTab }))
     dispatch(updatePermalink())
   }
 
-  handleDirectionsToggle = (event, data) => {
-    const { dispatch } = this.props
-    const { showDirectionsPanel } = this.props
+  const handleDirectionsToggle = (event, data) => {
+    const { dispatch } = props
+    const { showDirectionsPanel } = props
     if (!showDirectionsPanel) {
       document
         .getElementsByClassName('heightgraph-container')[0]
@@ -188,101 +186,99 @@ class MainControl extends React.Component {
     dispatch(toggleDirections())
   }
 
-  render() {
-    const { activeTab } = this.props
-    const appPanes = [
-      {
-        menuItem: 'Directions',
-        render: () => (
-          <Tab.Pane style={{ padding: '0 0 0 0' }} attached={false}>
-            <DirectionsControl />
-          </Tab.Pane>
-        ),
-      },
-      {
-        menuItem: 'Isochrones',
-        render: () => (
-          <Tab.Pane style={{ padding: '0 0 0 0' }} attached={false}>
-            <IsochronesControl />
-          </Tab.Pane>
-        ),
-      },
-    ]
+  const appPanes = [
+    {
+      menuItem: 'Directions',
+      render: () => (
+        <Tab.Pane style={{ padding: '0 0 0 0' }} attached={false}>
+          <DirectionsControl />
+        </Tab.Pane>
+      ),
+    },
+    {
+      menuItem: 'Isochrones',
+      render: () => (
+        <Tab.Pane style={{ padding: '0 0 0 0' }} attached={false}>
+          <IsochronesControl />
+        </Tab.Pane>
+      ),
+    },
+  ]
 
-    const ServiceTabs = () => (
-      <>
-        <Button
-          icon
-          style={{ float: 'right', marginLeft: '5px' }}
-          onClick={this.handleDirectionsToggle}
-          data-testid="close-directions-button"
+  return (
+    <>
+      <Button
+        primary
+        style={{
+          zIndex: 998,
+          top: '10px',
+          left: '10px',
+          position: 'absolute',
+        }}
+        onClick={handleDirectionsToggle}
+        data-testid="open-directions-button"
+      >
+        {activeTab === 0 ? 'Directions' : 'Isochrones'}
+      </Button>
+      <Drawer
+        enableOverlay={false}
+        open={props.showDirectionsPanel}
+        direction="left"
+        size="400"
+        style={{
+          zIndex: 1000,
+          overflow: 'auto',
+        }}
+      >
+        <div>
+          <Segment basic style={{ paddingBottom: 0 }}>
+            <div>
+              <Button
+                icon
+                style={{ float: 'right', marginLeft: '5px' }}
+                onClick={handleDirectionsToggle}
+                data-testid="close-directions-button"
+              >
+                <Icon name="close" />
+              </Button>
+              <Tab
+                activeIndex={activeTab}
+                onTabChange={handleTabChange}
+                menu={{ pointing: true }}
+                panes={appPanes}
+              />
+            </div>
+          </Segment>
+          {(activeTab === 0 && <DirectionOutputControl />) || (
+            <IsochronesOutputControl />
+          )}
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-start',
+            margin: '1rem',
+          }}
         >
-          <Icon name="close" />
-        </Button>
-        <Tab
-          activeIndex={activeTab}
-          onTabChange={this.handleTabChange}
-          menu={{ pointing: true }}
-          panes={appPanes}
-        />
-      </>
-    )
+          Last Data Update:{' '}
+          {lastUpdate
+            ? `${lastUpdate.toISOString().slice(0, 10)}, ${lastUpdate
+                .toISOString()
+                .slice(11, 16)}`
+            : '0000-00-00, 00:00'}
+        </div>
+      </Drawer>
+    </>
+  )
+}
 
-    return (
-      <>
-        <Button
-          primary
-          style={{
-            zIndex: 998,
-            top: '10px',
-            left: '10px',
-            position: 'absolute',
-          }}
-          onClick={this.handleDirectionsToggle}
-          data-testid="open-directions-button"
-        >
-          {activeTab === 0 ? 'Directions' : 'Isochrones'}
-        </Button>
-        <Drawer
-          enableOverlay={false}
-          open={this.props.showDirectionsPanel}
-          direction="left"
-          size="400"
-          style={{
-            zIndex: 1000,
-            overflow: 'auto',
-          }}
-        >
-          <div>
-            <Segment basic style={{ paddingBottom: 0 }}>
-              <div>
-                <ServiceTabs />
-              </div>
-            </Segment>
-            {(activeTab === 0 && <DirectionOutputControl />) || (
-              <IsochronesOutputControl />
-            )}
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-start',
-              margin: '1rem',
-            }}
-          >
-            Last Data Update:{' '}
-            {this.state
-              ? `${this.state.lastUpdate
-                  .toISOString()
-                  .slice(0, 10)}, ${this.state.lastUpdate
-                  .toISOString()
-                  .slice(11, 16)}`
-              : '0000-00-00, 00:00'}
-          </div>
-        </Drawer>
-      </>
-    )
-  }
+MainControl.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+  message: PropTypes.object,
+  activeDataset: PropTypes.string,
+  activeTab: PropTypes.number,
+  showDirectionsPanel: PropTypes.bool,
+  lastUpdate: PropTypes.object,
 }
 
 const mapStateToProps = (state) => {

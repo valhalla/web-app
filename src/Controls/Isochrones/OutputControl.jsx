@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { Segment, Divider } from 'semantic-ui-react'
@@ -8,48 +8,61 @@ import { makeIsochronesRequest } from 'actions/isochronesActions'
 import ContoursInformation from './ContoursInformation'
 import { VALHALLA_OSM_URL } from 'utils/valhalla'
 
-class OutputControl extends React.Component {
-  static propTypes = {
-    dispatch: PropTypes.func.isRequired,
-    profile: PropTypes.string,
-    activeTab: PropTypes.number,
-    successful: PropTypes.bool,
-    results: PropTypes.object,
-  }
+const OutputControl = ({
+  dispatch,
+  profile,
+  activeTab,
+  successful,
+  results,
+}) => {
+  const prevPropsRef = useRef()
 
+  // Handle activeTab changes - make API request when switching from directions to isochrones tab
   // necessary to calculate new routes the tab was changed from isochrone tab
   // need to do this every time, because "profile" is global (otherwise we would
   // calculate new when the profile was changed while being on the iso tab)
-  shouldComponentUpdate(nextProps, nextState, nextContext) {
-    if (nextProps.activeTab === 1 && this.props.activeTab === 0) {
-      nextProps.dispatch(makeIsochronesRequest())
+  useEffect(() => {
+    if (
+      prevPropsRef.current &&
+      activeTab === 1 &&
+      prevPropsRef.current.activeTab === 0
+    ) {
+      dispatch(makeIsochronesRequest())
     }
-    if (nextProps.activeTab === 0) {
-      return false
-    }
-    return true
+  }, [activeTab, dispatch])
+
+  useEffect(() => {
+    prevPropsRef.current = { activeTab }
+  })
+
+  if (activeTab === 0) {
+    return null
   }
 
-  render() {
-    const { successful } = this.props
-
-    return (
-      <Segment
-        style={{
-          margin: '0 1rem 10px',
-          display: successful ? 'block' : 'none',
-        }}
-      >
-        <div className={'flex-column'}>
-          <div className={'flex justify-between pointer'}>
-            <Summary provider={VALHALLA_OSM_URL} />
-          </div>
-          <Divider />
-          <ContoursInformation provider={VALHALLA_OSM_URL} />
+  return (
+    <Segment
+      style={{
+        margin: '0 1rem 10px',
+        display: successful ? 'block' : 'none',
+      }}
+    >
+      <div className={'flex-column'}>
+        <div className={'flex justify-between pointer'}>
+          <Summary provider={VALHALLA_OSM_URL} />
         </div>
-      </Segment>
-    )
-  }
+        <Divider />
+        <ContoursInformation provider={VALHALLA_OSM_URL} />
+      </div>
+    </Segment>
+  )
+}
+
+OutputControl.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+  profile: PropTypes.string,
+  activeTab: PropTypes.number,
+  successful: PropTypes.bool,
+  results: PropTypes.object,
 }
 
 const mapStateToProps = (state) => {
