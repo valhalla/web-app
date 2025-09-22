@@ -1,3 +1,5 @@
+// todo: we should get ride of @typescript-eslint/no-unsafe-assignment when we updating redux to redux-toolkit
+
 import {
   RECEIVE_GEOCODE_RESULTS_ISO,
   REQUEST_GEOCODE_RESULTS_ISO,
@@ -6,11 +8,31 @@ import {
   UPDATE_TEXTINPUT_ISO,
   TOGGLE_PROVIDER_ISO,
   CLEAR_ISOS,
-} from 'actions/types'
+} from '@/actions/types';
 
-import { VALHALLA_OSM_URL } from '../utils/valhalla'
+import { VALHALLA_OSM_URL } from '../utils/valhalla';
+import type { AnyAction } from 'redux';
+import type { ActiveWaypoint, ValhallaIsochroneResponse } from '@/common/types';
 
-const initialState = {
+interface IsochroneResult {
+  data: ValhallaIsochroneResponse;
+  show: boolean;
+}
+
+export interface IsochroneState {
+  successful: boolean;
+  userInput: string;
+  isFetching: boolean;
+  geocodeResults: ActiveWaypoint[];
+  selectedAddress: string;
+  maxRange: number;
+  interval: number;
+  denoise: number;
+  generalize: number;
+  results: Record<string, IsochroneResult>;
+}
+
+const initialState: IsochroneState = {
   successful: false,
   userInput: '',
   isFetching: false,
@@ -21,15 +43,19 @@ const initialState = {
   denoise: 0.1,
   generalize: 0,
   results: {
-    [VALHALLA_OSM_URL]: {
+    [VALHALLA_OSM_URL!]: {
       data: {},
       show: true,
-    },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any,
   },
-}
+};
 
-export const isochrones = (state = initialState, action) => {
-  const { type, payload } = action
+export const isochrones = (
+  state: IsochroneState = initialState,
+  action: AnyAction
+): IsochroneState => {
+  const { type, payload } = action;
   switch (type) {
     case CLEAR_ISOS:
       return {
@@ -39,7 +65,7 @@ export const isochrones = (state = initialState, action) => {
         geocodeResults: [],
         selectedAddress: '',
         results: initialState.results,
-      }
+      };
 
     case TOGGLE_PROVIDER_ISO:
       return {
@@ -51,7 +77,7 @@ export const isochrones = (state = initialState, action) => {
             show: payload.show,
           },
         },
-      }
+      };
     case RECEIVE_ISOCHRONE_RESULTS:
       return {
         ...state,
@@ -63,7 +89,7 @@ export const isochrones = (state = initialState, action) => {
           },
         },
         successful: true,
-      }
+      };
 
     case UPDATE_SETTINGS_ISO:
       return {
@@ -72,34 +98,37 @@ export const isochrones = (state = initialState, action) => {
         [payload.intervalName]: payload.value,
         [payload.generalizeName]: payload.value,
         [payload.denoiseName]: payload.value,
-      }
+      };
 
     case UPDATE_TEXTINPUT_ISO:
       return {
         ...state,
         userInput: payload.userInput,
-        selectedAddress: state.geocodeResults[action.payload.addressindex],
+        selectedAddress: state.geocodeResults[
+          action.payload.addressindex
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ] as any,
         geocodeResults: state.geocodeResults.map((result, i) =>
           i === action.payload.addressindex
             ? { ...result, selected: true }
             : { ...result, selected: false }
         ),
-      }
+      };
 
     case RECEIVE_GEOCODE_RESULTS_ISO:
       return {
         ...state,
-        geocodeResults: payload,
+        geocodeResults: payload as ActiveWaypoint[],
         isFetching: false,
-      }
+      };
 
     case REQUEST_GEOCODE_RESULTS_ISO:
       return {
         ...state,
         isFetching: true,
-      }
+      };
 
     default:
-      return state
+      return state;
   }
-}
+};

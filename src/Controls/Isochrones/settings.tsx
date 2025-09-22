@@ -1,13 +1,15 @@
-import React from 'react'
-import { Button, Popup, Icon } from 'semantic-ui-react'
-import PropTypes from 'prop-types'
+import { Button, Popup, Icon } from 'semantic-ui-react';
 
-export const Settings = ({ handleRemoveIsos }) => {
+interface SettingsProps {
+  handleRemoveIsos: () => void;
+}
+
+export const Settings = ({ handleRemoveIsos }: SettingsProps) => {
   return (
     <div>
       <Popup
-        content={'Reset Center'}
-        size={'tiny'}
+        content="Reset Center"
+        size="tiny"
         trigger={
           <Button basic icon onClick={handleRemoveIsos}>
             <Icon name="trash" />
@@ -15,9 +17,5 @@ export const Settings = ({ handleRemoveIsos }) => {
         }
       />
     </div>
-  )
-}
-
-Settings.propTypes = {
-  handleRemoveIsos: PropTypes.func,
-}
+  );
+};

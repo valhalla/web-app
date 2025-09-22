@@ -43,6 +43,7 @@ npm run test:e2e:ui
 Tests automatically start the development server if it's not already running.
 
 ## Get started with Docker
+
 ```bash
 git clone https://github.com/nilsnolde/valhalla-app.git
 cd valhalla-app
@@ -50,7 +51,9 @@ docker compose up --build
 ```
 
 ## Customization
+
 Edit `.env` to manage
+
 - Nominatim API server
 - Valhalla API server
 - Tile server

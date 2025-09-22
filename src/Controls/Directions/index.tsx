@@ -1,64 +1,85 @@
-import React, { useEffect, useCallback, useRef } from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { Divider } from 'semantic-ui-react'
+import { useEffect, useCallback, useRef } from 'react';
+import { connect } from 'react-redux';
+import type { ThunkDispatch } from 'redux-thunk';
+import { Divider, type ButtonProps } from 'semantic-ui-react';
 
-import Waypoints from './Waypoints'
+import Waypoints from './Waypoints';
 
-import { ProfilePicker } from 'components/profile-picker'
-import { SettingsButton } from 'components/SettingsButton'
-import { SettingsFooter } from 'components/SettingsFooter'
-import { Settings } from './settings'
-import { DateTimePicker } from 'components/DateTimePicker'
+import { ProfilePicker } from '@/components/profile-picker';
+import { SettingsButton } from '@/components/SettingsButton';
+import { SettingsFooter } from '@/components/SettingsFooter';
+import { Settings } from './settings';
+import { DateTimePicker } from '@/components/DateTimePicker';
 
 import {
   doAddWaypoint,
   doRemoveWaypoint,
   makeRequest,
   clearRoutes,
-} from 'actions/directionsActions'
+} from '@/actions/directionsActions';
 import {
   updateProfile,
   doShowSettings,
   updatePermalink,
   resetSettings,
   doUpdateDateTime,
-} from 'actions/commonActions'
+} from '@/actions/commonActions';
+import type { RootState } from '@/store';
+import type { Profile } from '@/reducers/common';
+import type { AnyAction } from 'redux';
 
-const DirectionsControl = ({ profile, dispatch, loading, dateTime }) => {
-  const prevPropsRef = useRef()
+interface DirectionsControlProps {
+  profile: Profile;
+  dispatch: ThunkDispatch<RootState, unknown, AnyAction>;
+  loading: boolean;
+  dateTime: {
+    type: number;
+    value: string;
+  };
+}
+
+const DirectionsControl = ({
+  profile,
+  dispatch,
+  loading,
+  dateTime,
+}: DirectionsControlProps) => {
+  const prevPropsRef = useRef<{
+    profile: Profile;
+    dateTime: {
+      type: number;
+      value: string;
+    };
+  }>({ profile, dateTime });
 
   const handleUpdateProfile = useCallback(
-    (event, data) => {
-      dispatch(updateProfile({ profile: data.valhalla_profile }))
-      dispatch(resetSettings())
-      dispatch(updatePermalink())
+    (event: React.MouseEvent<HTMLButtonElement>, data: ButtonProps) => {
+      dispatch(updateProfile({ profile: data.valhalla_profile }));
+      dispatch(resetSettings());
+      dispatch(updatePermalink());
     },
     [dispatch]
-  )
+  );
 
-  const handleAddWaypoint = useCallback(
-    (event, data) => {
-      dispatch(doAddWaypoint())
-    },
-    [dispatch]
-  )
+  const handleAddWaypoint = useCallback(() => {
+    dispatch(doAddWaypoint());
+  }, [dispatch]);
 
   const handleRemoveWaypoints = useCallback(() => {
-    dispatch(doRemoveWaypoint())
-    dispatch(clearRoutes())
-  }, [dispatch])
+    dispatch(doRemoveWaypoint());
+    dispatch(clearRoutes());
+  }, [dispatch]);
 
   const handleSettings = useCallback(() => {
-    dispatch(doShowSettings())
-  }, [dispatch])
+    dispatch(doShowSettings());
+  }, [dispatch]);
 
   const handleDateTime = useCallback(
     (type, value) => {
-      dispatch(doUpdateDateTime(type, value))
+      dispatch(doUpdateDateTime(type, value));
     },
     [dispatch]
-  )
+  );
 
   useEffect(() => {
     if (
@@ -67,20 +88,20 @@ const DirectionsControl = ({ profile, dispatch, loading, dateTime }) => {
         prevPropsRef.current.dateTime.value !== dateTime.value ||
         prevPropsRef.current.profile !== profile)
     ) {
-      dispatch(makeRequest())
+      dispatch(makeRequest());
     }
-  }, [dateTime.type, dateTime.value, profile, dispatch])
+  }, [dateTime.type, dateTime.value, profile, dispatch]);
 
   useEffect(() => {
-    prevPropsRef.current = { profile, dateTime }
-  })
+    prevPropsRef.current = { profile, dateTime };
+  });
 
   return (
     <div className="flex flex-column content-between">
       <div>
         <div className="pa2 flex flex-row justify-between">
           <ProfilePicker
-            group={'directions'}
+            group="directions"
             profiles={[
               'bicycle',
               'pedestrian',
@@ -123,27 +144,16 @@ const DirectionsControl = ({ profile, dispatch, loading, dateTime }) => {
       <Divider fitted />
       <SettingsFooter />
     </div>
-  )
-}
+  );
+};
 
-// PropTypes for the functional component
-DirectionsControl.propTypes = {
-  profile: PropTypes.string.isRequired,
-  dispatch: PropTypes.func.isRequired,
-  loading: PropTypes.bool,
-  dateTime: PropTypes.shape({
-    type: PropTypes.number,
-    value: PropTypes.string,
-  }),
-}
-
-const mapStateToProps = (state) => {
-  const { profile, loading, dateTime } = state.common
+const mapStateToProps = (state: RootState) => {
+  const { profile, loading, dateTime } = state.common;
   return {
     profile,
     loading,
     dateTime,
-  }
-}
+  };
+};
 
-export default connect(mapStateToProps)(DirectionsControl)
+export default connect(mapStateToProps)(DirectionsControl);

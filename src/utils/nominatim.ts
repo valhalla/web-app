@@ -1,35 +1,40 @@
-import axios from 'axios'
+import type { NominationResponse } from '@/common/types';
+import axios from 'axios';
 
-export const NOMINATIM_URL = `${process.env.REACT_APP_NOMINATIM_URL}/search`
-export const NOMINATIME_URL_REVERSE = `${process.env.REACT_APP_NOMINATIM_URL}/reverse`
+export const NOMINATIM_URL = `${process.env.REACT_APP_NOMINATIM_URL}/search`;
+export const NOMINATIME_URL_REVERSE = `${process.env.REACT_APP_NOMINATIM_URL}/reverse`;
 
-export const forward_geocode = (userInput) =>
-  axios.get(NOMINATIM_URL, {
+export const forward_geocode = (userInput: string) =>
+  axios.get<NominationResponse>(NOMINATIM_URL, {
     params: {
-      // eslint-disable-next-line
       q: userInput,
       format: 'json',
       limit: 5,
     },
-  })
+  });
 
-export const reverse_geocode = (lon, lat) =>
-  axios.get(NOMINATIME_URL_REVERSE, {
+export const reverse_geocode = (lon: number, lat: number) =>
+  axios.get<NominationResponse>(NOMINATIME_URL_REVERSE, {
     params: {
       lon: lon,
       lat: lat,
       format: 'json',
     },
-  })
+  });
 
-export const parseGeocodeResponse = (results, lngLat) => {
-  if (!(Object.prototype.toString.call(results) === '[object Array]')) {
-    results = [results]
+export const parseGeocodeResponse = (
+  results: NominationResponse | NominationResponse[],
+  lngLat: [number, number]
+) => {
+  if (!Array.isArray(results)) {
+    results = [results];
   }
-  const processedResults = []
+
+  const processedResults = [];
   for (const [index, result] of results.entries()) {
     if (
       'error' in result &&
+      // @ts-expect-error we know error exists in this case
       result.error.toLowerCase() === 'unable to geocode'
     ) {
       processedResults.push({
@@ -41,7 +46,7 @@ export const parseGeocodeResponse = (results, lngLat) => {
         displaylnglat: lngLat,
         key: index,
         addressindex: index,
-      })
+      });
     } else {
       processedResults.push({
         title:
@@ -61,8 +66,8 @@ export const parseGeocodeResponse = (results, lngLat) => {
             : [parseFloat(result.lon), parseFloat(result.lat)],
         key: index,
         addressindex: index,
-      })
+      });
     }
   }
-  return processedResults
-}
+  return processedResults;
+};

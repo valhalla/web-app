@@ -1,6 +1,6 @@
 name: 🐛 Bug
 description: Report an issue to help improve the project.
-title: "<description>"
+title: '<description>'
 labels: bug
 body:
   - type: textarea
@@ -10,7 +10,7 @@ body:
       description: A brief description of the issue, also include what you tried and what didn't work
       value: |
         ### What is the problem you are facing
-        
+
         ### What is your suggested solution
     validations:
       required: true

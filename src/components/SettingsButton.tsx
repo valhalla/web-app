@@ -1,20 +1,18 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import { Button, Popup, Icon } from 'semantic-ui-react'
+import { Button, Popup, Icon } from 'semantic-ui-react';
 
-export const SettingsButton = ({ handleSettings }) => {
+interface SettingsButtonProps {
+  handleSettings: () => void;
+}
+
+export const SettingsButton = ({ handleSettings }: SettingsButtonProps) => {
   return (
     <Popup
-      content={'Show/Hide Settings'}
+      content="Show/Hide Settings"
       trigger={
         <Button tertiary="true" icon onClick={() => handleSettings()}>
-          <Icon name="cogs" />{' '}
+          <Icon name="cogs" />
         </Button>
       }
     />
-  )
-}
-
-SettingsButton.propTypes = {
-  handleSettings: PropTypes.func,
-}
+  );
+};

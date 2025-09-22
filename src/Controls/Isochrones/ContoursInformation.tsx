@@ -1,16 +1,19 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { Icon } from 'semantic-ui-react'
+import React from 'react';
+import { connect } from 'react-redux';
+import { Icon } from 'semantic-ui-react';
+import type { RootState } from '@/store';
+import type { IsochroneState } from '@/reducers/isochrones';
+
+interface ContoursInformationProps {
+  results: IsochroneState['results'];
+  provider: string;
+}
 
 const ContoursInformation = ({
-  dispatch,
   results,
-  header,
   provider,
-  profile,
-}) => {
-  const { features } = results[provider].data
+}: ContoursInformationProps) => {
+  const { features } = results[provider]!.data;
 
   // const handleChange = (data, event) => {
   //   const { dispatch } = this.props
@@ -18,56 +21,48 @@ const ContoursInformation = ({
   // }
 
   if (!features) {
-    return <div>No isochrones found</div>
+    return <div>No isochrones found</div>;
   }
 
   return (
     <React.Fragment>
       {features
-        .filter((feature) => !feature.properties.type)
+        .filter((feature) => !feature.properties?.type)
         .map((feature, key) => {
           return (
-            <div className={'flex pb2'} key={key}>
+            <div className="flex pb2" key={key}>
               <div
-                className={'flex'}
+                className="flex"
                 style={{
                   alignSelf: 'center',
                   flexBasis: '140px',
                 }}
               >
-                <Icon circular name={'time'} />
-                <div className={'pr2 f6 b pt1 pb1'}>
-                  {feature.properties.contour + ' minutes'}
+                <Icon circular name="time" />
+                <div className="pr2 f6 b pt1 pb1">
+                  {feature.properties?.contour + ' minutes'}
                 </div>
               </div>
-              <div className={'flex'} style={{ alignSelf: 'center' }}>
-                <Icon circular name={'move'} />
-                <div className={'pa1 b f6'}>
-                  {(feature.properties.area > 1
-                    ? feature.properties.area.toFixed(0)
-                    : feature.properties.area.toFixed(1)) + ' km²'}
+              <div className="flex" style={{ alignSelf: 'center' }}>
+                <Icon circular name="move" />
+                <div className="pa1 b f6">
+                  {(feature.properties?.area > 1
+                    ? feature.properties?.area.toFixed(0)
+                    : feature.properties?.area.toFixed(1)) + ' km²'}
                 </div>
               </div>
             </div>
-          )
+          );
         })}
     </React.Fragment>
-  )
-}
+  );
+};
 
-ContoursInformation.propTypes = {
-  dispatch: PropTypes.func.isRequired,
-  results: PropTypes.object,
-  header: PropTypes.string,
-  provider: PropTypes.string,
-  profile: PropTypes.string,
-}
-
-const mapStateToProps = (state) => {
-  const { results } = state.isochrones
+const mapStateToProps = (state: RootState) => {
+  const { results } = state.isochrones;
   return {
     results,
-  }
-}
+  };
+};
 
-export default connect(mapStateToProps)(ContoursInformation)
+export default connect(mapStateToProps)(ContoursInformation);

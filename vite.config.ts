@@ -1,11 +1,20 @@
-import { resolve } from 'node:path'
-import { readFileSync } from 'node:fs'
-import { defineConfig, loadEnv, createFilter, transformWithEsbuild } from 'vite'
-import react from '@vitejs/plugin-react'
-import tsconfigPaths from 'vite-tsconfig-paths'
+import { resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
+import {
+  defineConfig,
+  loadEnv,
+  createFilter,
+  transformWithEsbuild,
+  type ConfigEnv,
+  type UserConfig,
+  type Plugin,
+} from 'vite';
+import react from '@vitejs/plugin-react';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import path from 'path';
 
-export default defineConfig(({ mode }) => {
-  setEnv(mode)
+export default defineConfig(({ mode }: ConfigEnv) => {
+  setEnv(mode);
   return {
     plugins: [
       react(),
@@ -18,31 +27,38 @@ export default defineConfig(({ mode }) => {
       htmlPlugin(mode),
       svgrPlugin(),
     ],
-  }
-})
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+    },
+  };
+});
 
-function setEnv(mode) {
+function setEnv(mode: string) {
   Object.assign(
     process.env,
     loadEnv(mode, '.', ['REACT_APP_', 'NODE_ENV', 'PUBLIC_URL'])
-  )
-  process.env.NODE_ENV ||= mode
-  const { homepage } = JSON.parse(readFileSync('package.json', 'utf-8'))
-  process.env.PUBLIC_URL ||= homepage
+  );
+  process.env.NODE_ENV ??= mode;
+  const { homepage } = JSON.parse(readFileSync('package.json', 'utf-8')) as {
+    homepage: string;
+  };
+  process.env.PUBLIC_URL ??= homepage
     ? `${
         homepage.startsWith('http') || homepage.startsWith('/')
           ? homepage
           : `/${homepage}`
       }`.replace(/\/$/, '')
-    : ''
+    : '';
 }
 
 // Expose `process.env` environment variables to your client code
-function envPlugin() {
+function envPlugin(): Plugin {
   return {
     name: 'env-plugin',
-    config(_, { mode }) {
-      const env = loadEnv(mode, '.', ['REACT_APP_', 'NODE_ENV', 'PUBLIC_URL'])
+    config(_config: UserConfig, { mode }: ConfigEnv) {
+      const env = loadEnv(mode, '.', ['REACT_APP_', 'NODE_ENV', 'PUBLIC_URL']);
       return {
         define: Object.fromEntries(
           Object.entries(env).map(([key, value]) => [
@@ -50,25 +66,25 @@ function envPlugin() {
             JSON.stringify(value),
           ])
         ),
-      }
+      };
     },
-  }
+  };
 }
 
 // Setup HOST, SSL, PORT
 // https://vitejs.dev/config/server-options.html#server-host
 // https://vitejs.dev/config/server-options.html#server-https
 // https://vitejs.dev/config/server-options.html#server-port
-function devServerPlugin() {
+function devServerPlugin(): Plugin {
   return {
     name: 'dev-server-plugin',
-    config(_, { mode }) {
+    config(_config: UserConfig, { mode }: ConfigEnv) {
       const { HOST, PORT, HTTPS, SSL_CRT_FILE, SSL_KEY_FILE } = loadEnv(
         mode,
         '.',
         ['HOST', 'PORT', 'HTTPS', 'SSL_CRT_FILE', 'SSL_KEY_FILE']
-      )
-      const https = HTTPS === 'true'
+      );
+      const https = HTTPS === 'true';
       return {
         server: {
           host: HOST || '0.0.0.0',
@@ -83,99 +99,106 @@ function devServerPlugin() {
               },
             }),
         },
-      }
+      };
     },
-  }
+  };
 }
 
 // https://vitejs.dev/config/build-options.html#build-outdir
-function buildPathPlugin() {
+function buildPathPlugin(): Plugin {
   return {
     name: 'build-path-plugin',
-    config(_, { mode }) {
-      const { BUILD_PATH } = loadEnv(mode, '.', ['BUILD_PATH'])
+    config(_config: UserConfig, { mode }: ConfigEnv) {
+      const { BUILD_PATH } = loadEnv(mode, '.', ['BUILD_PATH']);
       return {
         build: {
           outDir: BUILD_PATH || 'build',
         },
-      }
+      };
     },
-  }
+  };
 }
 
 // https://vitejs.dev/config/shared-options.html#base
-function basePlugin() {
+function basePlugin(): Plugin {
   return {
     name: 'base-plugin',
-    config(_, { mode }) {
-      const { PUBLIC_URL } = loadEnv(mode, '.', ['PUBLIC_URL'])
+    config(_config: UserConfig, { mode }: ConfigEnv) {
+      const { PUBLIC_URL } = loadEnv(mode, '.', ['PUBLIC_URL']);
       return {
-        base: PUBLIC_URL || '',
-      }
+        base: PUBLIC_URL ?? '',
+      };
     },
-  }
+  };
 }
 
 // To resolve modules from node_modules, you can prefix paths with ~
 // https://create-react-app.dev/docs/adding-a-sass-stylesheet
 // https://vitejs.dev/config/shared-options.html#resolve-alias
-function importPrefixPlugin() {
+function importPrefixPlugin(): Plugin {
   return {
     name: 'import-prefix-plugin',
-    config() {
+    config(_config: UserConfig, _env: ConfigEnv) {
       return {
         resolve: {
           alias: [{ find: /^~([^/])/, replacement: '$1' }],
         },
-      }
+      };
     },
-  }
+  };
 }
 
 // In Create React App, SVGs can be imported directly as React components. This is achieved by svgr libraries.
 // https://create-react-app.dev/docs/adding-images-fonts-and-files/#adding-svgs
-function svgrPlugin() {
-  const filter = createFilter('**/*.svg')
-  const postfixRE = /[?#].*$/s
+function svgrPlugin(): Plugin {
+  const filter = createFilter('**/*.svg');
+  const postfixRE = /[?#].*$/s;
   return {
     name: 'svgr-plugin',
-    async transform(code, id) {
+    async transform(code: string, id: string) {
       if (filter(id)) {
-        const { transform } = await import('@svgr/core')
-        const { default: jsx } = await import('@svgr/plugin-jsx')
-        const filePath = id.replace(postfixRE, '')
-        const svgCode = readFileSync(filePath, 'utf8')
+        const { transform } = await import('@svgr/core');
+        const { default: jsx } = await import('@svgr/plugin-jsx');
+        const filePath = id.replace(postfixRE, '');
+        const svgCode = readFileSync(filePath, 'utf8');
         const componentCode = await transform(svgCode, undefined, {
           filePath,
           caller: {
             previousExport: code,
             defaultPlugins: [jsx],
           },
-        })
+        });
         const res = await transformWithEsbuild(componentCode, id, {
           loader: 'jsx',
-        })
+        });
         return {
           code: res.code,
           map: null,
-        }
+        };
       }
     },
-  }
+  };
 }
 
 // Replace %ENV_VARIABLES% in index.html
 // https://vitejs.dev/guide/api-plugin.html#transformindexhtml
 // https://vitejs.dev/guide/env-and-mode.html#html-env-replacement
-function htmlPlugin(mode) {
-  const env = loadEnv(mode, '.', ['REACT_APP_', 'NODE_ENV', 'PUBLIC_URL'])
+function htmlPlugin(_mode: string): Plugin {
   return {
     name: 'html-plugin',
     transformIndexHtml: {
-      order: 'pre',
-      handler(html) {
-        return html.replace(/%(.*?)%/g, (match, p1) => env[p1] ?? match)
+      order: 'pre' as const,
+      handler(html: string) {
+        const env = loadEnv(_mode, '.', [
+          'REACT_APP_',
+          'NODE_ENV',
+          'PUBLIC_URL',
+        ]);
+        return html.replace(
+          /%(.*?)%/g,
+          (match: string, p1: string) => env[p1] ?? match
+        );
       },
     },
-  }
+  };
 }

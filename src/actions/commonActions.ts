@@ -9,162 +9,221 @@ import {
   RESET_SETTINGS,
   TOGGLE_DIRECTIONS,
   UPDATE_DATETIME,
-} from './types'
+} from './types';
 
 import {
   profile_settings,
   settings_general,
-} from '../Controls/settings-options'
+} from '../Controls/settings-options';
+import type { Profile } from '@/reducers/common';
+import type { PossibleSettings, ThunkResult } from '@/common/types';
 
-export const showLoading = (loading) => ({
+export const showLoading = (loading: boolean) => ({
   type: LOADING,
   payload: loading,
-})
+});
 
-export const sendMessage = (message_object) => ({
+interface MessageObject {
+  type: 'info' | 'warning' | 'error' | 'success'; // this might be not correct, but currently only warning is used
+  icon: 'info' | 'warning' | 'error' | 'success'; // this might be not correct, but currently only warning is used
+  description: string;
+  title: string;
+}
+
+export const sendMessage = (message_object: MessageObject) => ({
   type: MESSAGE_HANDLER,
   payload: {
     receivedAt: Date.now(),
     ...message_object,
   },
-})
+});
 
-export const updateSettings = (object) => ({
+interface SettingsObject {
+  name: string;
+  value: string | number | boolean | string[];
+}
+
+export const updateSettings = (object: SettingsObject) => ({
   type: UPDATE_SETTINGS,
   payload: object,
-})
+});
 
-export const updateProfile = (profile) => ({
+export const updateProfile = (object: { profile: Profile }) => ({
   type: UPDATE_PROFILE,
-  payload: profile,
-})
+  payload: object,
+});
 
-export const updateTab = (activeTab) => ({
+export const updateTab = (object: { activeTab: number }) => ({
   type: UPDATE_TAB,
-  payload: activeTab,
-})
+  payload: object,
+});
 
 export const doShowSettings = () => ({
   type: SHOW_SETTINGS,
-})
+});
 
 export const toggleDirections = () => ({
   type: TOGGLE_DIRECTIONS,
-})
+});
 
 export const resetSettings = () => ({
   type: RESET_SETTINGS,
-})
+});
 
-export const zoomTo = (coords) => ({
+export const zoomTo = (coords: number[][]) => ({
   type: ZOOM_TO,
   payload: coords,
-})
+});
 
-export const doUpdateDateTime = (key, value) => ({
+export const doUpdateDateTime = (key: string, value: string) => ({
   type: UPDATE_DATETIME,
   payload: { key, value },
-})
+});
 
-export const updatePermalink = () => (dispatch, getState) => {
-  const { waypoints } = getState().directions
+export const updatePermalink = (): ThunkResult => (_, getState) => {
+  const { waypoints } = getState().directions;
   const { geocodeResults, maxRange, interval, generalize, denoise } =
-    getState().isochrones
-  const { profile, /*settings,*/ activeTab } = getState().common
-  const queryParams = new URLSearchParams()
-  queryParams.set('profile', profile)
+    getState().isochrones;
+  const { profile, activeTab } = getState().common;
+  const queryParams = new URLSearchParams();
+  queryParams.set('profile', profile);
 
-  let path = '/directions?'
+  let path = '/directions?';
   if (activeTab === 0) {
-    const wps = []
+    const wps = [];
     for (const wp of waypoints) {
       for (const result of wp.geocodeResults) {
         if (result.selected) {
-          wps.push(result.sourcelnglat)
+          wps.push(result.sourcelnglat);
         }
       }
     }
     if (wps.length > 0) {
-      queryParams.set('wps', wps.toString())
+      queryParams.set('wps', wps.toString());
     }
   } else {
-    path = '/isochrones?'
+    path = '/isochrones?';
 
-    let center
+    let center;
     for (const result of geocodeResults) {
-      if (result.selected) {
-        center = result.sourcelnglat.toString()
+      if (result.selected && result.sourcelnglat) {
+        center = result.sourcelnglat.toString();
       }
     }
     if (center) {
-      queryParams.set('wps', center.toString())
+      queryParams.set('wps', center.toString());
     }
-    queryParams.set('range', maxRange)
-    queryParams.set('interval', interval)
-    queryParams.set('generalize', generalize)
-    queryParams.set('denoise', denoise)
+    queryParams.set('range', maxRange.toString());
+    queryParams.set('interval', interval.toString());
+    queryParams.set('generalize', generalize.toString());
+    queryParams.set('denoise', denoise.toString());
   }
-  window.history.replaceState(null, null, path + queryParams.toString())
-}
+  window.history.replaceState(null, '', path + queryParams.toString());
+};
 
-export const downloadFile = ({ data, fileName, fileType }) => {
+export const downloadFile = ({
+  data,
+  fileName,
+  fileType,
+}: {
+  data: string | ArrayBuffer;
+  fileName: string;
+  fileType: string;
+}) => {
   // Create a blob with the data we want to download as a file
-  const blob = new Blob([data], { type: fileType })
+  const blob = new Blob([data], { type: fileType });
   // Create an anchor element and dispatch a click event on it
   // to trigger a download
-  const aElem = document.createElement('a')
-  aElem.download = fileName
-  aElem.href = window.URL.createObjectURL(blob)
+  const aElem = document.createElement('a');
+  aElem.download = fileName;
+  aElem.href = window.URL.createObjectURL(blob);
   const clickEvt = new MouseEvent('click', {
     view: window,
     bubbles: true,
     cancelable: true,
-  })
-  aElem.dispatchEvent(clickEvt)
-  aElem.remove()
+  });
+  aElem.dispatchEvent(clickEvt);
+  aElem.remove();
+};
+
+// Type guard to check if profile exists in settings objects
+type SettingsProfile = Exclude<Profile, 'auto'>;
+
+function isValidSettingsProfile(profile: Profile): profile is SettingsProfile {
+  return profile !== 'auto';
 }
 
-export const filterProfileSettings = (profile, settings) => {
-  const filteredSettings = {
+export const filterProfileSettings = (
+  profile: Profile,
+  settings: PossibleSettings
+) => {
+  const filteredSettings: {
+    costing: Record<
+      string,
+      string | number | boolean | string[] | GeoJSON.GeoJSON[] | undefined
+    >;
+    directions: {
+      alternates: PossibleSettings['alternates'];
+      exclude_polygons: PossibleSettings['exclude_polygons'];
+    };
+  } = {
     costing: {},
     directions: {
       alternates: settings.alternates,
       exclude_polygons: settings.exclude_polygons,
     },
+  };
+
+  // Skip filtering if profile is 'auto' since it doesn't exist in settings
+  if (!isValidSettingsProfile(profile)) {
+    return filteredSettings;
   }
+
   for (const setting in settings) {
-    for (const item of settings_general[profile].numeric) {
-      if (setting === item.param) {
-        filteredSettings.costing[setting] = settings[setting]
+    // Check if the profile exists in settings_general
+    if (profile in settings_general) {
+      for (const item of settings_general[profile].numeric) {
+        if (setting === item.param) {
+          filteredSettings.costing[setting] =
+            settings[setting as keyof PossibleSettings];
+        }
       }
-    }
-    for (const item of settings_general[profile].boolean) {
-      if (setting === item.param) {
-        filteredSettings.costing[setting] = settings[setting]
+      for (const item of settings_general[profile].boolean) {
+        if (setting === item.param) {
+          filteredSettings.costing[setting] =
+            settings[setting as keyof PossibleSettings];
+        }
       }
-    }
-    for (const item of settings_general[profile].enum) {
-      if (setting === item.param) {
-        filteredSettings.costing[setting] = settings[setting]
+      for (const item of settings_general[profile].enum) {
+        if (setting === (item as { param: string }).param) {
+          filteredSettings.costing[setting] =
+            settings[setting as keyof PossibleSettings];
+        }
       }
     }
 
-    for (const item of profile_settings[profile].numeric) {
-      if (setting === item.param) {
-        filteredSettings.costing[setting] = settings[setting]
+    // Check if the profile exists in profile_settings
+    if (profile in profile_settings) {
+      for (const item of profile_settings[profile].numeric) {
+        if (setting === item.param) {
+          filteredSettings.costing[setting] =
+            settings[setting as keyof PossibleSettings];
+        }
       }
-    }
 
-    for (const item of profile_settings[profile].boolean) {
-      if (setting === item.param) {
-        filteredSettings.costing[setting] = settings[setting]
+      for (const item of profile_settings[profile].boolean) {
+        if (setting === item.param) {
+          filteredSettings.costing[setting] =
+            settings[setting as keyof PossibleSettings];
+        }
       }
-    }
-    for (const item of profile_settings[profile].enum) {
-      if (setting === item.param) {
-        filteredSettings.costing[setting] = settings[setting]
+      for (const item of profile_settings[profile].enum) {
+        if (setting === item.param) {
+          filteredSettings.costing[setting] =
+            settings[setting as keyof PossibleSettings];
+        }
       }
     }
   }
-  return filteredSettings
-}
+  return filteredSettings;
+};

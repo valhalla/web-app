@@ -10,7 +10,7 @@ body:
       description: Description of the enhancement you propose, also include what you tried and what worked.
       value: |
         ### What kind of feature you are suggesting?
-        
+
         ### Does it solve any problem?
     validations:
       required: true

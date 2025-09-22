@@ -1,86 +1,96 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
-import ReactDOM from 'react-dom'
-import { connect } from 'react-redux'
-import L from 'leaflet'
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import ReactDOM from 'react-dom';
+import { connect } from 'react-redux';
+import L, { LatLng, type LatLngExpression } from 'leaflet';
 
-import '@geoman-io/leaflet-geoman-free'
-import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css'
-import 'leaflet.heightgraph'
-import 'leaflet.heightgraph/dist/L.Control.Heightgraph.min.css'
+import '@geoman-io/leaflet-geoman-free';
+import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
+import 'leaflet.heightgraph';
+import 'leaflet.heightgraph/dist/L.Control.Heightgraph.min.css';
 
-import PropTypes from 'prop-types'
-import axios from 'axios'
+import axios from 'axios';
 
-import * as R from 'ramda'
-import ExtraMarkers from './extraMarkers'
-import { Button, Label, Icon, Popup } from 'semantic-ui-react'
-import { ToastContainer } from 'react-toastify'
-import { CopyToClipboard } from 'react-copy-to-clipboard'
+import * as R from 'ramda';
+import ExtraMarkers from './extraMarkers';
+import { Button, Label, Icon, Popup } from 'semantic-ui-react';
+import { ToastContainer } from 'react-toastify';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 import {
   fetchReverseGeocode,
   updateInclineDeclineTotal,
-} from 'actions/directionsActions'
-import { fetchReverseGeocodeIso } from 'actions/isochronesActions'
-import { updateSettings } from 'actions/commonActions'
+} from '@/actions/directionsActions';
+import { fetchReverseGeocodeIso } from '@/actions/isochronesActions';
+import { updateSettings } from '@/actions/commonActions';
 import {
   VALHALLA_OSM_URL,
   buildHeightRequest,
   buildLocateRequest,
-} from 'utils/valhalla'
-import { colorMappings, buildHeightgraphData } from 'utils/heightgraph'
-import formatDuration from 'utils/date_time'
-import makeResizable from 'utils/resizable'
-import './Map.css'
-const OSMTiles = L.tileLayer(process.env.REACT_APP_TILE_SERVER_URL, {
+} from '@/utils/valhalla';
+import { colorMappings, buildHeightgraphData } from '@/utils/heightgraph';
+import { formatDuration } from '@/utils/date_time';
+import makeResizable from '@/utils/resizable';
+import './Map.css';
+import { convertDDToDMS } from './utils';
+import type { LastCenterStorageValue } from './types';
+import type { RootState } from '@/store';
+import type { AnyAction } from 'redux';
+import type { ThunkDispatch } from 'redux-thunk';
+import type { DirectionsState } from '@/reducers/directions';
+import type { IsochroneState } from '@/reducers/isochrones';
+import type { Profile } from '@/reducers/common';
+import type { ParsedDirectionsGeometry } from '@/common/types';
+
+const OSMTiles = L.tileLayer(process.env.REACT_APP_TILE_SERVER_URL!, {
   attribution:
     '<a href="https://map.project-osrm.org/about.html" target="_blank">About this service and privacy policy</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-})
-
-const convertDDToDMS = (decimalDegrees) =>
-  [
-    0 | decimalDegrees,
-    '° ',
-    0 |
-      (((decimalDegrees =
-        (decimalDegrees < 0 ? -decimalDegrees : decimalDegrees) + 1e-4) %
-        1) *
-        60),
-    "' ",
-    0 | (((decimalDegrees * 60) % 1) * 60),
-    '"',
-  ].join('')
+});
 
 // for this app we create two leaflet layer groups to control, one for the isochrone centers and one for the isochrone contours
-const isoCenterLayer = L.featureGroup()
-const isoPolygonLayer = L.featureGroup()
-const isoLocationsLayer = L.featureGroup()
-const routeMarkersLayer = L.featureGroup()
-const routeLineStringLayer = L.featureGroup()
-const highlightRouteSegmentlayer = L.featureGroup()
-const highlightRouteIndexLayer = L.featureGroup()
-const excludePolygonsLayer = L.featureGroup()
+const isoCenterLayer = L.featureGroup();
+const isoPolygonLayer = L.featureGroup();
+const isoLocationsLayer = L.featureGroup();
+const routeMarkersLayer = L.featureGroup();
+const routeLineStringLayer = L.featureGroup();
+const highlightRouteSegmentlayer = L.featureGroup();
+const highlightRouteIndexLayer = L.featureGroup();
+const excludePolygonsLayer = L.featureGroup();
 
-const centerCoords = process.env.REACT_APP_CENTER_COORDS.split(',')
-let center = [parseFloat(centerCoords[0]), parseFloat(centerCoords[1])]
-let zoom_initial = 10
+const centerCoords = process.env.REACT_APP_CENTER_COORDS!.split(',');
+
+let center = [
+  parseFloat(centerCoords[0] || '52.51831'),
+  parseFloat(centerCoords[1] || '13.393707'),
+];
+
+let zoom_initial = 10;
 
 if (localStorage.getItem('last_center')) {
-  const last_center = JSON.parse(localStorage.getItem('last_center'))
-  center = last_center.center
-  zoom_initial = last_center.zoom_level
+  const last_center = JSON.parse(
+    localStorage.getItem('last_center')!
+  ) as LastCenterStorageValue;
+  center = last_center.center;
+  zoom_initial = last_center.zoom_level;
 }
 
-const maxBoundsString = process.env.REACT_APP_MAX_BOUNDS?.split(',')
+const maxBoundsString = (
+  process.env.REACT_APP_MAX_BOUNDS || '-90,-1e7,90,1e7'
+).split(',');
+
 const maxBounds = maxBoundsString
   ? [
       //south west corner
-      [parseFloat(maxBoundsString[0]), parseFloat(maxBoundsString[1])],
+      [
+        parseFloat(maxBoundsString[0] || '-90'),
+        parseFloat(maxBoundsString[1] || '-1e7'),
+      ],
       //north east corner
-      [parseFloat(maxBoundsString[2]), parseFloat(maxBoundsString[3])],
+      [
+        parseFloat(maxBoundsString[2] || '90'),
+        parseFloat(maxBoundsString[3] || '1e7'),
+      ],
     ]
-  : undefined
+  : undefined;
 
-// a leaflet map consumes parameters, I'd say they are quite self-explanatory
 const mapParams = {
   center,
   maxBounds,
@@ -101,87 +111,106 @@ const mapParams = {
     excludePolygonsLayer,
     OSMTiles,
   ],
-}
+};
 
 const routeObjects = {
-  [VALHALLA_OSM_URL]: {
+  [VALHALLA_OSM_URL!]: {
     color: '#0066ff',
     alternativeColor: '#66a3ff',
     name: 'OSM',
   },
+};
+
+interface MapProps {
+  dispatch: ThunkDispatch<RootState, unknown, AnyAction>;
+  directions: DirectionsState;
+  isochrones: IsochroneState;
+  profile: Profile;
+  activeTab: number;
+  coordinates: number[];
+  showDirectionsPanel: boolean;
+  showSettings: boolean;
 }
 
-// this you have seen before, we define a react component
 const Map = ({
   dispatch,
   directions,
   isochrones,
   profile,
   activeTab,
-  activeDataset,
-  showRestrictions,
   coordinates,
   showDirectionsPanel,
   showSettings,
-}) => {
-  const [showPopup, setShowPopup] = useState(false)
-  const [isLocateLoading, setIsLocateLoading] = useState(false)
-  const [isHeightLoading, setIsHeightLoading] = useState(false)
-  const [locate, setLocate] = useState([])
-  const [showInfoPopup, setShowInfoPopup] = useState(false)
-  const [latLng, setLatLng] = useState(null)
-  const [hasCopied, setHasCopied] = useState(false)
-  const [elevation, setElevation] = useState('')
-  const [heightPayload, setHeightPayload] = useState(null)
+}: MapProps) => {
+  const [showPopup, setShowPopup] = useState(false);
+  const [isLocateLoading, setIsLocateLoading] = useState(false);
+  const [isHeightLoading, setIsHeightLoading] = useState(false);
+  const [locate, setLocate] = useState([]);
+  const [showInfoPopup, setShowInfoPopup] = useState(false);
+  const [latLng, setLatLng] = useState<LatLng | null>(null);
+  const [hasCopied, setHasCopied] = useState(false);
+  const [elevation, setElevation] = useState('');
+  const [heightPayload, setHeightPayload] = useState<{
+    range: boolean;
+    shape: { lat: number; lon: number }[];
+    id: string;
+  } | null>(null);
 
-  const mapRef = useRef(null)
-  const layerControlRef = useRef(null)
-  const hgRef = useRef(null)
-  const heightgraphResizerRef = useRef(null)
+  const mapRef = useRef<L.Map>(null);
+  const layerControlRef = useRef<L.Control.Layers>(null);
+  // heightgraph is not typed unfortunately.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const hgRef = useRef<any>(null);
+  const heightgraphResizerRef = useRef(null);
 
   const updateExcludePolygons = useCallback(() => {
-    const excludePolygons = []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const excludePolygons: any[] = [];
     excludePolygonsLayer.eachLayer((layer) => {
-      const lngLatArray = []
+      const lngLatArray: number[][] = [];
+      // @ts-expect-error _latlngs is not typed
       for (const coords of layer._latlngs[0]) {
-        lngLatArray.push([coords.lng, coords.lat])
+        lngLatArray.push([coords.lng, coords.lat]);
       }
-      excludePolygons.push(lngLatArray)
-    })
-    const name = 'exclude_polygons'
-    const value = excludePolygons
+      excludePolygons.push(lngLatArray);
+    });
+    const name = 'exclude_polygons';
+    const value = excludePolygons;
     dispatch(
       updateSettings({
         name,
         value,
       })
-    )
-  }, [])
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateWaypointPosition = useCallback((object) => {
-    dispatch(fetchReverseGeocode(object))
-  }, [])
+    dispatch(fetchReverseGeocode(object));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateIsoPosition = useCallback((coord) => {
-    dispatch(fetchReverseGeocodeIso(coord.lng, coord.lat))
-  }, [])
+    dispatch(fetchReverseGeocodeIso(coord.lng, coord.lat));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCopy = useCallback(() => {
-    setHasCopied(true)
+    setHasCopied(true);
     setTimeout(() => {
-      setHasCopied(false)
-    }, 1000)
-  }, [])
+      setHasCopied(false);
+    }, 1000);
+  }, []);
 
   const handleOpenOSM = useCallback(() => {
-    const { lat, lng } = mapRef.current.getCenter()
-    const zoom = mapRef.current.getZoom()
-    const osmURL = `https://www.openstreetmap.org/#map=${zoom}/${lat}/${lng}`
-    window.open(osmURL, '_blank')
-  }, [])
+    const { lat, lng } = mapRef.current!.getCenter();
+    const zoom = mapRef.current!.getZoom();
+    const osmURL = `https://www.openstreetmap.org/#map=${zoom}/${lat}/${lng}`;
+    window.open(osmURL, '_blank');
+  }, []);
 
   const getHeight = useCallback((position) => {
-    setIsHeightLoading(true)
+    setIsHeightLoading(true);
     axios
       .post(
         VALHALLA_OSM_URL + '/height',
@@ -194,20 +223,20 @@ const Map = ({
       )
       .then(({ data }) => {
         if ('height' in data) {
-          setElevation(data.height[0] + ' m')
+          setElevation(data.height[0] + ' m');
         }
       })
       .catch(({ response }) => {
-        console.log(response) //eslint-disable-line
+        console.log(response);
       })
       .finally(() => {
-        setIsHeightLoading(false)
-      })
-  }, [])
+        setIsHeightLoading(false);
+      });
+  }, []);
 
   const getLocate = useCallback(
     (position) => {
-      setIsLocateLoading(true)
+      setIsLocateLoading(true);
       axios
         .post(
           VALHALLA_OSM_URL + '/locate',
@@ -219,50 +248,47 @@ const Map = ({
           }
         )
         .then(({ data }) => {
-          setLocate(data)
+          setLocate(data);
         })
         .catch(({ response }) => {
-          console.log(response) //eslint-disable-line
+          console.log(response);
         })
         .finally(() => {
-          setIsLocateLoading(false)
-        })
+          setIsLocateLoading(false);
+        });
     },
     [profile]
-  )
+  );
 
   const handleAddWaypoint = useCallback(
     (data, e) => {
-      mapRef.current.closePopup()
+      mapRef.current!.closePopup();
       updateWaypointPosition({
         latLng: latLng,
         index: e.index,
-      })
+      });
     },
     [latLng, updateWaypointPosition]
-  )
+  );
 
-  const handleAddIsoWaypoint = useCallback(
-    (data, e) => {
-      mapRef.current.closePopup()
-      updateIsoPosition(latLng)
-    },
-    [latLng, updateIsoPosition]
-  )
+  const handleAddIsoWaypoint = useCallback(() => {
+    mapRef.current!.closePopup();
+    updateIsoPosition(latLng);
+  }, [latLng, updateIsoPosition]);
 
   const getHeightData = useCallback(() => {
-    const { results } = directions
+    const { results } = directions;
 
     const heightPayloadNew = buildHeightRequest(
-      results[VALHALLA_OSM_URL].data.decodedGeometry
-    )
+      results[VALHALLA_OSM_URL!]!.data.decodedGeometry as [number, number][]
+    );
 
     if (!R.equals(heightPayload, heightPayloadNew)) {
-      if (hgRef.current && hgRef.current._removeChart) {
-        hgRef.current._removeChart()
+      if (hgRef.current?._removeChart) {
+        hgRef.current._removeChart();
       }
-      setIsHeightLoading(true)
-      setHeightPayload(heightPayloadNew)
+      setIsHeightLoading(true);
+      setHeightPayload(heightPayloadNew);
       axios
         .post(VALHALLA_OSM_URL + '/height', heightPayloadNew, {
           headers: {
@@ -272,48 +298,49 @@ const Map = ({
         .then(({ data }) => {
           // lets build geojson object with steepness for the height graph
           const reversedGeometry = JSON.parse(
-            JSON.stringify(results[VALHALLA_OSM_URL].data.decodedGeometry)
-          ).map((pair) => {
-            return [...pair.reverse()]
-          })
+            JSON.stringify(results[VALHALLA_OSM_URL!]!.data.decodedGeometry)
+          ).map((pair: number[]) => {
+            return [...pair.reverse()];
+          });
           const heightData = buildHeightgraphData(
             reversedGeometry,
             data.range_height
-          )
-          const { inclineTotal, declineTotal } = heightData[0].properties
+          );
+          const { inclineTotal, declineTotal } = heightData[0]!.properties;
           dispatch(
             updateInclineDeclineTotal({
               inclineTotal,
               declineTotal,
             })
-          )
+          );
 
           if (hgRef.current) {
-            hgRef.current.addData(heightData)
+            hgRef.current.addData(heightData);
           }
         })
         .catch(({ response }) => {
-          console.log(response) //eslint-disable-line
+          console.log(response);
         })
         .finally(() => {
-          setIsHeightLoading(false)
-        })
+          setIsHeightLoading(false);
+        });
     }
-  }, [directions, heightPayload, dispatch])
+  }, [directions, heightPayload, dispatch]);
 
   // Map initialization effect
   useEffect(() => {
     // our map!
-    mapRef.current = L.map('map', mapParams)
+    // @ts-expect-error this is not typed
+    mapRef.current = L.map('map', mapParams);
 
     // we create a leaflet pane which will hold all isochrone polygons with a given opacity
-    const isochronesPane = mapRef.current.createPane('isochronesPane')
-    isochronesPane.style.opacity = 0.9
+    const isochronesPane = mapRef.current.createPane('isochronesPane');
+    isochronesPane.style.opacity = '0.9';
 
     // our basemap and add it to the map
     const baseMaps = {
       OpenStreetMap: OSMTiles,
-    }
+    };
 
     const overlayMaps = {
       Waypoints: routeMarkersLayer,
@@ -321,93 +348,97 @@ const Map = ({
       Routes: routeLineStringLayer,
       Isochrones: isoPolygonLayer,
       'Isochrones (locations)': isoLocationsLayer,
-    }
+    };
 
+    // @ts-expect-error this is not typed
     layerControlRef.current = L.control
       .layers(baseMaps, overlayMaps)
-      .addTo(mapRef.current)
+      .addTo(mapRef.current);
 
     // we do want a zoom control
     L.control
       .zoom({
         position: 'topright',
       })
-      .addTo(mapRef.current)
+      .addTo(mapRef.current);
 
     //and for the sake of advertising your company, you may add a logo to the map
+    // @ts-expect-error this is not typed
     const brand = L.control({
       position: 'bottomleft',
-    })
-    brand.onAdd = (map) => {
-      const div = L.DomUtil.create('div', 'brand')
+    });
+
+    brand.onAdd = () => {
+      const div = L.DomUtil.create('div', 'brand');
       div.innerHTML =
-        '<a href="https://fossgis.de/news/2021-11-12_funding_valhalla/" target="_blank"><div class="fossgis-logo"></div></a>'
-      return div
-    }
+        '<a href="https://fossgis.de/news/2021-11-12_funding_valhalla/" target="_blank"><div class="fossgis-logo"></div></a>';
+      return div;
+    };
 
-    mapRef.current.addControl(brand)
+    mapRef.current.addControl(brand);
 
+    // @ts-expect-error this is not typed
     const valhallaBrand = L.control({
       position: 'bottomleft',
-    })
-    valhallaBrand.onAdd = (map) => {
-      const div = L.DomUtil.create('div', 'brand')
+    });
+    valhallaBrand.onAdd = () => {
+      const div = L.DomUtil.create('div', 'brand');
       div.innerHTML =
-        '<a href="https://github.com/valhalla/valhalla" target="_blank"><div class="valhalla-logo"></div></a>'
-      return div
-    }
+        '<a href="https://github.com/valhalla/valhalla" target="_blank"><div class="valhalla-logo"></div></a>';
+      return div;
+    };
 
-    mapRef.current.addControl(valhallaBrand)
+    mapRef.current.addControl(valhallaBrand);
 
-    const popup = L.popup({ className: 'valhalla-popup' })
+    const popup = L.popup({ className: 'valhalla-popup' });
 
-    mapRef.current.on('popupclose', (event) => {
-      setHasCopied(false)
-      setLocate([])
-    })
+    mapRef.current.on('popupclose', () => {
+      setHasCopied(false);
+      setLocate([]);
+    });
     mapRef.current.on('contextmenu', (event) => {
-      popup.setLatLng(event.latlng).openOn(mapRef.current)
+      popup.setLatLng(event.latlng).openOn(mapRef.current!);
 
       setTimeout(() => {
         // as setContent needs the react dom we are setting the state here
         // to showPopup which then again renders a react portal in the render
         // return function..
-        setShowPopup(true)
-        setShowInfoPopup(false)
-        setLatLng(event.latlng)
+        setShowPopup(true);
+        setShowInfoPopup(false);
+        setLatLng(event.latlng);
 
-        popup.update()
-      }, 20) //eslint-disable-line
-    })
+        popup.update();
+      }, 20);
+    });
 
     mapRef.current.on('click', (event) => {
       if (
-        !mapRef.current.pm.globalRemovalEnabled() &&
-        !mapRef.current.pm.globalDrawModeEnabled()
+        !mapRef.current!.pm.globalRemovalModeEnabled() &&
+        !mapRef.current!.pm.globalDrawModeEnabled()
       ) {
-        popup.setLatLng(event.latlng).openOn(mapRef.current)
+        popup.setLatLng(event.latlng).openOn(mapRef.current!);
 
-        getHeight(event.latlng)
+        getHeight(event.latlng);
 
         setTimeout(() => {
-          setShowPopup(true)
-          setShowInfoPopup(true)
-          setLatLng(event.latlng)
-          popup.update()
-        }, 20) //eslint-disable-line
+          setShowPopup(true);
+          setShowInfoPopup(true);
+          setLatLng(event.latlng);
+          popup.update();
+        }, 20);
       }
-    })
+    });
 
     mapRef.current.on('moveend', () => {
-      const last_coords = mapRef.current.getCenter()
-      const zoom_level = mapRef.current.getZoom()
+      const last_coords = mapRef.current!.getCenter();
+      const zoom_level = mapRef.current!.getZoom();
 
       const last_center = JSON.stringify({
         center: [last_coords.lat, last_coords.lng],
         zoom_level: zoom_level,
-      })
-      localStorage.setItem('last_center', last_center)
-    })
+      });
+      localStorage.setItem('last_center', last_center);
+    });
 
     // add Leaflet-Geoman controls with some options to the map
     mapRef.current.pm.addControls({
@@ -422,26 +453,27 @@ const Map = ({
       allowSelfIntersection: false,
       editPolygon: true,
       deleteLayer: true,
-    })
+    });
 
     mapRef.current.pm.setGlobalOptions({
       layerGroup: excludePolygonsLayer,
-    })
+    });
 
     mapRef.current.on('pm:create', ({ layer }) => {
-      layer.on('pm:edit', (e) => {
-        updateExcludePolygons()
-      })
-      layer.on('pm:dragend', (e) => {
-        updateExcludePolygons()
-      })
-      updateExcludePolygons()
-    })
+      layer.on('pm:edit', () => {
+        updateExcludePolygons();
+      });
+      layer.on('pm:dragend', () => {
+        updateExcludePolygons();
+      });
+      updateExcludePolygons();
+    });
 
-    mapRef.current.on('pm:remove', (e) => {
-      updateExcludePolygons()
-    })
+    mapRef.current.on('pm:remove', () => {
+      updateExcludePolygons();
+    });
 
+    // @ts-expect-error this is not typed
     hgRef.current = L.control.heightgraph({
       mappings: colorMappings,
       graphStyle: {
@@ -452,9 +484,9 @@ const Map = ({
       translation: {
         distance: 'Distance from start',
       },
-      expandCallback(expand) {
+      expandCallback(expand: boolean) {
         if (expand) {
-          getHeightData()
+          getHeightData();
         }
       },
       expandControls: true,
@@ -465,109 +497,116 @@ const Map = ({
       width: showDirectionsPanel
         ? window.innerWidth * 0.75
         : window.innerWidth * 0.9,
-    })
-    hgRef.current.addTo(mapRef.current)
-    const hg = hgRef.current
+    });
+    hgRef.current.addTo(mapRef.current);
+    const hg = hgRef.current;
     // Added title property to heightgraph-toggle element to show "Height Graph" tooltip
     document
-      .querySelector('.heightgraph-toggle')
-      .setAttribute('title', 'Height Graph')
+      .querySelector('.heightgraph-toggle')!
+      .setAttribute('title', 'Height Graph');
 
-    const heightgraphEl = document.querySelector('.heightgraph')
+    const heightgraphEl = document.querySelector('.heightgraph')!;
     if (heightgraphEl) {
-      heightgraphResizerRef.current = makeResizable(heightgraphEl, {
-        handles: 'w, n, nw',
-        minWidth: 380,
-        minHeight: 140,
-        applyInlineSize: false,
-        onResize: ({ width, height }) => {
-          hg.resize({ width, height })
-        },
-        onStop: () => {
-          // Clear inline size/position if any
-          heightgraphEl.style.width = ''
-          heightgraphEl.style.height = ''
-          heightgraphEl.style.left = ''
-          heightgraphEl.style.top = ''
-        },
-      })
+      // @ts-expect-error this is not typed
+      heightgraphResizerRef.current = makeResizable(
+        heightgraphEl as HTMLElement,
+        {
+          handles: 'w, n, nw',
+          minWidth: 380,
+          minHeight: 140,
+          applyInlineSize: false,
+          onResize: ({ width, height }) => {
+            hg.resize({ width, height });
+          },
+          onStop: () => {
+            // Clear inline size/position if any
+            (heightgraphEl as HTMLElement).style.width = '';
+            (heightgraphEl as HTMLElement).style.height = '';
+            (heightgraphEl as HTMLElement).style.left = '';
+            (heightgraphEl as HTMLElement).style.top = '';
+          },
+        }
+      );
     }
 
     // Cleanup function
     return () => {
       if (
         heightgraphResizerRef.current &&
+        // @ts-expect-error this is not typed
         typeof heightgraphResizerRef.current.destroy === 'function'
       ) {
-        heightgraphResizerRef.current.destroy()
+        // @ts-expect-error this is not typed
+        heightgraphResizerRef.current.destroy();
       }
       if (mapRef.current) {
-        mapRef.current.remove()
+        mapRef.current.remove();
       }
-    }
-  }, [])
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Map update functions
   const zoomToCoordinates = useCallback(() => {
-    const maxZoom = coordinates.length === 1 ? 11 : 18
+    const maxZoom = coordinates.length === 1 ? 11 : 18;
     const paddingTopLeft = [
       screen.width < 550 ? 50 : showDirectionsPanel ? 420 : 50,
       50,
-    ]
+    ];
 
     const paddingBottomRight = [
       screen.width < 550 ? 50 : showSettings ? 420 : 50,
       50,
-    ]
+    ];
 
-    mapRef.current.fitBounds(coordinates, {
+    // @ts-expect-error this is not typed
+    mapRef.current!.fitBounds(coordinates, {
       paddingBottomRight,
       paddingTopLeft,
       maxZoom,
-    })
-  }, [coordinates, showDirectionsPanel, showSettings])
+    });
+  }, [coordinates, showDirectionsPanel, showSettings]);
 
   const zoomTo = useCallback(
     (idx) => {
-      const { results } = directions
+      const { results } = directions;
 
-      if (
-        !results[VALHALLA_OSM_URL] ||
-        !results[VALHALLA_OSM_URL].data ||
-        !results[VALHALLA_OSM_URL].data.decodedGeometry
-      ) {
-        return
+      if (!results[VALHALLA_OSM_URL!]?.data?.decodedGeometry) {
+        return;
       }
 
-      const coords = results[VALHALLA_OSM_URL].data.decodedGeometry
+      const coords = results[VALHALLA_OSM_URL!]!.data.decodedGeometry;
 
       if (!mapRef.current || !coords[idx]) {
-        return
+        return;
       }
 
-      mapRef.current.setView(coords[idx], 17)
+      // @ts-expect-error this is not typed
+      mapRef.current.setView(coords[idx], 17);
 
       const highlightMarker = ExtraMarkers.icon({
+        // @ts-expect-error this is not typed
         icon: 'fa-coffee',
         markerColor: 'blue',
         shape: 'circle',
         prefix: 'fa',
         iconColor: 'white',
-      })
+      });
 
+      // @ts-expect-error this is not typed
       L.marker(coords[idx], {
         icon: highlightMarker,
         pmIgnore: true,
-      }).addTo(highlightRouteIndexLayer)
+      }).addTo(highlightRouteIndexLayer);
 
       setTimeout(() => {
-        highlightRouteIndexLayer.clearLayers()
-      }, 1000)
+        highlightRouteIndexLayer.clearLayers();
+      }, 1000);
     },
     [directions]
-  )
+  );
 
-  const getIsoTooltip = useCallback((contour, area, provider) => {
+  const getIsoTooltip = useCallback((contour, area) => {
     return `
     <div class="ui list">
         <div class="item">
@@ -588,8 +627,8 @@ const Map = ({
           </div>
         </div>
       </div>
-    `
-  }, [])
+    `;
+  }, []);
 
   const getIsoLocationTooltip = useCallback(() => {
     return `
@@ -598,10 +637,10 @@ const Map = ({
           Snapped location
         </div>
       </div>
-    `
-  }, [])
+    `;
+  }, []);
 
-  const getRouteToolTip = useCallback((summary, provider) => {
+  const getRouteToolTip = useCallback((summary) => {
     return `
     <div class="ui list">
         <div class="item">
@@ -622,69 +661,65 @@ const Map = ({
           </div>
         </div>
       </div>
-    `
-  }, [])
+    `;
+  }, []);
 
   // Handle map layers updates
   const handleHighlightSegment = useCallback(() => {
-    const { highlightSegment, results } = directions
+    const { highlightSegment, results } = directions;
 
-    if (
-      !highlightSegment ||
-      !results[VALHALLA_OSM_URL] ||
-      !results[VALHALLA_OSM_URL].data
-    ) {
-      highlightRouteSegmentlayer.clearLayers()
-      return
+    if (!highlightSegment || !results[VALHALLA_OSM_URL!]?.data) {
+      highlightRouteSegmentlayer.clearLayers();
+      return;
     }
 
-    const { startIndex, endIndex, alternate } = highlightSegment
+    const { startIndex, endIndex, alternate } = highlightSegment;
 
-    let coords
+    let coords;
     if (alternate == -1) {
-      coords = results[VALHALLA_OSM_URL].data.decodedGeometry
+      coords = results[VALHALLA_OSM_URL!]!.data.decodedGeometry;
     } else {
-      if (
-        !results[VALHALLA_OSM_URL].data.alternates ||
-        !results[VALHALLA_OSM_URL].data.alternates[alternate]
-      ) {
-        highlightRouteSegmentlayer.clearLayers()
-        return
+      if (!results[VALHALLA_OSM_URL!]!.data.alternates?.[alternate]) {
+        highlightRouteSegmentlayer.clearLayers();
+        return;
       }
-      coords =
-        results[VALHALLA_OSM_URL].data.alternates[alternate].decodedGeometry
+      coords = (results[VALHALLA_OSM_URL!]!.data.alternates?.[
+        alternate
+      ] as ParsedDirectionsGeometry)!.decodedGeometry;
     }
 
     if (startIndex > -1 && endIndex > -1 && coords) {
-      L.polyline(coords.slice(startIndex, endIndex + 1), {
+      L.polyline(coords.slice(startIndex, endIndex + 1) as LatLngExpression[], {
         color: 'yellow',
         weight: 4,
         opacity: 1,
         pmIgnore: true,
-      }).addTo(highlightRouteSegmentlayer)
+      }).addTo(highlightRouteSegmentlayer);
     } else {
-      highlightRouteSegmentlayer.clearLayers()
+      highlightRouteSegmentlayer.clearLayers();
     }
-  }, [directions])
+  }, [directions]);
 
   const addWaypoints = useCallback(() => {
-    routeMarkersLayer.clearLayers()
-    const { waypoints } = directions
-    let index = 0
+    routeMarkersLayer.clearLayers();
+    const { waypoints } = directions;
+    let index = 0;
     for (const waypoint of waypoints) {
       for (const address of waypoint.geocodeResults) {
         if (address.selected) {
           const wpMarker = ExtraMarkers.icon({
+            // @ts-expect-error this is not typed
             icon: 'fa-number',
             markerColor: 'green',
             //shape: 'star',
             prefix: 'fa',
             number: (index + 1).toString(),
-          })
+          });
 
           L.marker([address.displaylnglat[1], address.displaylnglat[0]], {
             icon: wpMarker,
             draggable: true,
+            // @ts-expect-error this is not typed
             index: index,
             pmIgnore: true,
           })
@@ -698,26 +733,27 @@ const Map = ({
                 latLng: e.target.getLatLng(),
                 index: e.target.options.index,
                 fromDrag: true,
-              })
-            })
+              });
+            });
         }
       }
-      index += 1
+      index += 1;
     }
-  }, [directions, updateWaypointPosition])
+  }, [directions, updateWaypointPosition]);
 
   const addIsoCenter = useCallback(() => {
-    isoCenterLayer.clearLayers()
-    const { geocodeResults } = isochrones
+    isoCenterLayer.clearLayers();
+    const { geocodeResults } = isochrones;
     for (const address of geocodeResults) {
       if (address.selected) {
         const isoMarker = ExtraMarkers.icon({
+          // @ts-expect-error this is not typed
           icon: 'fa-number',
           markerColor: 'purple',
           shape: 'star',
           prefix: 'fa',
           number: '1',
-        })
+        });
 
         L.marker([address.displaylnglat[1], address.displaylnglat[0]], {
           icon: isoMarker,
@@ -728,58 +764,54 @@ const Map = ({
           .bindTooltip(address.title, { permanent: false })
           //.openTooltip()
           .on('dragend', (e) => {
-            updateIsoPosition(e.target.getLatLng())
-          })
+            updateIsoPosition(e.target.getLatLng());
+          });
       }
     }
-  }, [isochrones, updateIsoPosition])
+  }, [isochrones, updateIsoPosition]);
 
   const addIsochrones = useCallback(() => {
-    const { results } = isochrones
-    isoPolygonLayer.clearLayers()
-    isoLocationsLayer.clearLayers()
+    const { results } = isochrones;
+    isoPolygonLayer.clearLayers();
+    isoLocationsLayer.clearLayers();
 
     if (!results) {
-      return
+      return;
     }
 
     for (const provider of [VALHALLA_OSM_URL]) {
       if (
-        results[provider] &&
-        results[provider].data &&
-        Object.keys(results[provider].data).length > 0 &&
-        results[provider].show
+        results[provider!]?.data &&
+        Object.keys(results[provider!]!.data).length > 0 &&
+        results[provider!]!.show
       ) {
-        for (const feature of results[provider].data.features) {
-          const coords_reversed = []
+        for (const feature of results[provider!]!.data.features) {
+          const coords_reversed = [];
+          // @ts-expect-error this is not typed
           for (const coord of feature.geometry.coordinates) {
-            coords_reversed.push([coord[1], coord[0]])
+            coords_reversed.push([coord[1], coord[0]]);
           }
           if (['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
             L.geoJSON(feature, {
               style: (feat) => ({
-                ...feat.properties,
+                ...feat!.properties,
                 color: '#fff',
                 opacity: 1,
               }),
             })
               .bindTooltip(
                 getIsoTooltip(
-                  feature.properties.contour,
-                  feature.properties.area.toFixed(2),
-                  provider
+                  feature.properties!.contour,
+                  feature.properties!.area.toFixed(2)
                 ),
-                {
-                  permanent: false,
-                  sticky: true,
-                }
+                { permanent: false, sticky: true }
               )
-              .addTo(isoPolygonLayer)
+              .addTo(isoPolygonLayer);
           } else {
             // locations
 
-            if (feature.properties.type === 'input') {
-              return
+            if (feature.properties!.type === 'input') {
+              return;
             }
             L.geoJSON(feature, {
               pointToLayer: (feat, ll) => {
@@ -792,97 +824,101 @@ const Map = ({
                 }).bindTooltip(getIsoLocationTooltip(), {
                   permanent: false,
                   sticky: true,
-                })
+                });
               },
-            }).addTo(isoLocationsLayer)
+            }).addTo(isoLocationsLayer);
           }
         }
       }
     }
-  }, [isochrones, getIsoTooltip, getIsoLocationTooltip])
+  }, [isochrones, getIsoTooltip, getIsoLocationTooltip]);
 
   const addRoutes = useCallback(() => {
-    const { results } = directions
-    routeLineStringLayer.clearLayers()
+    const { results } = directions;
+    routeLineStringLayer.clearLayers();
 
     if (
-      results[VALHALLA_OSM_URL] &&
-      results[VALHALLA_OSM_URL].data &&
-      Object.keys(results[VALHALLA_OSM_URL].data).length > 0
+      results[VALHALLA_OSM_URL!]?.data &&
+      Object.keys(results[VALHALLA_OSM_URL!]!.data).length > 0
     ) {
-      const response = results[VALHALLA_OSM_URL].data
-      const showRoutes = results[VALHALLA_OSM_URL].show || {}
+      const response = results[VALHALLA_OSM_URL!]!.data;
+      const showRoutes = results[VALHALLA_OSM_URL!]!.show || {};
       // show alternates if they exist on the respsonse
       if (response.alternates) {
         for (let i = 0; i < response.alternates.length; i++) {
           if (!showRoutes[i]) {
-            continue
+            continue;
           }
-          const alternate = response.alternates[i]
-          const coords = alternate.decodedGeometry
-          const summary = alternate.trip.summary
+          const alternate = response.alternates[i];
+          const coords = (alternate! as ParsedDirectionsGeometry)!
+            .decodedGeometry;
+          const summary = alternate!.trip.summary;
+          // @ts-expect-error this is not typed
           L.polyline(coords, {
             color: '#FFF',
             weight: 9,
             opacity: 1,
             pmIgnore: true,
-          }).addTo(routeLineStringLayer)
+          }).addTo(routeLineStringLayer);
+          // @ts-expect-error this is not typed
           L.polyline(coords, {
-            color: routeObjects[VALHALLA_OSM_URL].alternativeColor,
+            color: routeObjects[VALHALLA_OSM_URL!]!.alternativeColor,
             weight: 5,
             opacity: 1,
             pmIgnore: true,
           })
             .addTo(routeLineStringLayer)
-            .bindTooltip(getRouteToolTip(summary, VALHALLA_OSM_URL), {
+            .bindTooltip(getRouteToolTip(summary), {
               permanent: false,
               sticky: true,
-            })
+            });
         }
       }
       if (!showRoutes[-1]) {
-        return
+        return;
       }
-      const coords = response.decodedGeometry
-      const summary = response.trip.summary
+      const coords = response.decodedGeometry;
+      const summary = response.trip.summary;
+      // @ts-expect-error this is not typed
       L.polyline(coords, {
         color: '#FFF',
         weight: 9,
         opacity: 1,
         pmIgnore: true,
-      }).addTo(routeLineStringLayer)
+      }).addTo(routeLineStringLayer);
+      // @ts-expect-error this is not typed
       L.polyline(coords, {
-        color: routeObjects[VALHALLA_OSM_URL].color,
+        color: routeObjects[VALHALLA_OSM_URL!]!.color,
         weight: 5,
         opacity: 1,
         pmIgnore: true,
       })
         .addTo(routeLineStringLayer)
-        .bindTooltip(getRouteToolTip(summary, VALHALLA_OSM_URL), {
+        .bindTooltip(getRouteToolTip(summary), {
           permanent: false,
           sticky: true,
-        })
+        });
 
       if (hgRef.current && hgRef.current._showState === true) {
-        hgRef.current._expand()
+        hgRef.current._expand();
       }
     }
-  }, [directions, getRouteToolTip])
+  }, [directions, getRouteToolTip]);
 
   // Effect for handling map updates based on prop changes
   useEffect(() => {
-    addWaypoints()
-    addIsoCenter()
-    addIsochrones()
-    addRoutes()
-    handleHighlightSegment()
+    addWaypoints();
+    addIsoCenter();
+    addIsochrones();
+    addRoutes();
+    handleHighlightSegment();
 
     if (!directions.successful) {
-      routeLineStringLayer.clearLayers()
+      routeLineStringLayer.clearLayers();
     }
     if (!isochrones.successful) {
-      isoPolygonLayer.clearLayers()
-      isoLocationsLayer.clearLayers()
+      isoPolygonLayer.clearLayers();
+      isoLocationsLayer.clearLayers();
     }
   }, [
     directions.selectedAddresses,
@@ -892,21 +928,19 @@ const Map = ({
     isochrones.selectedAddress,
     isochrones.successful,
     isochrones.results,
-    showRestrictions,
-    activeDataset,
     addWaypoints,
     addIsoCenter,
     addIsochrones,
     addRoutes,
     handleHighlightSegment,
-  ])
+  ]);
 
   // Effect for coordinates changes
   useEffect(() => {
     if (coordinates && coordinates.length > 0) {
-      zoomToCoordinates()
+      zoomToCoordinates();
     }
-  }, [coordinates, zoomToCoordinates])
+  }, [coordinates, zoomToCoordinates]);
 
   // Effect for zoom object changes
   useEffect(() => {
@@ -915,14 +949,14 @@ const Map = ({
       directions.zoomObj.index !== undefined &&
       directions.zoomObj.timeNow
     ) {
-      zoomTo(directions.zoomObj.index)
+      zoomTo(directions.zoomObj.index);
     }
-  }, [directions.zoomObj, zoomTo])
+  }, [directions.zoomObj, zoomTo]);
 
   // Render function
-  const MapPopup = (isInfo) => {
+  const MapPopup = (isInfo: boolean) => {
     if (!latLng) {
-      return null
+      return null;
     }
 
     return (
@@ -1110,10 +1144,10 @@ const Map = ({
           </React.Fragment>
         )}
       </React.Fragment>
-    )
-  }
+    );
+  };
 
-  const leafletPopupDiv = document.querySelector('.leaflet-popup-content')
+  const leafletPopupDiv = document.querySelector('.leaflet-popup-content');
   return (
     <React.Fragment>
       <div>
@@ -1145,44 +1179,22 @@ const Map = ({
           : null}
       </div>
     </React.Fragment>
-  )
-}
+  );
+};
 
-Map.propTypes = {
-  dispatch: PropTypes.func.isRequired,
-  directions: PropTypes.object,
-  isochrones: PropTypes.object,
-  profile: PropTypes.string,
-  activeTab: PropTypes.number,
-  activeDataset: PropTypes.string,
-  showRestrictions: PropTypes.object,
-  coordinates: PropTypes.array,
-  showDirectionsPanel: PropTypes.bool,
-  showSettings: PropTypes.bool,
-}
-
-const mapStateToProps = (state) => {
-  const { directions, isochrones, common } = state
-  const {
-    activeTab,
-    profile,
-    showRestrictions,
-    activeDataset,
-    coordinates,
-    showDirectionsPanel,
-    showSettings,
-  } = common
+const mapStateToProps = (state: RootState) => {
+  const { directions, isochrones, common } = state;
+  const { activeTab, profile, coordinates, showDirectionsPanel, showSettings } =
+    common;
   return {
     directions,
     isochrones,
     profile,
     coordinates,
     activeTab,
-    activeDataset,
-    showRestrictions,
     showDirectionsPanel,
     showSettings,
-  }
-}
+  };
+};
 
-export default connect(mapStateToProps)(Map)
+export default connect(mapStateToProps)(Map);

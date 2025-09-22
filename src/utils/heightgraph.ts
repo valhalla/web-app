@@ -1,68 +1,100 @@
-const deriveHeightClass = (slope) => {
-  let heightClass
-  switch (true) {
-    case slope < -15:
-      heightClass = -5
-      break
-    case -15 <= slope && -10 > slope:
-      heightClass = -4
-      break
-    case -10 <= slope && -7 > slope:
-      heightClass = -3
-      break
-    case -7 <= slope && -4 > slope:
-      heightClass = -2
-      break
-    case -4 <= slope && -1 > slope:
-      heightClass = -1
-      break
-    case -1 <= slope && 1 > slope:
-      heightClass = 0
-      break
-    case 1 <= slope && 3 > slope:
-      heightClass = 1
-      break
-    case 3 <= slope && 6 > slope:
-      heightClass = 2
-      break
-    case 6 <= slope && 9 > slope:
-      heightClass = 3
-      break
-    case 9 <= slope && 15 > slope:
-      heightClass = 4
-      break
-    case slope >= 15:
-      heightClass = 5
-      break
-    default:
-      break
-  }
-  return heightClass
+type Coordinate = [number, number]; // [latitude, longitude]
+type RangeHeightPoint = [number, number]; // [distance, elevation]
+type LineStringCoordinate = [number, number, number]; // [longitude, latitude, elevation]
+type HeightClass = -5 | -4 | -3 | -2 | -1 | 0 | 1 | 2 | 3 | 4 | 5;
+
+interface HeightGraphFeature {
+  type: 'Feature';
+  geometry: {
+    type: 'LineString';
+    coordinates: LineStringCoordinate[];
+  };
+  properties: {
+    attributeType: HeightClass;
+  };
 }
 
-export const buildHeightgraphData = (coordinates, rangeHeightData) => {
-  const features = []
+interface HeightGraphFeatureCollection {
+  type: 'FeatureCollection';
+  features: HeightGraphFeature[];
+  properties: {
+    summary: 'steepness';
+    inclineTotal: number;
+    declineTotal: number;
+  };
+}
 
-  let LineStringCoordinates = []
-  let previousHeightClass
+const deriveHeightClass = (slope: number): HeightClass => {
+  let heightClass: HeightClass;
+  switch (true) {
+    case slope < -15:
+      heightClass = -5;
+      break;
+    case -15 <= slope && -10 > slope:
+      heightClass = -4;
+      break;
+    case -10 <= slope && -7 > slope:
+      heightClass = -3;
+      break;
+    case -7 <= slope && -4 > slope:
+      heightClass = -2;
+      break;
+    case -4 <= slope && -1 > slope:
+      heightClass = -1;
+      break;
+    case -1 <= slope && 1 > slope:
+      heightClass = 0;
+      break;
+    case 1 <= slope && 3 > slope:
+      heightClass = 1;
+      break;
+    case 3 <= slope && 6 > slope:
+      heightClass = 2;
+      break;
+    case 6 <= slope && 9 > slope:
+      heightClass = 3;
+      break;
+    case 9 <= slope && 15 > slope:
+      heightClass = 4;
+      break;
+    case slope >= 15:
+      heightClass = 5;
+      break;
+    default:
+      heightClass = 0;
+      break;
+  }
+  return heightClass;
+};
 
-  let inclineTotal = 0
-  let declineTotal = 0
+export const buildHeightgraphData = (
+  coordinates: Coordinate[],
+  rangeHeightData: RangeHeightPoint[]
+): HeightGraphFeatureCollection[] => {
+  const features: HeightGraphFeature[] = [];
+
+  let LineStringCoordinates: LineStringCoordinate[] = [];
+  let previousHeightClass: HeightClass | undefined;
+
+  let inclineTotal = 0;
+  let declineTotal = 0;
 
   rangeHeightData.forEach((item, index) => {
     if (index < rangeHeightData.length - 1) {
-      const riseThis = item[1]
-      const riseNext = rangeHeightData[index + 1][1]
-      const rise = riseNext - riseThis
-      const run = rangeHeightData[index + 1][0] - item[0]
+      const riseThis = item[1];
+      const riseNext = rangeHeightData[index + 1]![1];
+      const rise = riseNext - riseThis;
+      const run = rangeHeightData[index + 1]![0] - item[0];
 
-      const slope = (rise / run) * 100
-      const heightClass = isNaN(slope) ? 0 : deriveHeightClass(slope)
+      const slope = (rise / run) * 100;
+      const heightClass: HeightClass = isNaN(slope)
+        ? 0
+        : deriveHeightClass(slope);
 
       if (rise > 0) {
-        inclineTotal += rise
+        inclineTotal += rise;
       } else if (rise < 0) {
-        declineTotal += rise * -1
+        declineTotal += rise * -1;
       }
 
       // IDEA FOR BUILDING GEOJSON FOR HEIGHTGRAPH:
@@ -75,10 +107,10 @@ export const buildHeightgraphData = (coordinates, rangeHeightData) => {
       if (previousHeightClass !== heightClass) {
         // since at this point we have a change in height class this will be the last point in current LineString
         LineStringCoordinates.push([
-          coordinates[index][0],
-          coordinates[index][1],
-          rangeHeightData[index][1],
-        ])
+          coordinates[index]![0],
+          coordinates[index]![1],
+          rangeHeightData[index]![1],
+        ]);
 
         // add current LineString as one feature in GeoJSON
         features.push({
@@ -92,20 +124,20 @@ export const buildHeightgraphData = (coordinates, rangeHeightData) => {
             // this is closing the linestring with all the points having same heightClass
             attributeType: previousHeightClass || 0,
           },
-        })
+        });
         // reset LineStringCoordinates and prepare it for new GeoJSON feature
-        LineStringCoordinates = []
+        LineStringCoordinates = [];
       }
       // current point is also the stratting point for new LineString
       LineStringCoordinates.push([
-        coordinates[index][0],
-        coordinates[index][1],
-        rangeHeightData[index][1],
-      ])
+        coordinates[index]![0],
+        coordinates[index]![1],
+        rangeHeightData[index]![1],
+      ]);
       // replace previousHeightClass with current heightClass
-      previousHeightClass = heightClass
+      previousHeightClass = heightClass;
     }
-  })
+  });
 
   return [
     {
@@ -116,9 +148,9 @@ export const buildHeightgraphData = (coordinates, rangeHeightData) => {
         inclineTotal,
         declineTotal,
       },
-    },
-  ]
-}
+    } as HeightGraphFeatureCollection,
+  ];
+};
 
 export const colorMappings = {
   steepness: {
@@ -167,4 +199,4 @@ export const colorMappings = {
       color: '#AD0F0C',
     },
   },
-}
+};

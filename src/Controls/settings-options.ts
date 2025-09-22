@@ -1,3 +1,5 @@
+import type { BicycleType } from '@/common/types';
+
 const length = {
   name: 'Length',
   param: 'length',
@@ -8,7 +10,7 @@ const length = {
     max: 50.0,
     step: 0.5,
   },
-}
+};
 
 const width = {
   name: 'Width',
@@ -20,7 +22,7 @@ const width = {
     max: 10,
     step: 0.5,
   },
-}
+};
 
 const weight = {
   name: 'Weight',
@@ -32,7 +34,7 @@ const weight = {
     max: 100,
     step: 1,
   },
-}
+};
 
 const height = {
   name: 'Height',
@@ -44,7 +46,7 @@ const height = {
     max: 10,
     step: 0.5,
   },
-}
+};
 
 const axleLoad = {
   name: 'Axle load',
@@ -56,7 +58,7 @@ const axleLoad = {
     max: 50,
     step: 1,
   },
-}
+};
 
 const countryCrossingPenalty = {
   name: 'Border Penalty',
@@ -69,7 +71,7 @@ const countryCrossingPenalty = {
     max: 1000,
     step: 60,
   },
-}
+};
 
 const countryCrossingCost = {
   name: 'Border Cost',
@@ -82,7 +84,7 @@ const countryCrossingCost = {
     max: 5000,
     step: 100,
   },
-}
+};
 
 const turnPenaltyCost = {
   name: 'Turn Penalty',
@@ -95,7 +97,7 @@ const turnPenaltyCost = {
     max: 20,
     step: 1,
   },
-}
+};
 
 const maneuverPenalty = {
   name: 'Maneuver Penalty',
@@ -108,7 +110,7 @@ const maneuverPenalty = {
     max: 60,
     step: 1,
   },
-}
+};
 
 const gateCost = {
   name: 'Gate Cost',
@@ -121,7 +123,7 @@ const gateCost = {
     max: 300,
     step: 10,
   },
-}
+};
 
 const gatePenalty = {
   name: 'Gate Penalty',
@@ -134,7 +136,7 @@ const gatePenalty = {
     max: 600,
     step: 30,
   },
-}
+};
 
 const tollBoothCost = {
   name: 'Toll Booth Cost',
@@ -147,7 +149,7 @@ const tollBoothCost = {
     max: 120,
     step: 5,
   },
-}
+};
 
 const tollBoothPenalty = {
   name: 'Toll Booth Penalty',
@@ -160,7 +162,7 @@ const tollBoothPenalty = {
     max: 1000,
     step: 10,
   },
-}
+};
 
 const fixedSpeed = {
   name: 'Fixed Speed',
@@ -173,7 +175,7 @@ const fixedSpeed = {
     max: 252,
     step: 1,
   },
-}
+};
 
 const axleCount = {
   name: 'Axle Count',
@@ -185,28 +187,28 @@ const axleCount = {
     max: 10,
     step: 1,
   },
-}
+};
 
 const includeHOV2 = {
   name: 'Include HOV2',
   param: 'include_hov2',
   description:
     'A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous. Default false.',
-}
+};
 
 const includeHOV3 = {
   name: 'Include HOV 3',
   param: 'include_hov3',
   description:
     'A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous. Default false.',
-}
+};
 
 const includeHot = {
   name: 'Include HOT Lanes',
   param: 'include_hot',
   description:
     "A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met. Default false.",
-}
+};
 
 const transitStartEndMaxDistance = {
   name: 'Transit Start/End Max Distance',
@@ -219,7 +221,7 @@ const transitStartEndMaxDistance = {
     max: 10000,
     step: 100,
   },
-}
+};
 
 const transitTransferMaxDistance = {
   name: 'Transit Transfer Max Distance',
@@ -232,13 +234,13 @@ const transitTransferMaxDistance = {
     max: 8000,
     step: 1,
   },
-}
+};
 
 const hazardousMaterials = {
   name: 'Hazardous materials',
   description: 'Whether the vehicle is carrying hazardous materials',
   param: 'hazmat',
-}
+};
 
 const useHighways = {
   name: 'Use Highways',
@@ -251,7 +253,7 @@ const useHighways = {
     max: 1,
     step: 0.1,
   },
-}
+};
 const useTollways = {
   name: 'Use Tollways',
   param: 'use_tolls',
@@ -263,7 +265,7 @@ const useTollways = {
     max: 1,
     step: 0.1,
   },
-}
+};
 const useFerry = {
   name: 'Use Ferries',
   param: 'use_ferry',
@@ -275,7 +277,7 @@ const useFerry = {
     max: 1,
     step: 0.1,
   },
-}
+};
 
 const useLit = {
   name: 'Use Lit Streets',
@@ -288,7 +290,7 @@ const useLit = {
     max: 1,
     step: 0.1,
   },
-}
+};
 
 const ferryCost = {
   name: 'Ferry Cost',
@@ -301,7 +303,7 @@ const ferryCost = {
     max: 5000,
     step: 100,
   },
-}
+};
 
 const useLivingStreets = {
   name: 'Use Living Streets',
@@ -314,7 +316,7 @@ const useLivingStreets = {
     max: 1,
     step: 0.1,
   },
-}
+};
 
 const useTracks = {
   name: 'Use Tracks',
@@ -327,7 +329,7 @@ const useTracks = {
     max: 1,
     step: 0.1,
   },
-}
+};
 
 const privateAccessPenalty = {
   name: 'Private Access Penalty',
@@ -340,28 +342,28 @@ const privateAccessPenalty = {
     max: 5000,
     step: 100,
   },
-}
+};
 
 const ignoreClosures = {
   name: 'Ignore Closures',
   description:
     'If set to true, ignores all closures, marked due to live traffic closures, during routing. ',
   param: 'ignore_closures',
-}
+};
 
 const ignoreRestrictions = {
   name: 'Ignore Restrictions',
   description:
     'If set to true, ignores any restrictions (e.g. turn/dimensional/conditional restrictions). Especially useful for matching GPS traces to the road network regardless of restrictions.',
   param: 'ignore_restrictions',
-}
+};
 
 const ignoreAccess = {
   name: 'Ignore Access',
   description:
     'If set to true, will ignore mode-specific access tags. Especially useful for matching GPS traces to the road network regardless of restrictions.',
   param: 'ignore_access',
-}
+};
 
 const closureFactor = {
   name: 'Closure Factor',
@@ -374,7 +376,7 @@ const closureFactor = {
     max: 10,
     step: 0.5,
   },
-}
+};
 
 const servicePenalty = {
   name: 'Service Penalty',
@@ -387,7 +389,7 @@ const servicePenalty = {
     max: 100,
     step: 5,
   },
-}
+};
 
 const serviceFactor = {
   name: 'Service Factor',
@@ -400,35 +402,35 @@ const serviceFactor = {
     max: 50,
     step: 1,
   },
-}
+};
 
 const excludeUnpaved = {
   name: 'Exclude Unpaved',
   description:
     'This value indicates whether or not the path may include unpaved roads. If set to true, a route is allowed to start and end with unpaved roads, but is not allowed to have them in the middle, otherwise they are allowed.',
   param: 'exclude_unpaved',
-}
+};
 
 const shortest = {
   name: 'Shortest',
   description:
     'Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, shortest will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is false.',
   param: 'shortest',
-}
+};
 
 const excludeCashOnlyTolls = {
   name: 'Exclude Cash Only Tolls',
   description:
     'A boolean value which indicates the desire to avoid routes with cash-only tolls.',
   param: 'exclude_cash_only_tolls',
-}
+};
 
 const useGeocoding = {
   name: 'Geocoding',
   description:
     'Decides whether you want to use geocoding or work with plain coordinates.',
   param: 'use_geocoding',
-}
+};
 
 const alternates = {
   name: 'Alternates',
@@ -440,14 +442,14 @@ const alternates = {
     max: 5,
     step: 1,
   },
-}
+};
 
 const ignoreHierarchies = {
   name: 'Disable Hierarchies',
   description:
     'Forces routing algorithms to not use hierarchies (or shortcuts)',
   param: 'disable_hierarchy_pruning',
-}
+};
 
 const bicycleType = {
   name: 'Bicycle Type',
@@ -484,7 +486,7 @@ const bicycleType = {
       value: 'Mountain',
     },
   ],
-}
+};
 
 const cyclingSpeed = {
   name: 'Cycling Speed',
@@ -497,7 +499,7 @@ const cyclingSpeed = {
     max: 50,
     step: 1,
   },
-}
+};
 
 const useRoads = {
   name: 'Use Roads',
@@ -510,7 +512,7 @@ const useRoads = {
     max: 1,
     step: 0.1,
   },
-}
+};
 
 const useHills = {
   name: 'Use Hills',
@@ -523,7 +525,7 @@ const useHills = {
     max: 1,
     step: 0.1,
   },
-}
+};
 
 const avoidBadSurfaces = {
   name: 'Avoid Bad Surface',
@@ -536,7 +538,7 @@ const avoidBadSurfaces = {
     max: 1,
     step: 0.1,
   },
-}
+};
 
 const topSpeed = {
   name: 'Top Speed',
@@ -549,7 +551,7 @@ const topSpeed = {
     max: 252,
     step: 5,
   },
-}
+};
 
 const usePrimary = {
   name: 'Use Primary',
@@ -562,7 +564,7 @@ const usePrimary = {
     max: 1,
     step: 0.1,
   },
-}
+};
 
 const walkingSpeed = {
   name: 'Walking Speed',
@@ -575,7 +577,7 @@ const walkingSpeed = {
     max: 25,
     step: 0.1,
   },
-}
+};
 
 const walkwayFactor = {
   name: 'Walkway Factor',
@@ -588,7 +590,7 @@ const walkwayFactor = {
     max: 50,
     step: 1,
   },
-}
+};
 
 const sidewalkFactor = {
   name: 'Sidewalk Factor',
@@ -601,7 +603,7 @@ const sidewalkFactor = {
     max: 50,
     step: 1,
   },
-}
+};
 
 const alleyFactor = {
   name: 'Alley Factor',
@@ -614,7 +616,7 @@ const alleyFactor = {
     max: 50,
     step: 1,
   },
-}
+};
 
 const drivewayFactor = {
   name: 'Driveway Factor',
@@ -627,7 +629,7 @@ const drivewayFactor = {
     max: 50,
     step: 1,
   },
-}
+};
 
 const stepPenalty = {
   name: 'Step Penalty',
@@ -640,7 +642,7 @@ const stepPenalty = {
     max: 500,
     step: 5,
   },
-}
+};
 
 const maxHikingDifficulty = {
   name: 'Maximum Hiking Difficulty',
@@ -653,7 +655,7 @@ const maxHikingDifficulty = {
     max: 6,
     step: 1,
   },
-}
+};
 
 const useTrails = {
   name: 'Use Trails',
@@ -665,7 +667,7 @@ const useTrails = {
     max: 1,
     step: 0.1,
   },
-}
+};
 
 const useTruckRoutes = {
   name: 'Use Truck Routes',
@@ -677,7 +679,7 @@ const useTruckRoutes = {
     max: 1,
     step: 0.1,
   },
-}
+};
 
 export const denoise = {
   name: 'Denoise',
@@ -690,7 +692,7 @@ export const denoise = {
     max: 1,
     step: 0.1,
   },
-}
+};
 
 export const generalize = {
   name: 'Generalize',
@@ -703,7 +705,7 @@ export const generalize = {
     max: 1000,
     step: 1,
   },
-}
+};
 
 export const settingsInit = {
   maneuver_penalty: 5,
@@ -731,7 +733,7 @@ export const settingsInit = {
   exclude_unpaved: false,
   shortest: false,
   exclude_cash_only_tolls: false,
-  bicycle_type: 'Hybrid',
+  bicycle_type: 'Hybrid' as BicycleType,
   cycling_speed: 20,
   use_roads: 0.5,
   use_hills: 0.5,
@@ -764,13 +766,13 @@ export const settingsInit = {
   denoise: 0.1,
   generalize: 0,
   alternates: 0,
-}
+};
 
 export const settingsInitTruckOverride = {
   ...settingsInit,
   width: 2.6,
   height: 4.11,
-}
+};
 
 export const profile_settings = {
   truck: {
@@ -917,7 +919,7 @@ export const profile_settings = {
     ],
     enum: [],
   },
-}
+};
 
 export const settings_general = {
   truck: {
@@ -1040,9 +1042,9 @@ export const settings_general = {
     boolean: [useGeocoding],
     numeric: [alternates],
   },
-}
+};
 
 export const jsonConfig = {
   type: 'space',
   size: 2,
-}
+};

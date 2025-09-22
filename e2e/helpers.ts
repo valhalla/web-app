@@ -1,3 +1,16 @@
+import type { Page, Route } from '@playwright/test';
+
+interface ApiRequest {
+  url: string;
+  method: string;
+  params?: {
+    lon?: string | null;
+    lat?: string | null;
+    format?: string | null;
+  };
+  body?: Record<string, unknown>;
+}
+
 export const BERLIN_COORDINATES = {
   lat: 52.507027222951635,
   lon: 13.385467529296877,
@@ -7,7 +20,7 @@ export const BERLIN_COORDINATES = {
     minLon: 13.0,
     maxLon: 14.0,
   },
-}
+};
 
 export const mockNominatimResponse = {
   place_id: 123456,
@@ -24,14 +37,14 @@ export const mockNominatimResponse = {
     country: 'Germany',
     country_code: 'de',
   },
-}
+};
 
 export const simpleMockNominatimResponse = {
   place_id: 123456,
   lat: BERLIN_COORDINATES.lat.toString(),
   lon: BERLIN_COORDINATES.lon.toString(),
   display_name: 'Brandenburg Gate, Berlin, Germany',
-}
+};
 
 export const mockRouteResponse = {
   trip: {
@@ -533,7 +546,7 @@ export const mockRouteResponse = {
     language: 'en-US',
   },
   id: 'valhalla_directions',
-}
+};
 
 export const mockHeightResponse = {
   shape: [
@@ -544,7 +557,7 @@ export const mockHeightResponse = {
   ],
   height: [34],
   id: 'valhalla_height',
-}
+};
 
 export const mockLocateResponse = [
   {
@@ -568,20 +581,20 @@ export const mockLocateResponse = [
     ],
     nodes: [],
   },
-]
+];
 
 export async function setupNominatimMock(
-  page,
+  page: Page,
   response = mockNominatimResponse
 ) {
-  const apiRequests = []
+  const apiRequests: ApiRequest[] = [];
 
   await page.route(
     '**/nominatim.openstreetmap.org/reverse**',
-    async (route) => {
-      const request = route.request()
-      const url = request.url()
-      const urlObj = new URL(url)
+    async (route: Route) => {
+      const request = route.request();
+      const url = request.url();
+      const urlObj = new URL(url);
 
       apiRequests.push({
         url,
@@ -591,83 +604,98 @@ export async function setupNominatimMock(
           lat: urlObj.searchParams.get('lat'),
           format: urlObj.searchParams.get('format'),
         },
-      })
+      });
 
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify(response),
-      })
+      });
     }
-  )
+  );
 
-  return apiRequests
+  return apiRequests;
 }
 
-export async function setupRouteMock(page, response = mockRouteResponse) {
-  const apiRequests = []
+export async function setupRouteMock(page: Page, response = mockRouteResponse) {
+  const apiRequests: ApiRequest[] = [];
 
-  await page.route('**/valhalla1.openstreetmap.de/route**', async (route) => {
-    const request = route.request()
-    const url = request.url()
+  await page.route(
+    '**/valhalla1.openstreetmap.de/route**',
+    async (route: Route) => {
+      const request = route.request();
+      const url = request.url();
 
-    apiRequests.push({
-      url,
-      method: request.method(),
-    })
+      apiRequests.push({
+        url,
+        method: request.method(),
+      });
 
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(response),
-    })
-  })
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(response),
+      });
+    }
+  );
 
-  return apiRequests
+  return apiRequests;
 }
 
-export async function setupHeightMock(page, response = mockHeightResponse) {
-  const apiRequests = []
+export async function setupHeightMock(
+  page: Page,
+  response = mockHeightResponse
+) {
+  const apiRequests: ApiRequest[] = [];
 
-  await page.route('**/valhalla1.openstreetmap.de/height**', async (route) => {
-    const request = route.request()
-    const url = request.url()
+  await page.route(
+    '**/valhalla1.openstreetmap.de/height**',
+    async (route: Route) => {
+      const request = route.request();
+      const url = request.url();
 
-    apiRequests.push({
-      url,
-      method: request.method(),
-    })
+      apiRequests.push({
+        url,
+        method: request.method(),
+      });
 
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(response),
-    })
-  })
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(response),
+      });
+    }
+  );
 
-  return apiRequests
+  return apiRequests;
 }
 
-export async function setupLocateMock(page, response = mockLocateResponse) {
-  const apiRequests = []
+export async function setupLocateMock(
+  page: Page,
+  response = mockLocateResponse
+) {
+  const apiRequests: ApiRequest[] = [];
 
-  await page.route('**/valhalla1.openstreetmap.de/locate', async (route) => {
-    const request = route.request()
-    const url = request.url()
-    const body = await request.postData()
+  await page.route(
+    '**/valhalla1.openstreetmap.de/locate',
+    async (route: Route) => {
+      const request = route.request();
+      const url = request.url();
+      const body = await request.postData();
 
-    apiRequests.push({
-      url,
-      method: request.method(),
-      body: JSON.parse(body || '{}'),
-    })
+      apiRequests.push({
+        url,
+        method: request.method(),
+        body: JSON.parse(body || '{}'),
+      });
 
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(response),
-    })
-  })
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(response),
+      });
+    }
+  );
 
-  return apiRequests
+  return apiRequests;
 }

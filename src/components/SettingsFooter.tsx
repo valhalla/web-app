@@ -1,5 +1,3 @@
-import React from 'react'
-
 export const SettingsFooter = () => {
   return (
     <div className="ml2 mr2">
@@ -22,5 +20,5 @@ export const SettingsFooter = () => {
         </a>
       </span>
     </div>
-  )
-}
+  );
+};

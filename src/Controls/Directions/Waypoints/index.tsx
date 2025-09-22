@@ -1,73 +1,91 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import PropTypes from 'prop-types'
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
-import { connect } from 'react-redux'
+import React, { useState, useEffect, useCallback } from 'react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { connect } from 'react-redux';
 
-import Waypoint from './Waypoint'
+import Waypoint from './Waypoint';
 import {
   doAddWaypoint,
   setWaypoints,
   makeRequest,
-} from 'actions/directionsActions'
+} from '@/actions/directionsActions';
+import type { RootState } from '@/store';
+import type { AnyAction } from 'redux';
+import type {
+  DirectionsState,
+  Waypoint as WaypointType,
+} from '@/reducers/directions';
+import type { ThunkDispatch } from 'redux-thunk';
 
-const reorder = (list, startIndex, endIndex) => {
-  const result = Array.from(list)
-  const [removed] = result.splice(startIndex, 1)
-  result.splice(endIndex, 0, removed)
+const reorder = (
+  list: WaypointType[],
+  startIndex: number,
+  endIndex: number
+) => {
+  const result = Array.from(list);
+  const [removed] = result.splice(startIndex, 1);
+  result.splice(endIndex, 0, removed!);
 
-  return result
-}
+  return result;
+};
 
-const getItemStyle = (isDragging, draggableStyle) => ({
+const getItemStyle = (
+  isDragging: boolean,
+  draggableStyle: React.CSSProperties
+) => ({
   userSelect: 'none',
   paddingLeft: 16,
   paddingRight: 16,
   //background: isDragging ? 'lightgreen' : 'transparent',
   // styles we need to apply on draggables
   ...draggableStyle,
-})
+});
 
-const Waypoints = ({ directions, dispatch }) => {
-  const [, setVisible] = useState(false)
+interface WaypointsProps {
+  directions: DirectionsState;
+  dispatch: ThunkDispatch<RootState, unknown, AnyAction>;
+}
+
+const Waypoints = ({ directions, dispatch }: WaypointsProps) => {
+  const [, setVisible] = useState(false);
 
   // const handleDismiss = useCallback(() => {
   //   setVisible(false)
   // }, [])
 
   useEffect(() => {
-    setVisible(true)
+    setVisible(true);
 
     if (directions.waypoints.length === 0) {
       Array(2)
-        .fill()
-        .map((_, i) => dispatch(doAddWaypoint()))
+        .fill(null)
+        .map(() => dispatch(doAddWaypoint()));
     }
-  }, [dispatch, directions.waypoints.length])
+  }, [dispatch, directions.waypoints.length]);
 
   const onDragEnd = useCallback(
     (result) => {
       // dropped outside the list
       if (!result.destination) {
-        return
+        return;
       }
 
       const items = reorder(
         directions.waypoints,
         result.source.index,
         result.destination.index
-      )
-      dispatch(setWaypoints(items))
-      dispatch(makeRequest())
+      );
+      dispatch(setWaypoints(items));
+      dispatch(makeRequest());
     },
     [dispatch, directions.waypoints]
-  )
+  );
 
-  const { waypoints } = directions
+  const { waypoints } = directions;
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <Droppable droppableId="droppable">
-        {(provided, snapshot) => (
+        {(provided) => (
           <React.Fragment>
             <div
               className="flex flex-column"
@@ -82,17 +100,14 @@ const Waypoints = ({ directions, dispatch }) => {
                       ref={provided_inner.innerRef}
                       {...provided_inner.draggableProps}
                       {...provided_inner.dragHandleProps}
+                      // @ts-expect-error todo: fix this
                       style={getItemStyle(
                         snapshot_inner.isDragging,
-                        provided_inner.draggableProps.style
+                        provided_inner.draggableProps
+                          .style as React.CSSProperties
                       )}
                     >
-                      <Waypoint
-                        id={wp.id}
-                        index={index}
-                        value={wp.text}
-                        geocodeResults={wp.geocodeResults}
-                      />
+                      <Waypoint index={index} />
                     </div>
                   )}
                 </Draggable>
@@ -103,19 +118,14 @@ const Waypoints = ({ directions, dispatch }) => {
         )}
       </Droppable>
     </DragDropContext>
-  )
-}
+  );
+};
 
-Waypoints.propTypes = {
-  directions: PropTypes.object,
-  dispatch: PropTypes.func,
-}
-
-const mapStateToProps = (state) => {
-  const { directions } = state
+const mapStateToProps = (state: RootState) => {
+  const { directions } = state;
   return {
     directions,
-  }
-}
+  };
+};
 
-export default connect(mapStateToProps)(Waypoints)
+export default connect(mapStateToProps)(Waypoints);

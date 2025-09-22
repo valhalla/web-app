@@ -1,3 +1,5 @@
+// todo: we should get ride of @typescript-eslint/no-unsafe-assignment when we updating redux to redux-toolkit
+
 import {
   UPDATE_SETTINGS,
   UPDATE_PROFILE,
@@ -9,11 +11,31 @@ import {
   RESET_SETTINGS,
   TOGGLE_DIRECTIONS,
   UPDATE_DATETIME,
-} from 'actions/types'
+} from '@/actions/types';
+import type { PossibleSettings } from '@/common/types';
 import {
   settingsInit,
   settingsInitTruckOverride,
-} from 'Controls/settings-options'
+} from '@/Controls/settings-options';
+import type { AnyAction } from 'redux';
+
+export type Profile =
+  | 'auto'
+  | 'bicycle'
+  | 'pedestrian'
+  | 'car'
+  | 'truck'
+  | 'bus'
+  | 'motor_scooter'
+  | 'motorcycle';
+
+export interface Message {
+  receivedAt: number;
+  type: 'info' | 'warning' | 'error' | 'success' | null;
+  icon: string | null;
+  topic: string | null;
+  description: string | null;
+}
 
 const initialState = {
   activeTab: 0,
@@ -28,59 +50,62 @@ const initialState = {
     topic: null,
     description: null,
   },
-  profile: 'bicycle',
-  settings: { ...settingsInit },
+  profile: 'bicycle' as Profile,
+  settings: { ...settingsInit } as PossibleSettings,
   dateTime: {
     type: -1,
     value: new Date(Date.now()).toISOString().slice(0, 16),
   },
-}
+};
 
-export const common = (state = initialState, action) => {
+export const common = (
+  state: typeof initialState = initialState,
+  action: AnyAction
+): typeof initialState => {
   switch (action.type) {
     case MESSAGE_HANDLER: {
       return {
         ...state,
         message: action.payload,
-      }
+      };
     }
     case LOADING: {
       return {
         ...state,
         loading: action.payload,
-      }
+      };
     }
 
     case ZOOM_TO: {
       return {
         ...state,
         coordinates: action.payload,
-      }
+      };
     }
 
     case SHOW_SETTINGS: {
       return {
         ...state,
         showSettings: !state.showSettings,
-      }
+      };
     }
 
     case TOGGLE_DIRECTIONS: {
       return {
         ...state,
         showDirectionsPanel: !state.showDirectionsPanel,
-      }
+      };
     }
 
     case UPDATE_SETTINGS: {
-      const { name, value } = action.payload
+      const { name, value } = action.payload;
       return {
         ...state,
         settings: {
           ...state.settings,
           [name]: value,
         },
-      }
+      };
     }
 
     case RESET_SETTINGS: {
@@ -91,38 +116,38 @@ export const common = (state = initialState, action) => {
             ? settingsInitTruckOverride
             : settingsInit),
         },
-      }
+      };
     }
 
     case UPDATE_TAB: {
-      const { activeTab } = action.payload
+      const { activeTab } = action.payload;
       return {
         ...state,
         activeTab,
-      }
+      };
     }
 
     case UPDATE_PROFILE: {
-      const { profile } = action.payload
+      const { profile } = action.payload;
       return {
         ...state,
         profile,
-      }
+      };
     }
 
     case UPDATE_DATETIME: {
-      const { key, value } = action.payload
+      const { key, value } = action.payload;
       return {
         ...state,
         dateTime: {
           ...state.dateTime,
           [key]: value,
         },
-      }
+      };
     }
 
     default: {
-      return state
+      return state;
     }
   }
-}
+};

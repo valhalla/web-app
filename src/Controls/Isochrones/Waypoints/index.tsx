@@ -1,63 +1,72 @@
-import React, { useState, useCallback, useMemo } from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
+import { useState, useCallback, useMemo } from 'react';
+import { connect } from 'react-redux';
 
-import { Search, Form, Popup, Icon, Label, Accordion } from 'semantic-ui-react'
-import { Slider } from '@mui/material'
+import { Search, Form, Popup, Icon, Label, Accordion } from 'semantic-ui-react';
+import { Slider } from '@mui/material';
 
-import { Settings } from '../settings'
+import { Settings } from '../settings';
 
-import { isValidCoordinates } from 'utils/geom'
+import { isValidCoordinates } from '@/utils/geom';
 import {
   updateTextInput,
   updateIsoSettings,
   fetchGeocode,
   makeIsochronesRequest,
   clearIsos,
-} from 'actions/isochronesActions'
+} from '@/actions/isochronesActions';
 
 import {
   denoise as denoiseParam,
   generalize as generalizeParam,
   settingsInit,
-} from 'Controls/settings-options'
+} from '@/Controls/settings-options';
 
-import { updatePermalink, zoomTo } from 'actions/commonActions'
+import { updatePermalink, zoomTo } from '@/actions/commonActions';
 
-import { debounce } from 'throttle-debounce'
+import { debounce } from 'throttle-debounce';
+import type { RootState } from '@/store';
+import type { AnyAction } from 'redux';
+import type { ThunkDispatch } from 'redux-thunk';
+import type { IsochroneState } from '@/reducers/isochrones';
 
-const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
-  const [activeIndex, setActiveIndex] = useState(0)
-  const [open, setOpen] = useState(false)
+interface WaypointsProps {
+  isochrones: IsochroneState;
+  dispatch: ThunkDispatch<RootState, unknown, AnyAction>;
+  use_geocoding: boolean;
+}
+
+const Waypoints = ({ isochrones, dispatch, use_geocoding }: WaypointsProps) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [open, setOpen] = useState(false);
 
   const fetchGeocodeResults = useMemo(
     () =>
       debounce(200, (e) => {
-        const { userInput } = isochrones
+        const { userInput } = isochrones;
 
-        setOpen(true)
+        setOpen(true);
 
         if (userInput.length > 0 && e === 'Enter') {
           // make results visible
           if (use_geocoding) {
-            dispatch(fetchGeocode(userInput))
+            dispatch(fetchGeocode(userInput));
           } else {
-            const coords = userInput.split(/[\s,;]+/)
+            const coords = userInput.split(/[\s,;]+/);
             // is this a coordinate?
             if (coords.length === 2) {
-              const lat = coords[1]
-              const lng = coords[0]
-              if (isValidCoordinates(lat, lng)) {
+              const lat = coords[1];
+              const lng = coords[0];
+              if (isValidCoordinates(lat!, lng!)) {
                 dispatch(
-                  fetchGeocode(userInput, [parseFloat(lng), parseFloat(lat)])
-                )
+                  fetchGeocode(userInput, [parseFloat(lng!), parseFloat(lat!)])
+                );
               }
             }
           }
         }
       }),
     [isochrones, use_geocoding, dispatch]
-  )
+  );
 
   const handleIsoSliderUpdateSettings = useMemo(
     () =>
@@ -79,126 +88,125 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
               generalizeName,
               value: parseFloat(value),
             })
-          )
+          );
 
-          dispatch(updatePermalink())
+          dispatch(updatePermalink());
         }
       ),
     [dispatch]
-  )
+  );
 
   const makeIsochronesRequestDebounced = useMemo(
     () => debounce(100, () => dispatch(makeIsochronesRequest())),
     [dispatch]
-  )
+  );
 
   const handleClick = useCallback(
     (e, titleProps) => {
-      const { index } = titleProps
-      const newIndex = activeIndex === index ? -1 : index
-      setActiveIndex(newIndex)
+      const { index } = titleProps;
+      const newIndex = activeIndex === index ? -1 : index;
+      setActiveIndex(newIndex);
     },
     [activeIndex]
-  )
+  );
 
   const handleSearchChange = useCallback(
     (event, { value }) => {
-      dispatch(updateTextInput({ userInput: value }))
+      dispatch(updateTextInput({ userInput: value }));
     },
     [dispatch]
-  )
+  );
 
-  const handleRemoveIsos = useCallback(
-    (event, { value }) => {
-      dispatch(clearIsos())
-    },
-    [dispatch]
-  )
+  const handleRemoveIsos = useCallback(() => {
+    dispatch(clearIsos());
+  }, [dispatch]);
 
   const handleResultSelect = useCallback(
     (e, { result }) => {
-      setOpen(false)
+      setOpen(false);
 
       dispatch(
         updateTextInput({
           userInput: result.title,
           addressindex: result.addressindex,
         })
-      )
-      dispatch(zoomTo([[result.addresslnglat[1], result.addresslnglat[0]]]))
-      makeIsochronesRequestDebounced()
+      );
+      dispatch(zoomTo([[result.addresslnglat[1], result.addresslnglat[0]]]));
+      makeIsochronesRequestDebounced();
     },
     [dispatch, makeIsochronesRequestDebounced]
-  )
+  );
 
   const handleIntervalChange = useCallback(
     (e, { value }) => {
-      const { maxRange } = isochrones
+      const { maxRange } = isochrones;
 
-      value = isNaN(parseInt(value)) ? 0 : parseInt(value)
+      value = isNaN(parseInt(value)) ? 0 : parseInt(value);
       if (value > maxRange) {
-        value = maxRange
+        value = maxRange;
       }
 
-      const intervalName = 'interval'
+      const intervalName = 'interval';
 
       handleIsoSliderUpdateSettings({
         intervalName,
         value,
-      })
+      });
     },
     [isochrones, handleIsoSliderUpdateSettings]
-  )
+  );
 
   const handleDenoiseChange = useCallback(
     (e, { value }) => {
       value = isNaN(parseFloat(value))
         ? settingsInit.denoise
-        : parseFloat(value)
+        : parseFloat(value);
 
-      const denoiseName = 'denoise'
+      const denoiseName = 'denoise';
 
       handleIsoSliderUpdateSettings({
         denoiseName,
         value,
-      })
+      });
     },
     [handleIsoSliderUpdateSettings]
-  )
+  );
 
   const handleGeneralizeChange = useCallback(
     (e, { value }) => {
-      value = isNaN(parseInt(value)) ? settingsInit.generalize : parseInt(value)
+      value = isNaN(parseInt(value))
+        ? settingsInit.generalize
+        : parseInt(value);
 
-      const generalizeName = 'generalize'
+      const generalizeName = 'generalize';
 
       handleIsoSliderUpdateSettings({
         generalizeName,
         value,
-      })
+      });
     },
     [handleIsoSliderUpdateSettings]
-  )
+  );
 
   const handleRangeChange = useCallback(
     (e, { value }) => {
-      value = isNaN(parseInt(value)) ? 0 : parseInt(value)
+      value = isNaN(parseInt(value)) ? 0 : parseInt(value);
       if (value > 120) {
-        value = 120
+        value = 120;
       }
 
-      const maxRangeName = 'maxRange'
-      const intervalName = 'interval'
+      const maxRangeName = 'maxRange';
+      const intervalName = 'interval';
 
       handleIsoSliderUpdateSettings({
         maxRangeName,
         intervalName,
         value,
-      })
-      makeIsochronesRequestDebounced()
+      });
+      makeIsochronesRequestDebounced();
     },
     [handleIsoSliderUpdateSettings, makeIsochronesRequestDebounced]
-  )
+  );
 
   const resultRenderer = useCallback(
     ({ title, description }) => (
@@ -219,7 +227,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
       </div>
     ),
     []
-  )
+  );
 
   const {
     isFetching,
@@ -229,7 +237,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
     interval,
     denoise,
     generalize,
-  } = isochrones
+  } = isochrones;
 
   const controlSettings = {
     maxRange: {
@@ -256,7 +264,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
     },
     generalize: generalizeParam,
     denoise: denoiseParam,
-  }
+  };
 
   return (
     <div>
@@ -273,7 +281,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
               size="small"
               type="text"
               minCharacters={3}
-              className={'pt2 pb2 pl3'}
+              className="pt2 pb2 pl3"
               input={{ icon: 'search', iconPosition: 'left' }}
               onSearchChange={handleSearchChange}
               onResultSelect={handleResultSelect}
@@ -285,8 +293,8 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
               loading={isFetching}
               results={geocodeResults}
               value={userInput}
-              onKeyPress={(event) => {
-                fetchGeocodeResults(event.key)
+              onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
+                fetchGeocodeResults(event.key);
               }}
               placeholder="Hit enter for search..."
             />
@@ -305,8 +313,8 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
             <span className="f5">Settings</span>
           </Accordion.Title>
           <Accordion.Content active={activeIndex === 0}>
-            <Form size={'small'}>
-              <div className={'pt3 pl3 pr3'}>
+            <Form size="small">
+              <div className="pt3 pl3 pr3">
                 <Form.Group inline>
                   <Form.Input
                     width={12}
@@ -318,7 +326,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                         </span>
                         <Popup
                           content={controlSettings.maxRange.description}
-                          size={'tiny'}
+                          size="tiny"
                           trigger={
                             <Icon
                               className="pl2"
@@ -337,12 +345,12 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                     onChange={handleRangeChange}
                   />
                   <Popup
-                    content={'Units'}
-                    size={'tiny'}
+                    content="Units"
+                    size="tiny"
                     trigger={
                       <Label
                         basic
-                        size={'small'}
+                        size="small"
                         style={{
                           cursor: 'default',
                         }}
@@ -352,7 +360,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                     }
                   />
                 </Form.Group>
-                <div className={'mb2 pa2'}>
+                <div className="mb2 pa2">
                   <Slider
                     min={controlSettings.maxRange.settings.min}
                     max={controlSettings.maxRange.settings.max}
@@ -362,21 +370,21 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                     aria-label="Default"
                     valueLabelDisplay="auto"
                     onChange={(e) => {
-                      const maxRangeName = controlSettings.maxRange.param
-                      const intervalName = controlSettings.interval.param
+                      const maxRangeName = controlSettings.maxRange.param;
+                      const intervalName = controlSettings.interval.param;
                       handleIsoSliderUpdateSettings({
                         maxRangeName,
                         intervalName,
-                        value: e.target.value,
-                      })
+                        value: (e.target as HTMLInputElement).value,
+                      });
                     }}
                     onChangeCommitted={() => {
-                      makeIsochronesRequestDebounced()
+                      makeIsochronesRequestDebounced();
                     }}
                   />
                 </div>
               </div>
-              <div className={'pt3 pl3 pr3'}>
+              <div className="pt3 pl3 pr3">
                 <Form.Group inline>
                   <Form.Input
                     width={12}
@@ -388,7 +396,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                         </span>
                         <Popup
                           content={controlSettings.interval.description}
-                          size={'tiny'}
+                          size="tiny"
                           trigger={
                             <Icon
                               className="pl2"
@@ -405,12 +413,12 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                     onChange={handleIntervalChange}
                   />
                   <Popup
-                    content={'Units'}
-                    size={'tiny'}
+                    content="Units"
+                    size="tiny"
                     trigger={
                       <Label
                         basic
-                        size={'small'}
+                        size="small"
                         style={{
                           cursor: 'default',
                         }}
@@ -420,7 +428,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                     }
                   />
                 </Form.Group>
-                <div className={'mb2 pa2'}>
+                <div className="mb2 pa2">
                   <Slider
                     min={controlSettings.interval.settings.min}
                     max={controlSettings.interval.settings.max}
@@ -430,19 +438,19 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                     aria-label="Default"
                     valueLabelDisplay="auto"
                     onChange={(e) => {
-                      const intervalName = controlSettings.interval.param
+                      const intervalName = controlSettings.interval.param;
                       handleIsoSliderUpdateSettings({
                         intervalName,
-                        value: e.target.value,
-                      })
+                        value: (e.target as HTMLInputElement).value,
+                      });
                     }}
                     onChangeCommitted={() => {
-                      makeIsochronesRequestDebounced()
+                      makeIsochronesRequestDebounced();
                     }}
                   />
                 </div>
               </div>
-              <div className={'pt3 pl3 pr3'}>
+              <div className="pt3 pl3 pr3">
                 <Form.Group inline>
                   <Form.Input
                     width={12}
@@ -454,7 +462,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                         </span>
                         <Popup
                           content={controlSettings.denoise.description}
-                          size={'tiny'}
+                          size="tiny"
                           trigger={
                             <Icon
                               className="pl2"
@@ -471,7 +479,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                     onChange={handleDenoiseChange}
                   />
                 </Form.Group>
-                <div className={'mb2 pa2'}>
+                <div className="mb2 pa2">
                   <Slider
                     min={0}
                     max={1}
@@ -481,19 +489,19 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                     aria-label="Default"
                     valueLabelDisplay="auto"
                     onChange={(e) => {
-                      const param = controlSettings.denoise.param
+                      const param = controlSettings.denoise.param;
                       handleIsoSliderUpdateSettings({
                         denoiseName: param,
-                        value: e.target.value,
-                      })
+                        value: (e.target as HTMLInputElement).value,
+                      });
                     }}
                     onChangeCommitted={() => {
-                      makeIsochronesRequestDebounced()
+                      makeIsochronesRequestDebounced();
                     }}
                   />
                 </div>
               </div>
-              <div className={'pt3 pl3 pr3'}>
+              <div className="pt3 pl3 pr3">
                 <Form.Group inline>
                   <Form.Input
                     width={12}
@@ -505,7 +513,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                         </span>
                         <Popup
                           content={controlSettings.generalize.description}
-                          size={'tiny'}
+                          size="tiny"
                           trigger={
                             <Icon
                               className="pl2"
@@ -522,12 +530,12 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                     onChange={handleGeneralizeChange}
                   />
                   <Popup
-                    content={'Units'}
-                    size={'tiny'}
+                    content="Units"
+                    size="tiny"
                     trigger={
                       <Label
                         basic
-                        size={'small'}
+                        size="small"
                         style={{
                           cursor: 'default',
                         }}
@@ -537,7 +545,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                     }
                   />
                 </Form.Group>
-                <div className={'mb2 pa2'}>
+                <div className="mb2 pa2">
                   <Slider
                     min={controlSettings.generalize.settings.min}
                     max={controlSettings.generalize.settings.max}
@@ -547,14 +555,14 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
                     aria-label="Default"
                     valueLabelDisplay="auto"
                     onChange={(e) => {
-                      const param = controlSettings.generalize.param
+                      const param = controlSettings.generalize.param;
                       handleIsoSliderUpdateSettings({
                         generalizeName: param,
-                        value: e.target.value,
-                      })
+                        value: (e.target as HTMLInputElement).value,
+                      });
                     }}
                     onChangeCommitted={() => {
-                      makeIsochronesRequestDebounced()
+                      makeIsochronesRequestDebounced();
                     }}
                   />
                 </div>
@@ -564,23 +572,17 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }) => {
         </Accordion>
       </div>
     </div>
-  )
-}
+  );
+};
 
-Waypoints.propTypes = {
-  isochrones: PropTypes.object,
-  dispatch: PropTypes.func,
-  use_geocoding: PropTypes.bool,
-}
-
-const mapStateToProps = (state) => {
-  const { isochrones } = state
-  const { use_geocoding } = state.common.settings
+const mapStateToProps = (state: RootState) => {
+  const { isochrones } = state;
+  const { use_geocoding } = state.common.settings;
 
   return {
     isochrones,
     use_geocoding,
-  }
-}
+  };
+};
 
-export default connect(mapStateToProps)(Waypoints)
+export default connect(mapStateToProps)(Waypoints);
