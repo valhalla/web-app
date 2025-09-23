@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: Tests and Linting
 on:
   push:
     branches: [main, master]
@@ -15,6 +15,12 @@ jobs:
           node-version: lts/*
       - name: Install dependencies
         run: npm ci
+      - name: Type checking
+        run: npm run typecheck
+      - name: Linting
+        run: npm run lint
+      - name: Unit tests
+        run: npm run test
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run Playwright tests

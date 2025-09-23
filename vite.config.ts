@@ -138,6 +138,7 @@ function basePlugin(): Plugin {
 function importPrefixPlugin(): Plugin {
   return {
     name: 'import-prefix-plugin',
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     config(_config: UserConfig, _env: ConfigEnv) {
       return {
         resolve: {
