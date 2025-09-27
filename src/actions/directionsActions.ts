@@ -353,11 +353,7 @@ const processGeocodeResponse =
     permaLast?: boolean
   ): ThunkResult =>
   (dispatch) => {
-    if (!lngLat) {
-      lngLat = [parseFloat(data.lon), parseFloat(data.lat)];
-    }
-
-    const addresses = parseGeocodeResponse(data, lngLat);
+    const addresses = parseGeocodeResponse(data, lngLat!);
     // if no address can be found
     if (addresses.length === 0) {
       dispatch(
