@@ -2,6 +2,7 @@ name: PR preview
 
 on:
   pull_request:
+    types: [opened, reopened, synchronize, closed]
     branches:
       - 'master'
     paths-ignore:
