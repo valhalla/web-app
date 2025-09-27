@@ -2,14 +2,12 @@ name: PR preview
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize, closed]
-    paths:
-      - 'src/**'
-      - 'public/**'
-      - 'package*.json'
-      - '.env'
-      - 'jsconfig.json'
-      - '.github/workflows/preview.yml'
+    branches:
+      - 'master'
+    paths-ignore:
+      - '**.md'
+      - 'docker*'
+      - 'Docker*'
 
 env:
   PULL_NUMBER: ${{ github.event.pull_request.number }}

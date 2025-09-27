@@ -5,12 +5,10 @@ on:
   push:
     branches:
       - master
-    paths:
-      - 'src/**'
-      - 'public/**'
-      - 'package*.json'
-      - '.env'
-      - 'jsconfig.json'
+    paths-ignore:
+      - '**.md'
+      - 'docker*'
+      - 'Docker*'
 
 jobs:
   deploy:
