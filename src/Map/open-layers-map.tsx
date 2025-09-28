@@ -21,7 +21,7 @@ export const OpenLayersMap: React.FC<OpenLayersMapProps> = ({
       target: mapRef.current,
       view: new View({
         center: [0, 0],
-        zoom: 2,
+        zoom: 3,
       }),
     });
 
