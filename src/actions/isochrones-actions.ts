@@ -20,7 +20,7 @@ import {
   showLoading,
   updatePermalink,
   filterProfileSettings,
-} from './commonActions';
+} from './common-actions';
 import { calcArea } from '@/utils/geom';
 import type {
   ActiveWaypoint,

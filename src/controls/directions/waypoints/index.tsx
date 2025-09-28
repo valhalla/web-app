@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { connect } from 'react-redux';
 
-import Waypoint from './Waypoint';
+import Waypoint from './waypoint';
 import {
   doAddWaypoint,
   setWaypoints,
   makeRequest,
-} from '@/actions/directionsActions';
+} from '@/actions/directions-actions';
 import type { RootState } from '@/store';
 import type { AnyAction } from 'redux';
 import type {

@@ -2,9 +2,9 @@ import React, { useCallback } from 'react';
 import { connect } from 'react-redux';
 
 import { Icon, Checkbox, Popup } from 'semantic-ui-react';
-import { showProvider } from '../../actions/directionsActions';
+import { showProvider } from '../../actions/directions-actions';
 
-import { formatDuration } from '@/utils/date_time';
+import { formatDuration } from '@/utils/date-time';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import type { RootState } from '@/store';
 import type { DirectionsState } from '@/reducers/directions';

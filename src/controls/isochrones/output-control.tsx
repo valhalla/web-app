@@ -2,9 +2,9 @@ import { useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
 import { Segment, Divider } from 'semantic-ui-react';
 
-import Summary from './Summary';
-import { makeIsochronesRequest } from '@/actions/isochronesActions';
-import ContoursInformation from './ContoursInformation';
+import Summary from './summary';
+import { makeIsochronesRequest } from '@/actions/isochrones-actions';
+import ContoursInformation from './contours-information';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import type { RootState } from '@/store';
 import type { ThunkDispatch } from 'redux-thunk';

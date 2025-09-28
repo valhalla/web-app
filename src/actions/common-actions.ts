@@ -14,7 +14,7 @@ import {
 import {
   profile_settings,
   settings_general,
-} from '../Controls/settings-options';
+} from '../controls/settings-options';
 import type { Profile } from '@/reducers/common';
 import type { PossibleSettings, ThunkResult } from '@/common/types';
 

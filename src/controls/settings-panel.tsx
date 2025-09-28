@@ -30,12 +30,12 @@ import {
   doShowSettings,
   filterProfileSettings,
   resetSettings,
-} from '@/actions/commonActions';
+} from '@/actions/common-actions';
 
-import CustomSlider from '../components/CustomSlider';
-import { makeRequest } from '@/actions/directionsActions';
-import { makeIsochronesRequest } from '@/actions/isochronesActions';
-import { Checkbox } from '@/components/Checkbox';
+import CustomSlider from '../components/custom-slider';
+import { makeRequest } from '@/actions/directions-actions';
+import { makeIsochronesRequest } from '@/actions/isochrones-actions';
+import { Checkbox } from '@/components/checkbox';
 import type { RootState } from '@/store';
 import type { Profile } from '@/reducers/common';
 import type { PossibleSettings } from '@/common/types';

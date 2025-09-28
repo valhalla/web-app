@@ -1,6 +1,6 @@
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
-import { App } from './App';
+import { App } from './app';
 import './index.css'; // postCSS import of CSS module
 import { store } from './store';
 

@@ -13,15 +13,15 @@ import {
   fetchGeocode,
   makeIsochronesRequest,
   clearIsos,
-} from '@/actions/isochronesActions';
+} from '@/actions/isochrones-actions';
 
 import {
   denoise as denoiseParam,
   generalize as generalizeParam,
   settingsInit,
-} from '@/Controls/settings-options';
+} from '@/controls/settings-options';
 
-import { updatePermalink, zoomTo } from '@/actions/commonActions';
+import { updatePermalink, zoomTo } from '@/actions/common-actions';
 
 import { debounce } from 'throttle-debounce';
 import type { RootState } from '@/store';

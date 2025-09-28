@@ -2,12 +2,12 @@ import React, { useCallback } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
 import { Checkbox, Icon } from 'semantic-ui-react';
-import { showProvider } from '@/actions/directionsActions';
+import { showProvider } from '@/actions/directions-actions';
 
-import { downloadFile } from '@/actions/commonActions';
+import { downloadFile } from '@/actions/common-actions';
 // @ts-expect-error todo: json-format is not typed
 import jsonFormat from 'json-format';
-import { jsonConfig } from '@/Controls/settings-options';
+import { jsonConfig } from '@/controls/settings-options';
 import type { RootState } from '@/store';
 import type { ThunkDispatch } from 'redux-thunk';
 import type { AnyAction } from 'redux';
