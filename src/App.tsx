@@ -1,11 +1,14 @@
-import Map from './Map/Map';
 import MainControl from './Controls';
 import SettingsPanel from './Controls/settings-panel';
+import { OpenLayersMap } from './Map/open-layers-map';
+// import MapLibreMap from './Map/maplibre-map';
 
 export const App = () => {
   return (
     <div>
-      <Map />
+      {/* <Map /> */}
+      {/* <MapLibreMap /> */}
+      <OpenLayersMap />
       <MainControl />
       <SettingsPanel />
     </div>
