@@ -8,7 +8,29 @@ import tseslint from 'typescript-eslint';
 import checkFile from 'eslint-plugin-check-file';
 
 export default defineConfig(
-  { ignores: ['node_modules', 'build', 'dist', 'coverage'] },
+  {
+    ignores: [
+      'node_modules',
+      'build',
+      'dist',
+      'coverage',
+      '**/*.css',
+      '**/*.scss',
+      '**/*.less',
+      '**/*.svg',
+      '**/*.png',
+      '**/*.jpg',
+      '**/*.jpeg',
+      '**/*.gif',
+      '**/*.ico',
+      '**/*.woff',
+      '**/*.woff2',
+      '**/*.ttf',
+      '**/*.eot',
+      '**/*.DS_Store',
+      'src/vite-env.d.ts',
+    ],
+  },
   {
     files: ['**/*.ts', '**/*.tsx'],
     extends: [...tseslint.configs.recommended, eslintPluginPrettier],
@@ -96,7 +118,7 @@ export default defineConfig(
             'KEBAB_CASE',
         },
       ],
-    }
+    },
   },
   {
     files: [
@@ -108,5 +130,5 @@ export default defineConfig(
     rules: {
       'check-file/filename-naming-convention': 'off',
     },
-  },
+  }
 );
