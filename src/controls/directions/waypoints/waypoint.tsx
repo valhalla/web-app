@@ -7,9 +7,9 @@ import {
   fetchGeocode,
   makeRequest,
   isWaypoint,
-} from '@/actions/directionsActions';
+} from '@/actions/directions-actions';
 
-import { zoomTo } from '@/actions/commonActions';
+import { zoomTo } from '@/actions/common-actions';
 import { isValidCoordinates } from '@/utils/geom';
 
 import { debounce } from 'throttle-debounce';

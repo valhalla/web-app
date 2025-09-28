@@ -34,4 +34,4 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-*.tsconfig.tsbuildinfo
+tsconfig.tsbuildinfo

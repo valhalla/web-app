@@ -1,5 +1,5 @@
 import type React from 'react';
-import { updateSettings } from '@/actions/commonActions';
+import { updateSettings } from '@/actions/common-actions';
 import type { AnyAction } from 'redux';
 import { Form, type StrictCheckboxProps } from 'semantic-ui-react';
 

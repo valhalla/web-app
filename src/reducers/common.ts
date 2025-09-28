@@ -16,7 +16,7 @@ import type { PossibleSettings } from '@/common/types';
 import {
   settingsInit,
   settingsInitTruckOverride,
-} from '@/Controls/settings-options';
+} from '@/controls/settings-options';
 import type { AnyAction } from 'redux';
 
 export type Profile =

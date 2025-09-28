@@ -2,19 +2,19 @@ import React, { useEffect, useCallback, useRef } from 'react';
 import { connect } from 'react-redux';
 import { Divider } from 'semantic-ui-react';
 
-import Waypoints from './Waypoints';
+import Waypoints from './waypoints';
 
 import { ProfilePicker } from '@/components/profile-picker';
-import { SettingsButton } from '@/components/SettingsButton';
-import { SettingsFooter } from '@/components/SettingsFooter';
+import { SettingsButton } from '@/components/settings-button';
+import { SettingsFooter } from '@/components/settings-footer';
 
 import {
   updateProfile,
   doShowSettings,
   updatePermalink,
   resetSettings,
-} from '@/actions/commonActions';
-import { makeIsochronesRequest } from '@/actions/isochronesActions';
+} from '@/actions/common-actions';
+import { makeIsochronesRequest } from '@/actions/isochrones-actions';
 import type { RootState } from '@/store';
 import type { AnyAction } from 'redux';
 import type { ThunkDispatch } from 'redux-thunk';

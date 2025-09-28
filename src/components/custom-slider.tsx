@@ -5,7 +5,7 @@ import { type debounce } from 'throttle-debounce';
 import {
   settingsInit,
   settingsInitTruckOverride,
-} from '@/Controls/settings-options';
+} from '@/controls/settings-options';
 import type { RootState } from '@/store';
 import type { Profile } from '@/reducers/common';
 

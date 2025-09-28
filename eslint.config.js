@@ -5,6 +5,7 @@ import eslintPluginPrettier from 'eslint-plugin-prettier/recommended';
 import importPlugin from 'eslint-plugin-import';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import tseslint from 'typescript-eslint';
+import checkFile from 'eslint-plugin-check-file';
 
 export default defineConfig(
   { ignores: ['node_modules', 'build', 'dist', 'coverage'] },
@@ -76,5 +77,36 @@ export default defineConfig(
         projectService: true,
       },
     },
-  }
+  },
+  {
+    files: ['src/**/*.*'],
+    plugins: { 'check-file': checkFile },
+    rules: {
+      'check-file/filename-naming-convention': [
+        'error',
+        {
+          '**/*.{js,jsx,ts,tsx}': 'KEBAB_CASE',
+        },
+      ],
+
+      'check-file/folder-naming-convention': [
+        'error',
+        {
+          'src/**/!(__tests__|__test__|__mocks__|__snapshots__|__fixtures__)/':
+            'KEBAB_CASE',
+        },
+      ],
+    }
+  },
+  {
+    files: [
+      '**/*.spec.{js,jsx,ts,tsx}',
+      '**/*.test.{js,jsx,ts,tsx}',
+      '**/*.d.ts',
+      'src/vite-env.d.ts',
+    ],
+    rules: {
+      'check-file/filename-naming-convention': 'off',
+    },
+  },
 );

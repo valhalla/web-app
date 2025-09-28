@@ -11,25 +11,25 @@ import 'leaflet.heightgraph/dist/L.Control.Heightgraph.min.css';
 import axios from 'axios';
 
 import * as R from 'ramda';
-import ExtraMarkers from './extraMarkers';
+import ExtraMarkers from './extra-markers';
 import { Button, Label, Icon, Popup } from 'semantic-ui-react';
 import { ToastContainer } from 'react-toastify';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import {
   fetchReverseGeocode,
   updateInclineDeclineTotal,
-} from '@/actions/directionsActions';
-import { fetchReverseGeocodeIso } from '@/actions/isochronesActions';
-import { updateSettings } from '@/actions/commonActions';
+} from '@/actions/directions-actions';
+import { fetchReverseGeocodeIso } from '@/actions/isochrones-actions';
+import { updateSettings } from '@/actions/common-actions';
 import {
   VALHALLA_OSM_URL,
   buildHeightRequest,
   buildLocateRequest,
 } from '@/utils/valhalla';
 import { colorMappings, buildHeightgraphData } from '@/utils/heightgraph';
-import { formatDuration } from '@/utils/date_time';
+import { formatDuration } from '@/utils/date-time';
 import makeResizable from '@/utils/resizable';
-import './Map.css';
+import './map.css';
 import { convertDDToDMS } from './utils';
 import type { LastCenterStorageValue } from './types';
 import type { RootState } from '@/store';

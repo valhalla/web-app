@@ -3,14 +3,14 @@ import { connect } from 'react-redux';
 import { Segment, Button, Icon } from 'semantic-ui-react';
 import L from 'leaflet';
 
-import { makeRequest } from '@/actions/directionsActions';
-import { downloadFile } from '@/actions/commonActions';
-import Summary from './Summary';
-import Maneuvers from './Maneuvers';
+import { makeRequest } from '@/actions/directions-actions';
+import { downloadFile } from '@/actions/common-actions';
+import Summary from './summary';
+import Maneuvers from './maneuvers';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 // @ts-expect-error todo: json-format is not typed
 import jsonFormat from 'json-format';
-import { jsonConfig } from '@/Controls/settings-options';
+import { jsonConfig } from '@/controls/settings-options';
 import type { RootState } from '@/store';
 import type { ThunkDispatch } from 'redux-thunk';
 import type { AnyAction } from 'redux';

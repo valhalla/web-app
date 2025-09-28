@@ -2,7 +2,10 @@ import React, { useCallback } from 'react';
 import { connect } from 'react-redux';
 import { Header, Icon, Divider, Popup } from 'semantic-ui-react';
 
-import { highlightManeuver, zoomToManeuver } from '@/actions/directionsActions';
+import {
+  highlightManeuver,
+  zoomToManeuver,
+} from '@/actions/directions-actions';
 import type { RootState } from '@/store';
 import type { ThunkDispatch } from 'redux-thunk';
 import type { Leg } from '@/common/types';

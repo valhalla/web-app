@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDuration } from './date_time';
+import { formatDuration } from './date-time';
 
 describe('formatDuration', () => {
   it('should format zero duration correctly', () => {

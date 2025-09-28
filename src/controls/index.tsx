@@ -3,10 +3,10 @@ import { connect } from 'react-redux';
 import Drawer from 'react-modern-drawer';
 import 'react-modern-drawer/dist/index.css';
 import { toast } from 'react-toastify';
-import DirectionsControl from './Directions';
-import IsochronesControl from './Isochrones';
-import DirectionOutputControl from './Directions/OutputControl';
-import IsochronesOutputControl from './Isochrones/OutputControl';
+import DirectionsControl from './directions';
+import IsochronesControl from './isochrones';
+import DirectionOutputControl from './directions/output-control';
+import IsochronesOutputControl from './isochrones/output-control';
 import {
   Segment,
   Tab,
@@ -21,12 +21,12 @@ import {
   zoomTo,
   resetSettings,
   toggleDirections,
-} from '@/actions/commonActions';
-import { fetchReverseGeocodePerma } from '@/actions/directionsActions';
+} from '@/actions/common-actions';
+import { fetchReverseGeocodePerma } from '@/actions/directions-actions';
 import {
   fetchReverseGeocodeIso,
   updateIsoSettings,
-} from '@/actions/isochronesActions';
+} from '@/actions/isochrones-actions';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import type { RootState } from '@/store';
 import type { AnyAction } from 'redux';

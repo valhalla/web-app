@@ -34,7 +34,7 @@ import {
   filterProfileSettings,
   updatePermalink,
   zoomTo,
-} from './commonActions';
+} from './common-actions';
 
 import type {
   ActiveWaypoint,
