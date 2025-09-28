@@ -4,6 +4,8 @@ import View from 'ol/View.js';
 import { apply } from 'ol-mapbox-style';
 import 'ol/ol.css';
 
+import styleData from './style.json';
+
 interface OpenLayersMapProps {
   className?: string;
 }
@@ -25,7 +27,7 @@ export const OpenLayersMap: React.FC<OpenLayersMapProps> = ({
       }),
     });
 
-    apply(map, '/style.json')
+    apply(map, styleData)
       .then(() => {
         console.log('Map style applied successfully');
       })
