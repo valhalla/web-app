@@ -373,6 +373,25 @@ test.describe('Map interactions with left context menu', () => {
       button: 'left',
     });
 
+    await expect(page.getByTestId('dd-button')).toContainText(
+      '13.393707, 52.517892'
+    );
+    await expect(page.locator('.ui.compact.icon').first()).toBeVisible();
+
+    await expect(page.getByTestId('latlng-button')).toContainText(
+      '52.517892, 13.393707'
+    );
+    await expect(
+      page.locator('.mt1 > .ui.tiny > .ui.compact.icon').first()
+    ).toBeVisible();
+
+    await expect(page.getByTestId('dms-button')).toContainText(
+      '52° 31\' 4" N 13° 23\' 37" E'
+    );
+    await expect(
+      page.locator('div:nth-child(3) > .ui.tiny > .ui.compact.icon')
+    ).toBeVisible();
+
     await expect(
       page.getByRole('button', { name: 'Locate Point' })
     ).toBeVisible();
@@ -380,18 +399,11 @@ test.describe('Map interactions with left context menu', () => {
     await expect(
       page.getByRole('button', { name: 'Valhalla Location JSON' })
     ).toBeVisible();
+    await expect(
+      page.locator('div:nth-child(5) > .ui.tiny > .ui.compact.icon')
+    ).toBeVisible();
 
-    await expect(page.getByTestId('dd-button')).toContainText(
-      '13.393707, 52.517892'
-    );
-
-    await expect(page.getByTestId('latlng-button')).toContainText(
-      '52.517892, 13.393707'
-    );
-
-    await expect(page.getByTestId('dms-button')).toContainText(
-      '52° 31\' 4" N 13° 23\' 37" E'
-    );
+    await expect(page.getByTestId('elevation-button')).toContainText('34 m');
   });
 
   test('should show height from api response', async ({ page }) => {
@@ -430,6 +442,23 @@ test.describe('Map interactions with left context menu', () => {
     expect(locateRequest.body?.locations).toStrictEqual([
       { lat: 52.51789222838286, lon: 13.393707275390627 },
     ]);
+  });
+
+  test('should copy text to clipboard', async ({ page }) => {
+    await setupHeightMock(page);
+
+    await page.getByTestId('map').click({
+      button: 'left',
+    });
+
+    await page.locator('.ui.compact.icon').first().click();
+
+    await expect(page.getByText('copied')).toBeVisible();
+
+    const clipboardContent = await page.evaluate(() =>
+      navigator.clipboard.readText()
+    );
+    expect(clipboardContent).toBe('13.393707,52.517892');
   });
 });
 
