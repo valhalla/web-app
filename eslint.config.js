@@ -9,27 +9,7 @@ import checkFile from 'eslint-plugin-check-file';
 
 export default defineConfig(
   {
-    ignores: [
-      'node_modules',
-      'build',
-      'dist',
-      'coverage',
-      '**/*.css',
-      '**/*.scss',
-      '**/*.less',
-      '**/*.svg',
-      '**/*.png',
-      '**/*.jpg',
-      '**/*.jpeg',
-      '**/*.gif',
-      '**/*.ico',
-      '**/*.woff',
-      '**/*.woff2',
-      '**/*.ttf',
-      '**/*.eot',
-      '**/*.DS_Store',
-      'src/vite-env.d.ts',
-    ],
+    ignores: ['node_modules', 'build', 'dist', 'coverage'],
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
@@ -101,7 +81,7 @@ export default defineConfig(
     },
   },
   {
-    files: ['src/**/*.*'],
+    files: ['**/*.ts', '**/*.tsx'],
     plugins: { 'check-file': checkFile },
     rules: {
       'check-file/filename-naming-convention': [

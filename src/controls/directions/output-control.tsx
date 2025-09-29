@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { connect } from 'react-redux';
 import { Segment, Button, Icon } from 'semantic-ui-react';
-import L from 'leaflet';
 
 import { makeRequest } from '@/actions/directions-actions';
 import { downloadFile } from '@/actions/common-actions';
@@ -107,12 +106,17 @@ const OutputControl = ({
     (e: React.MouseEvent) => {
       const routeResult = results[VALHALLA_OSM_URL!];
       const data = routeResult?.data;
-      const coordinates = data?.decodedGeometry;
+      const coordinates = data?.decodedGeometry as number[][] | undefined;
       if (!coordinates) return;
-      const formattedData = jsonFormat(
-        L.polyline(coordinates as L.LatLngExpression[]).toGeoJSON(),
-        jsonConfig
-      );
+      const geojson = {
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'LineString',
+          coordinates: coordinates.map(([lat, lng]) => [lng, lat]),
+        },
+      };
+      const formattedData = jsonFormat(geojson, jsonConfig);
       e.preventDefault();
       downloadFile({
         data: formattedData,
