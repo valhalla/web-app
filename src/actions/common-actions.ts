@@ -40,7 +40,7 @@ export const sendMessage = (message_object: MessageObject) => ({
 
 interface SettingsObject {
   name: string;
-  value: string | number | boolean | string[];
+  value: string | number | boolean | string[] | import('geojson').GeoJSON[];
 }
 
 export const updateSettings = (object: SettingsObject) => ({

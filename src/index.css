@@ -1,8 +1,7 @@
 @import '~semantic-ui-css/semantic.css';
-@import '~leaflet/dist/leaflet.css';
+@import '~maplibre-gl/dist/maplibre-gl.css';
 @import '~tachyons/css/tachyons.css';
 @import '~react-toastify/dist/ReactToastify.css';
-@import '~leaflet-extra-markers/dist/css/leaflet.extra-markers.min.css';
 
 body {
   margin: 0;
@@ -56,16 +55,10 @@ i.help.grey.icon {
   margin: 0em 0em 0em;
 }
 
-.extra-marker i {
-  font-style: normal;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.ui.menu .item{
+.ui.menu .item {
   width: 50%;
 }
 
-.ui.menu:not(.vertical) .item{
+.ui.menu:not(.vertical) .item {
   justify-content: center;
 }
