@@ -22,6 +22,23 @@ export const BERLIN_COORDINATES = {
   },
 };
 
+export const mockStatusResponse = {
+  version: '3.5.1-658c9b5ca',
+  tileset_last_modified: 1758082755,
+  available_actions: [
+    'expansion',
+    'height',
+    'status',
+    'trace_attributes',
+    'trace_route',
+    'optimized_route',
+    'sources_to_targets',
+    'isochrone',
+    'route',
+    'locate',
+  ],
+};
+
 export const mockNominatimResponse = {
   place_id: 123456,
   licence: 'Data © OpenStreetMap contributors, ODbL 1.0.',
@@ -582,6 +599,34 @@ export const mockLocateResponse = [
     nodes: [],
   },
 ];
+
+export async function setupStatusMock(
+  page: Page,
+  response = mockStatusResponse
+) {
+  const apiRequests: ApiRequest[] = [];
+
+  await page.route(
+    '**/valhalla1.openstreetmap.de/status**',
+    async (route: Route) => {
+      const request = route.request();
+      const url = request.url();
+
+      apiRequests.push({
+        url,
+        method: request.method(),
+      });
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(response),
+      });
+    }
+  );
+
+  return apiRequests;
+}
 
 export async function setupNominatimMock(
   page: Page,

@@ -17,7 +17,13 @@ export const Settings = ({
       content="Add Waypoint"
       size="tiny"
       trigger={
-        <Button basic size="tiny" icon onClick={() => handleAddWaypoint()}>
+        <Button
+          data-testid="add-waypoint-button"
+          basic
+          size="tiny"
+          icon
+          onClick={() => handleAddWaypoint()}
+        >
           <Icon name="plus" />
         </Button>
       }
@@ -26,7 +32,13 @@ export const Settings = ({
       content="Reset Waypoints"
       size="tiny"
       trigger={
-        <Button basic size="tiny" icon onClick={() => handleRemoveWaypoints()}>
+        <Button
+          data-testid="reset-waypoints-button"
+          basic
+          size="tiny"
+          icon
+          onClick={() => handleRemoveWaypoints()}
+        >
           <Icon name="trash" />
         </Button>
       }

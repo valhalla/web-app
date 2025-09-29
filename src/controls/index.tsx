@@ -213,7 +213,10 @@ const MainControl = (props: MainControlProps) => {
 
   const appPanes = [
     {
-      menuItem: 'Directions',
+      menuItem: {
+        'data-testid': 'directions-tab-button',
+        content: 'Directions',
+      },
       render: () => (
         <Tab.Pane style={{ padding: '0 0 0 0' }} attached={false}>
           <DirectionsControl />
@@ -221,7 +224,10 @@ const MainControl = (props: MainControlProps) => {
       ),
     },
     {
-      menuItem: 'Isochrones',
+      menuItem: {
+        'data-testid': 'isochrones-tab-button',
+        content: 'Isochrones',
+      },
       render: () => (
         <Tab.Pane style={{ padding: '0 0 0 0' }} attached={false}>
           <IsochronesControl />
