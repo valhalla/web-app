@@ -600,6 +600,30 @@ export const mockLocateResponse = [
   },
 ];
 
+export const mockSearchResponse = [
+  {
+    place_id: 123456,
+    licence: 'Data © OpenStreetMap contributors, ODbL 1.0.',
+    osm_type: 'way',
+    osm_id: 12345,
+    lat: BERLIN_COORDINATES.lat.toString(),
+    lon: BERLIN_COORDINATES.lon.toString(),
+    class: 'highway',
+    type: 'primary',
+    place_rank: 26,
+    importance: 0.5148900273965856,
+    addresstype: 'road',
+    name: 'Unter den Linden',
+    display_name: 'Unter den Linden, Mitte, Berlin, Germany',
+    boundingbox: [
+      BERLIN_COORDINATES.bounds.minLat,
+      BERLIN_COORDINATES.bounds.maxLat,
+      BERLIN_COORDINATES.bounds.minLon,
+      BERLIN_COORDINATES.bounds.maxLon,
+    ],
+  },
+];
+
 export async function setupStatusMock(
   page: Page,
   response = mockStatusResponse
@@ -732,6 +756,34 @@ export async function setupLocateMock(
         url,
         method: request.method(),
         body: JSON.parse(body || '{}'),
+      });
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(response),
+      });
+    }
+  );
+
+  return apiRequests;
+}
+
+export async function setupSearchMock(
+  page: Page,
+  response = mockSearchResponse
+) {
+  const apiRequests: ApiRequest[] = [];
+
+  await page.route(
+    '**/nominatim.openstreetmap.org/search**',
+    async (route: Route) => {
+      const request = route.request();
+      const url = request.url();
+
+      apiRequests.push({
+        url,
+        method: request.method(),
       });
 
       await route.fulfill({

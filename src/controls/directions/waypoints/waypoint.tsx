@@ -191,6 +191,7 @@ const Waypoint = ({
             size="tiny"
             trigger={
               <Icon
+                data-testid="remove-waypoint-button"
                 className="pointer"
                 name="remove"
                 // size="32px"
