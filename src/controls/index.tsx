@@ -215,6 +215,7 @@ const MainControl = (props: MainControlProps) => {
     {
       menuItem: {
         'data-testid': 'directions-tab-button',
+        key: 'directions-tab-button',
         content: 'Directions',
       },
       render: () => (
@@ -226,6 +227,7 @@ const MainControl = (props: MainControlProps) => {
     {
       menuItem: {
         'data-testid': 'isochrones-tab-button',
+        key: 'isochrones-tab-button',
         content: 'Isochrones',
       },
       render: () => (
