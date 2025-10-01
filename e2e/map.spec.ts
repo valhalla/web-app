@@ -464,8 +464,8 @@ test.describe('Map interactions with right context menu', () => {
     expect(routeRequests.length).toBe(1);
 
     // Drag waypoint
-    let boundingBox = await toWaypoint.boundingBox();
-    expect(boundingBox).not.toBeNull;
+    const boundingBox = await toWaypoint.boundingBox();
+    expect(boundingBox).not.toBeNull();
 
     if (boundingBox !== null) {
       const startX = boundingBox.x + boundingBox.width / 2;
