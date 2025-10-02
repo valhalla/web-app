@@ -38,7 +38,11 @@ import type { ThunkDispatch } from 'redux-thunk';
 import type { DirectionsState } from '@/reducers/directions';
 import type { IsochroneState } from '@/reducers/isochrones';
 import type { Profile } from '@/reducers/common';
-import type { ParsedDirectionsGeometry } from '@/common/types';
+import type {
+  LatLngLocation,
+  LocateResponse,
+  ParsedDirectionsGeometry,
+} from '@/common/types';
 
 const OSMTiles = L.tileLayer(process.env.REACT_APP_TILE_SERVER_URL!, {
   attribution:
@@ -145,7 +149,7 @@ const Map = ({
   const [showPopup, setShowPopup] = useState(false);
   const [isLocateLoading, setIsLocateLoading] = useState(false);
   const [isHeightLoading, setIsHeightLoading] = useState(false);
-  const [locate, setLocate] = useState([]);
+  const [locate, setLocate] = useState<LocateResponse[]>([]);
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [latLng, setLatLng] = useState<LatLng | null>(null);
   const [hasCopied, setHasCopied] = useState(false);
@@ -235,7 +239,7 @@ const Map = ({
   }, []);
 
   const getLocate = useCallback(
-    (position) => {
+    (position: LatLngLocation) => {
       setIsLocateLoading(true);
       axios
         .post(
@@ -248,7 +252,7 @@ const Map = ({
           }
         )
         .then(({ data }) => {
-          setLocate(data);
+          setLocate(data as LocateResponse[]);
         })
         .catch(({ response }) => {
           console.log(response);
@@ -683,9 +687,11 @@ const Map = ({
         highlightRouteSegmentlayer.clearLayers();
         return;
       }
-      coords = (results[VALHALLA_OSM_URL!]!.data.alternates?.[
-        alternate
-      ] as ParsedDirectionsGeometry)!.decodedGeometry;
+      coords = (
+        results[VALHALLA_OSM_URL!]!.data.alternates?.[
+          alternate
+        ] as ParsedDirectionsGeometry
+      ).decodedGeometry;
     }
 
     if (startIndex > -1 && endIndex > -1 && coords) {
@@ -850,7 +856,7 @@ const Map = ({
             continue;
           }
           const alternate = response.alternates[i];
-          const coords = (alternate! as ParsedDirectionsGeometry)!
+          const coords = (alternate! as ParsedDirectionsGeometry)
             .decodedGeometry;
           const summary = alternate!.trip.summary;
           // @ts-expect-error this is not typed

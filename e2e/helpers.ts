@@ -1,4 +1,8 @@
-import type { NominatimResponse, StatusResponse } from '@/common/types';
+import type {
+  LocateResponse,
+  NominatimResponse,
+  StatusResponse,
+} from '@/common/types';
 import type { Page, Route } from '@playwright/test';
 
 interface ApiRequest {
@@ -582,7 +586,7 @@ export const mockHeightResponse = {
   id: 'valhalla_height',
 };
 
-export const mockLocateResponse = [
+export const mockLocateResponse: LocateResponse[] = [
   {
     input_lat: 52.51246,
     input_lon: 13.363323,
@@ -747,7 +751,7 @@ export async function setupHeightMock(
 
 export async function setupLocateMock(
   page: Page,
-  response = mockLocateResponse
+  response: LocateResponse[] = mockLocateResponse
 ) {
   const apiRequests: ApiRequest[] = [];
 
@@ -756,12 +760,12 @@ export async function setupLocateMock(
     async (route: Route) => {
       const request = route.request();
       const url = request.url();
-      const body = await request.postData();
+      const body = request.postData();
 
       apiRequests.push({
         url,
         method: request.method(),
-        body: JSON.parse(body || '{}'),
+        body: JSON.parse(body || '{}') as Record<string, unknown>,
       });
 
       await route.fulfill({

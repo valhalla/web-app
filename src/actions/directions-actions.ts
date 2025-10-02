@@ -52,13 +52,13 @@ interface LatLng {
 interface FetchReverseGeocodePermaObject {
   index: number;
   permaLast?: boolean;
-  latLng: LatLng;
+  latLng: LatLngLocation;
 }
 
 interface FetchReverseGeocodeObject {
   index: number;
   fromDrag?: boolean;
-  latLng: LatLng;
+  latLng: LatLngLocation;
 }
 
 interface FetchGeocodeObject {

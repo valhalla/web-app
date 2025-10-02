@@ -2,6 +2,16 @@ import type { RootState } from '@/store';
 import type { AnyAction } from 'redux';
 import type { ThunkAction } from 'redux-thunk';
 
+export interface LatLonLocation {
+  lat: number;
+  lon: number;
+}
+
+export interface LatLngLocation {
+  lat: number;
+  lng: number;
+}
+
 export interface ActiveWaypoint {
   title: string;
   description?: string;
@@ -94,7 +104,7 @@ export interface ParsedDirectionsGeometry {
 }
 
 export interface Trip {
-  locations: Location[];
+  locations: TripLocation[];
   legs: Leg[];
   summary: Summary;
   status_message: string;
@@ -103,7 +113,7 @@ export interface Trip {
   language: string;
 }
 
-export interface Location {
+export interface TripLocation {
   type: string;
   lat: number;
   lon: number;
@@ -251,4 +261,17 @@ export interface StatusResponse {
   version: string;
   tileset_last_modified: number;
   available_actions: string[];
+}
+
+export interface LocateResponse {
+  input_lat: number;
+  input_lon: number;
+  edges: {
+    way_id: number;
+    correlated_lat: number;
+    correlated_lon: number;
+    side_of_street: string;
+    percent_along: number;
+  }[];
+  nodes: LatLonLocation[];
 }

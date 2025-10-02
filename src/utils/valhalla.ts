@@ -4,6 +4,8 @@ import type {
   ActiveWaypoint,
   ActiveWaypoints,
   IsochronesRequestParams,
+  LatLngLocation,
+  LatLonLocation,
   Settings,
   ValhallaRouteResponse,
 } from '@/common/types';
@@ -11,7 +13,7 @@ import type {
 export const VALHALLA_OSM_URL = process.env.REACT_APP_VALHALLA_URL;
 
 export const buildLocateRequest = (
-  latLng: { lat: number; lng: number },
+  latLng: LatLngLocation,
   profile: Profile
 ) => {
   let valhalla_profile = profile;
@@ -20,7 +22,7 @@ export const buildLocateRequest = (
   }
   return {
     costing: valhalla_profile,
-    locations: [{ lat: latLng.lat, lon: latLng.lng }],
+    locations: [{ lat: latLng.lat, lon: latLng.lng } as LatLonLocation],
   };
 };
 
