@@ -504,32 +504,27 @@ test.describe('Map interactions with left context menu', () => {
     await expect(page.getByTestId('dd-button')).toContainText(
       '13.393707, 52.517892'
     );
-    await expect(page.locator('.ui.compact.icon').first()).toBeVisible();
+    await expect(page.getByTestId('dd-copy-button')).toBeVisible();
 
     await expect(page.getByTestId('latlng-button')).toContainText(
       '52.517892, 13.393707'
     );
-    await expect(
-      page.locator('.mt1 > .ui.tiny > .ui.compact.icon').first()
-    ).toBeVisible();
+    await expect(page.getByTestId('latlng-copy-button')).toBeVisible();
 
     await expect(page.getByTestId('dms-button')).toContainText(
       '52° 31\' 4" N 13° 23\' 37" E'
     );
-    await expect(
-      page.locator('div:nth-child(3) > .ui.tiny > .ui.compact.icon')
-    ).toBeVisible();
+    await expect(page.getByTestId('dms-copy-button')).toBeVisible();
 
     await expect(
       page.getByRole('button', { name: 'Locate Point' })
     ).toBeVisible();
+    await expect(page.getByTestId('locate-point-copy-button')).toBeVisible();
 
     await expect(
       page.getByRole('button', { name: 'Valhalla Location JSON' })
     ).toBeVisible();
-    await expect(
-      page.locator('div:nth-child(5) > .ui.tiny > .ui.compact.icon')
-    ).toBeVisible();
+    await expect(page.getByTestId('location-json-copy-button')).toBeVisible();
 
     await expect(page.getByTestId('elevation-button')).toContainText('34 m');
   });
@@ -579,7 +574,7 @@ test.describe('Map interactions with left context menu', () => {
       button: 'left',
     });
 
-    await page.locator('.ui.compact.icon').first().click();
+    await page.getByTestId('dd-copy-button').click();
 
     await expect(page.getByText('copied')).toBeVisible();
 
@@ -685,7 +680,7 @@ https: test.describe('Left drawer', () => {
     await searchBox.fill('Unter den Linden');
     await searchBox.press('Enter');
 
-    const searchResult = page.locator('.results.transition.visible');
+    const searchResult = page.getByTestId('search-result');
 
     await expect(searchResult).toBeVisible();
     await searchResult.click();
@@ -713,7 +708,7 @@ https: test.describe('Left drawer', () => {
     await firstSearchBox.fill('Unter den Linden');
     await firstSearchBox.press('Enter');
 
-    const firstSearchResult = page.locator('.results.transition.visible');
+    const firstSearchResult = page.getByTestId('search-result');
 
     await expect(firstSearchResult).toBeVisible();
     await firstSearchResult.click();
@@ -731,7 +726,7 @@ https: test.describe('Left drawer', () => {
     await secondSearchBox.fill('Unter den Linden');
     await secondSearchBox.press('Enter');
 
-    const secondSearchResult = page.locator('.results.transition.visible');
+    const secondSearchResult = page.getByTestId('search-result').nth(1);
 
     await expect(secondSearchResult).toBeVisible();
     await secondSearchResult.click();

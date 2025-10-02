@@ -40,9 +40,7 @@ test('has default elements in the page', async ({ page }) => {
   await expect(page.getByTestId('date-time-picker')).toBeVisible();
 
   await expect(
-    page.locator('div').filter({
-      hasText: /^Calculations by Valhalla • Visualized with Valhalla App$/,
-    })
+    page.getByText(/^Calculations by Valhalla • Visualized with Valhalla App$/)
   ).toBeVisible();
 
   await page.getByTestId('isochrones-tab-button').click();
@@ -52,9 +50,7 @@ test('has default elements in the page', async ({ page }) => {
   ).toBeVisible();
   await page.getByTestId('reset-center-button').click();
 
-  await expect(
-    page.locator('div').filter({ hasText: /^Settings$/ })
-  ).toBeVisible();
+  await expect(page.getByText(/^Settings$/)).toBeVisible();
 
   await expect(page.getByText('Maximum Rangemins10')).toBeVisible();
   await expect(page.getByText('Interval Stepmins10')).toBeVisible();
