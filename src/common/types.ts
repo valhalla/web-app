@@ -198,7 +198,7 @@ export interface Directions {
   exclude_polygons: GeoJSON.GeoJSON[];
 }
 
-export interface NominationResponse {
+export interface NominatimResponse {
   place_id: number;
   licence: string;
   osm_type: string;
@@ -214,17 +214,20 @@ export interface NominationResponse {
   display_name: string;
   address: Address;
   boundingbox: string[];
+  error?: string;
 }
 
 export interface Address {
-  suburb: string;
-  town: string;
-  state: string;
+  road?: string;
+  suburb?: string;
+  town?: string;
+  city?: string;
+  state?: string;
   'ISO3166-2-lvl4'?: string;
-  region: string;
-  postcode: string;
-  country: string;
-  country_code: string;
+  region?: string;
+  postcode?: string;
+  country?: string;
+  country_code?: string;
 }
 
 export interface ValhallaRouteResponse {

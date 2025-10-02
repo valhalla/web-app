@@ -24,7 +24,7 @@ import {
 import { calcArea } from '@/utils/geom';
 import type {
   ActiveWaypoint,
-  NominationResponse,
+  NominatimResponse,
   ThunkResult,
   ValhallaIsochroneResponse,
 } from '@/common/types';
@@ -235,7 +235,7 @@ export const fetchGeocode =
 
 const processGeocodeResponse =
   (
-    data: NominationResponse,
+    data: NominatimResponse,
     reverse?: boolean,
     lngLat?: [number, number]
   ): ThunkResult =>

@@ -1,11 +1,11 @@
-import type { NominationResponse } from '@/common/types';
+import type { NominatimResponse } from '@/common/types';
 import axios from 'axios';
 
 export const NOMINATIM_URL = `${process.env.REACT_APP_NOMINATIM_URL}/search`;
 export const NOMINATIME_URL_REVERSE = `${process.env.REACT_APP_NOMINATIM_URL}/reverse`;
 
 export const forward_geocode = (userInput: string) =>
-  axios.get<NominationResponse>(NOMINATIM_URL, {
+  axios.get<NominatimResponse>(NOMINATIM_URL, {
     params: {
       q: userInput,
       format: 'json',
@@ -14,7 +14,7 @@ export const forward_geocode = (userInput: string) =>
   });
 
 export const reverse_geocode = (lon: number, lat: number) =>
-  axios.get<NominationResponse>(NOMINATIME_URL_REVERSE, {
+  axios.get<NominatimResponse>(NOMINATIME_URL_REVERSE, {
     params: {
       lon: lon,
       lat: lat,
@@ -23,7 +23,7 @@ export const reverse_geocode = (lon: number, lat: number) =>
   });
 
 export const parseGeocodeResponse = (
-  results: NominationResponse | NominationResponse[],
+  results: NominatimResponse | NominatimResponse[],
   lngLat: [number, number]
 ) => {
   if (!Array.isArray(results)) {
@@ -34,8 +34,7 @@ export const parseGeocodeResponse = (
   for (const [index, result] of results.entries()) {
     if (
       'error' in result &&
-      // @ts-expect-error we know error exists in this case
-      result.error.toLowerCase() === 'unable to geocode'
+      result.error?.toLowerCase() === 'unable to geocode'
     ) {
       processedResults.push({
         title: lngLat.toString(),

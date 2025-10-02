@@ -1,3 +1,4 @@
+import type { NominatimResponse } from '@/common/types';
 import type { Page, Route } from '@playwright/test';
 
 interface ApiRequest {
@@ -15,10 +16,10 @@ export const BERLIN_COORDINATES = {
   lat: 52.507027222951635,
   lon: 13.385467529296877,
   bounds: {
-    minLat: 52.0,
-    maxLat: 53.0,
-    minLon: 13.0,
-    maxLon: 14.0,
+    minLat: '52.0',
+    maxLat: '53.0',
+    minLon: '13.0',
+    maxLon: '14.0',
   },
 };
 
@@ -39,14 +40,26 @@ export const mockStatusResponse = {
   ],
 };
 
-export const mockNominatimResponse = {
+export const mockNominatimResponse: NominatimResponse = {
   place_id: 123456,
   licence: 'Data © OpenStreetMap contributors, ODbL 1.0.',
   osm_type: 'way',
   osm_id: 12345,
   lat: BERLIN_COORDINATES.lat.toString(),
   lon: BERLIN_COORDINATES.lon.toString(),
+  class: 'building',
+  type: 'apartments',
+  place_rank: 30,
+  importance: 0.00008875486381318407,
   display_name: 'Unter den Linden, Mitte, Berlin, Germany',
+  addresstype: 'building',
+  name: '',
+  boundingbox: [
+    BERLIN_COORDINATES.bounds.minLat,
+    BERLIN_COORDINATES.bounds.maxLat,
+    BERLIN_COORDINATES.bounds.minLon,
+    BERLIN_COORDINATES.bounds.maxLon,
+  ],
   address: {
     road: 'Unter den Linden',
     suburb: 'Mitte',
@@ -54,13 +67,6 @@ export const mockNominatimResponse = {
     country: 'Germany',
     country_code: 'de',
   },
-};
-
-export const simpleMockNominatimResponse = {
-  place_id: 123456,
-  lat: BERLIN_COORDINATES.lat.toString(),
-  lon: BERLIN_COORDINATES.lon.toString(),
-  display_name: 'Brandenburg Gate, Berlin, Germany',
 };
 
 export const mockRouteResponse = {
@@ -654,7 +660,7 @@ export async function setupStatusMock(
 
 export async function setupNominatimMock(
   page: Page,
-  response = mockNominatimResponse
+  response: NominatimResponse = mockNominatimResponse
 ) {
   const apiRequests: ApiRequest[] = [];
 

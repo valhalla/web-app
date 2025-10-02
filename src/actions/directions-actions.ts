@@ -38,7 +38,7 @@ import {
 
 import type {
   ActiveWaypoint,
-  NominationResponse,
+  NominatimResponse,
   ParsedDirectionsGeometry,
   ThunkResult,
   ValhallaRouteResponse,
@@ -346,7 +346,7 @@ export const fetchGeocode =
 
 const processGeocodeResponse =
   (
-    data: NominationResponse,
+    data: NominatimResponse,
     index: number,
     reverse?: boolean,
     lngLat?: [number, number],

@@ -6,7 +6,6 @@ import {
   setupNominatimMock,
   setupRouteMock,
   setupSearchMock,
-  simpleMockNominatimResponse,
 } from './helpers';
 
 interface NominatimApiRequest {
@@ -50,10 +49,10 @@ function validateBerlinCoordinates(
   const lon = parseFloat(lonStr || '0');
   const lat = parseFloat(latStr || '0');
 
-  expect(lon).toBeGreaterThan(BERLIN_COORDINATES.bounds.minLon);
-  expect(lon).toBeLessThan(BERLIN_COORDINATES.bounds.maxLon);
-  expect(lat).toBeGreaterThan(BERLIN_COORDINATES.bounds.minLat);
-  expect(lat).toBeLessThan(BERLIN_COORDINATES.bounds.maxLat);
+  expect(lon).toBeGreaterThan(parseFloat(BERLIN_COORDINATES.bounds.minLon));
+  expect(lon).toBeLessThan(parseFloat(BERLIN_COORDINATES.bounds.maxLon));
+  expect(lat).toBeGreaterThan(parseFloat(BERLIN_COORDINATES.bounds.minLat));
+  expect(lat).toBeLessThan(parseFloat(BERLIN_COORDINATES.bounds.maxLat));
 }
 
 test.describe('Map interactions with right context menu', () => {
@@ -103,11 +102,7 @@ test.describe('Map interactions with right context menu', () => {
   test('should make Nominatim request with Berlin coordinates', async ({
     page,
   }) => {
-    const apiRequests = await setupNominatimMock(
-      page,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      simpleMockNominatimResponse as any
-    );
+    const apiRequests = await setupNominatimMock(page);
 
     await page.waitForSelector('[data-testid="map"]', { state: 'visible' });
     await page.waitForTimeout(1000);
@@ -178,11 +173,7 @@ test.describe('Map interactions with right context menu', () => {
   test('should make Nominatim request with Berlin coordinates for "to here"', async ({
     page,
   }) => {
-    const apiRequests = await setupNominatimMock(
-      page,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      simpleMockNominatimResponse as any
-    );
+    const apiRequests = await setupNominatimMock(page);
 
     await page.waitForSelector('[data-testid="map"]', { state: 'visible' });
     await page.waitForTimeout(1000);
@@ -471,17 +462,11 @@ test.describe('Map interactions with right context menu', () => {
       const startX = boundingBox.x + boundingBox.width / 2;
       const startY = boundingBox.y + boundingBox.height / 2;
 
-      page.mouse.move(startX, startY);
-      await page.waitForTimeout(500);
-
-      page.mouse.down();
-      await page.waitForTimeout(500);
-
-      page.mouse.move(startX + 100, startY);
-      await page.waitForTimeout(500);
-
-      page.mouse.up();
-      await page.waitForTimeout(1000);
+      await page.mouse.move(startX, startY);
+      await page.mouse.down();
+      await page.mouse.move(startX + 100, startY);
+      await page.mouse.up();
+      await page.waitForTimeout(2000);
 
       expect(nominatimRequests.length).toBe(3);
       expect(routeRequests.length).toBe(2);

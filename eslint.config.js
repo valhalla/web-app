@@ -33,7 +33,7 @@ export default defineConfig(
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
-    extends: [...tseslint.configs.recommended, eslintPluginPrettier],
+    extends: [...tseslint.configs.recommendedTypeChecked, eslintPluginPrettier],
     settings: {
       'import/resolver': {
         'eslint-import-resolver-typescript': true,
