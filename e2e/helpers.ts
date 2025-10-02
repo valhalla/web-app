@@ -610,30 +610,6 @@ export const mockLocateResponse: LocateResponse[] = [
   },
 ];
 
-export const mockSearchResponse = [
-  {
-    place_id: 123456,
-    licence: 'Data © OpenStreetMap contributors, ODbL 1.0.',
-    osm_type: 'way',
-    osm_id: 12345,
-    lat: BERLIN_COORDINATES.lat.toString(),
-    lon: BERLIN_COORDINATES.lon.toString(),
-    class: 'highway',
-    type: 'primary',
-    place_rank: 26,
-    importance: 0.5148900273965856,
-    addresstype: 'road',
-    name: 'Unter den Linden',
-    display_name: 'Unter den Linden, Mitte, Berlin, Germany',
-    boundingbox: [
-      BERLIN_COORDINATES.bounds.minLat,
-      BERLIN_COORDINATES.bounds.maxLat,
-      BERLIN_COORDINATES.bounds.minLon,
-      BERLIN_COORDINATES.bounds.maxLon,
-    ],
-  },
-];
-
 export async function setupStatusMock(
   page: Page,
   response: StatusResponse = mockStatusResponse
@@ -781,7 +757,7 @@ export async function setupLocateMock(
 
 export async function setupSearchMock(
   page: Page,
-  response = mockSearchResponse
+  response: NominatimResponse[] = [mockNominatimResponse]
 ) {
   const apiRequests: ApiRequest[] = [];
 
