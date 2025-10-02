@@ -32,6 +32,7 @@ import type { RootState } from '@/store';
 import type { AnyAction } from 'redux';
 import type { ThunkDispatch } from 'redux-thunk';
 import type { Message, Profile } from '@/reducers/common';
+import type { StatusResponse } from '@/common/types';
 
 const pairwise = (
   arr: number[],
@@ -58,14 +59,14 @@ const MainControl = (props: MainControlProps) => {
 
   const getLastUpdate = async () => {
     const response = await fetch(`${VALHALLA_OSM_URL}/status`);
-    const data = await response.json();
+    const data = (await response.json()) as StatusResponse;
     setLastUpdate(new Date(data.tileset_last_modified * 1000));
   };
 
   useEffect(() => {
     const { dispatch } = props;
 
-    getLastUpdate();
+    void getLastUpdate();
 
     toast.success(
       'Welcome to Valhalla! Global Routing Service - funded by FOSSGIS e.V.',

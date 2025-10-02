@@ -246,3 +246,9 @@ export type ThunkResult<T = void> = ThunkAction<
   unknown,
   AnyAction
 >;
+
+export interface StatusResponse {
+  version: string;
+  tileset_last_modified: number;
+  available_actions: string[];
+}

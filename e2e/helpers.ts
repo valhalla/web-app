@@ -1,4 +1,4 @@
-import type { NominatimResponse } from '@/common/types';
+import type { NominatimResponse, StatusResponse } from '@/common/types';
 import type { Page, Route } from '@playwright/test';
 
 interface ApiRequest {
@@ -23,7 +23,7 @@ export const BERLIN_COORDINATES = {
   },
 };
 
-export const mockStatusResponse = {
+export const mockStatusResponse: StatusResponse = {
   version: '3.5.1-658c9b5ca',
   tileset_last_modified: 1758082755,
   available_actions: [
@@ -632,7 +632,7 @@ export const mockSearchResponse = [
 
 export async function setupStatusMock(
   page: Page,
-  response = mockStatusResponse
+  response: StatusResponse = mockStatusResponse
 ) {
   const apiRequests: ApiRequest[] = [];
 
