@@ -14,6 +14,8 @@ export default defineConfig(
       'build',
       'dist',
       'coverage',
+      'playwright-report',
+      'test-results',
       '**/*.css',
       '**/*.scss',
       '**/*.less',
