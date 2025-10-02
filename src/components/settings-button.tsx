@@ -9,7 +9,12 @@ export const SettingsButton = ({ handleSettings }: SettingsButtonProps) => {
     <Popup
       content="Show/Hide Settings"
       trigger={
-        <Button tertiary="true" icon onClick={() => handleSettings()}>
+        <Button
+          data-testid="show-hide-settings-btn"
+          tertiary="true"
+          icon
+          onClick={() => handleSettings()}
+        >
           <Icon name="cogs" />
         </Button>
       }

@@ -11,7 +11,12 @@ export const Settings = ({ handleRemoveIsos }: SettingsProps) => {
         content="Reset Center"
         size="tiny"
         trigger={
-          <Button basic icon onClick={handleRemoveIsos}>
+          <Button
+            data-testid="reset-center-button"
+            basic
+            icon
+            onClick={handleRemoveIsos}
+          >
             <Icon name="trash" />
           </Button>
         }

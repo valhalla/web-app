@@ -104,7 +104,7 @@ const Waypoint = ({
 
   const resultRenderer = useCallback(
     ({ title, description }) => (
-      <div className="flex-column">
+      <div data-testid="search-result" className="flex-column">
         <div>
           <span className="title">{title}</span>
         </div>
@@ -191,6 +191,7 @@ const Waypoint = ({
             size="tiny"
             trigger={
               <Icon
+                data-testid="remove-waypoint-button"
                 className="pointer"
                 name="remove"
                 // size="32px"

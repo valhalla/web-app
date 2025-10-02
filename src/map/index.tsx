@@ -982,7 +982,7 @@ const Map = ({
                   text={latLng.lng.toFixed(6) + ',' + latLng.lat.toFixed(6)}
                   onCopy={handleCopy}
                 >
-                  <Button compact icon="copy" />
+                  <Button compact data-testid="dd-copy-button" icon="copy" />
                 </CopyToClipboard>
               </Button.Group>
             </div>
@@ -1006,7 +1006,11 @@ const Map = ({
                   text={latLng.lat.toFixed(6) + ',' + latLng.lng.toFixed(6)}
                   onCopy={handleCopy}
                 >
-                  <Button compact icon="copy" />
+                  <Button
+                    compact
+                    data-testid="latlng-copy-button"
+                    icon="copy"
+                  />
                 </CopyToClipboard>
               </Button.Group>
             </div>
@@ -1037,7 +1041,7 @@ const Map = ({
                   }
                   onCopy={handleCopy}
                 >
-                  <Button compact icon="copy" />
+                  <Button compact data-testid="dms-copy-button" icon="copy" />
                 </CopyToClipboard>
               </Button.Group>
             </div>
@@ -1061,7 +1065,12 @@ const Map = ({
                   text={JSON.stringify(locate)}
                   onCopy={handleCopy}
                 >
-                  <Button disabled={locate.length === 0} compact icon="copy" />
+                  <Button
+                    disabled={locate.length === 0}
+                    compact
+                    data-testid="locate-point-copy-button"
+                    icon="copy"
+                  />
                 </CopyToClipboard>
               </Button.Group>
             </div>
@@ -1085,7 +1094,11 @@ const Map = ({
                     }`}
                   onCopy={handleCopy}
                 >
-                  <Button compact icon="copy" />
+                  <Button
+                    compact
+                    data-testid="location-json-copy-button"
+                    icon="copy"
+                  />
                 </CopyToClipboard>
               </Button.Group>
             </div>

@@ -31,6 +31,7 @@ export const DateTimePicker = ({
       />
       <Input placeholder="Search..." style={{ marginLeft: '3px' }}>
         <input
+          data-testid="date-time-picker"
           type="datetime-local"
           value={value}
           onChange={(e) => onChange('value', e.target.value)}
