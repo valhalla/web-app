@@ -32,6 +32,11 @@ export type Settings = Record<
   }
 >;
 
+export interface SettingsObject {
+  name: string;
+  value: string | number | boolean | string[];
+}
+
 export type BicycleType = 'Hybrid' | 'Road' | 'City' | 'Cross' | 'Mountain';
 
 export interface PossibleSettings {

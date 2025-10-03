@@ -38,7 +38,7 @@ import { makeIsochronesRequest } from '@/actions/isochrones-actions';
 import { Checkbox } from '@/components/checkbox';
 import type { RootState } from '@/store';
 import type { Profile } from '@/reducers/common';
-import type { PossibleSettings } from '@/common/types';
+import type { PossibleSettings, SettingsObject } from '@/common/types';
 import type { ThunkDispatch } from 'redux-thunk';
 import type { AnyAction } from 'redux';
 
@@ -80,7 +80,7 @@ const SettingsPanel = ({
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleUpdateSettings = useCallback(
-    debounce(300, ({ name, value }) => {
+    debounce(300, ({ name, value }: SettingsObject) => {
       dispatch(
         updateSettings({
           name,
@@ -186,12 +186,14 @@ const SettingsPanel = ({
     dispatch(resetSettings());
   }, [dispatch]);
 
-  const extractSettings = useCallback((profileParam, settingsParam) => {
-    return JSON.stringify(filterProfileSettings(profileParam, settingsParam));
-  }, []);
+  const extractSettings = useCallback(
+    (profileParam: Profile, settingsParam: PossibleSettings) => {
+      return JSON.stringify(filterProfileSettings(profileParam, settingsParam));
+    },
+    []
+  );
 
-  const no_profile_settings =
-    profile_settings[profile as ProfileWithSettings].boolean.length === 0;
+  const no_profile_settings = profile_settings[profile].boolean.length === 0;
   const width = no_profile_settings ? 200 : 400;
 
   return (
@@ -213,53 +215,47 @@ const SettingsPanel = ({
               <Grid.Column width={8}>
                 <Form size="small">
                   <Header as="h4">Extra Settings</Header>
-                  {profile_settings[profile as ProfileWithSettings].numeric.map(
-                    (option, key) => (
-                      <Fragment key={key}>
-                        <div className="flex pointer">
-                          <div
-                            onClick={() =>
-                              handleShowSettings('extraSettings', key)
+                  {profile_settings[profile].numeric.map((option, key) => (
+                    <Fragment key={key}>
+                      <div className="flex pointer">
+                        <div
+                          onClick={() =>
+                            handleShowSettings('extraSettings', key)
+                          }
+                        >
+                          <Icon
+                            name={
+                              extraSettings[key] ? 'caret down' : 'caret right'
                             }
-                          >
-                            <Icon
-                              name={
-                                extraSettings[key]
-                                  ? 'caret down'
-                                  : 'caret right'
-                              }
-                            />
-                            <span className="b f6">{option.name}</span>
-                          </div>
-                          <div
-                            style={{
-                              marginLeft: 'auto',
-                            }}
-                          >
-                            <Popup
-                              content={option.description}
-                              size="tiny"
-                              trigger={<Icon color="grey" name="help circle" />}
-                            />
-                          </div>
-                        </div>
-                        {extraSettings[key] ? (
-                          <CustomSlider
-                            key={key}
-                            option={option}
-                            settings={settings}
-                            profile={profile}
-                            handleUpdateSettings={handleUpdateSettings}
                           />
-                        ) : null}
-                      </Fragment>
-                    )
-                  )}
+                          <span className="b f6">{option.name}</span>
+                        </div>
+                        <div
+                          style={{
+                            marginLeft: 'auto',
+                          }}
+                        >
+                          <Popup
+                            content={option.description}
+                            size="tiny"
+                            trigger={<Icon color="grey" name="help circle" />}
+                          />
+                        </div>
+                      </div>
+                      {extraSettings[key] ? (
+                        <CustomSlider
+                          key={key}
+                          option={option}
+                          settings={settings}
+                          profile={profile}
+                          handleUpdateSettings={handleUpdateSettings}
+                        />
+                      ) : null}
+                    </Fragment>
+                  ))}
                   <Divider />
                   <Fragment>
-                    {profile_settings[
-                      profile as ProfileWithSettings
-                    ].boolean.map((option, key) => {
+                    {profile_settings[profile].boolean.map((option, key) => {
                       return (
                         <div key={key} className="flex">
                           <Checkbox
@@ -284,37 +280,33 @@ const SettingsPanel = ({
                   </Fragment>
                   <Divider />
                   <Fragment>
-                    {profile_settings[profile as ProfileWithSettings].enum.map(
-                      (option, key) => {
-                        return (
-                          <div key={key} className="flex">
-                            <Dropdown
-                              placeholder="Select Bicycle Type"
-                              fluid
-                              onChange={handleBikeTypeChange}
-                              value={settings.bicycle_type}
-                              selection
-                              name="bicycle_type"
-                              options={option.enums}
-                            />
+                    {profile_settings[profile].enum.map((option, key) => {
+                      return (
+                        <div key={key} className="flex">
+                          <Dropdown
+                            placeholder="Select Bicycle Type"
+                            fluid
+                            onChange={handleBikeTypeChange}
+                            value={settings.bicycle_type}
+                            selection
+                            name="bicycle_type"
+                            options={option.enums}
+                          />
 
-                            <div
-                              style={{
-                                marginLeft: 'auto',
-                              }}
-                            >
-                              <Popup
-                                content={option.description}
-                                size="tiny"
-                                trigger={
-                                  <Icon color="grey" name="help circle" />
-                                }
-                              />
-                            </div>
+                          <div
+                            style={{
+                              marginLeft: 'auto',
+                            }}
+                          >
+                            <Popup
+                              content={option.description}
+                              size="tiny"
+                              trigger={<Icon color="grey" name="help circle" />}
+                            />
                           </div>
-                        );
-                      }
-                    )}
+                        </div>
+                      );
+                    })}
                   </Fragment>
                 </Form>
               </Grid.Column>
@@ -328,60 +320,23 @@ const SettingsPanel = ({
                   </Button>
                 </div>
                 <Accordion>
-                  {settings_general[profile as ProfileWithSettings].numeric.map(
-                    (option, key) => (
-                      <Fragment key={key}>
-                        <div className="flex pointer">
-                          <div
-                            onClick={() =>
-                              handleShowSettings('generalSettings', key)
+                  {settings_general[profile].numeric.map((option, key) => (
+                    <Fragment key={key}>
+                      <div className="flex pointer">
+                        <div
+                          onClick={() =>
+                            handleShowSettings('generalSettings', key)
+                          }
+                        >
+                          <Icon
+                            name={
+                              generalSettings[key]
+                                ? 'caret down'
+                                : 'caret right'
                             }
-                          >
-                            <Icon
-                              name={
-                                generalSettings[key]
-                                  ? 'caret down'
-                                  : 'caret right'
-                              }
-                            />
-                            <span className="b f6">{option.name}</span>
-                          </div>
-                          <div
-                            style={{
-                              marginLeft: 'auto',
-                            }}
-                          >
-                            <Popup
-                              content={option.description}
-                              size="tiny"
-                              trigger={<Icon color="grey" name="help circle" />}
-                            />
-                          </div>
-                        </div>
-                        {generalSettings[key] ? (
-                          <CustomSlider
-                            key={key}
-                            option={option}
-                            settings={settings}
-                            profile={profile}
-                            handleUpdateSettings={handleUpdateSettings}
                           />
-                        ) : null}
-                      </Fragment>
-                    )
-                  )}
-                </Accordion>
-                <Divider />
-                {settings_general[profile as ProfileWithSettings].boolean.map(
-                  (option, key) => {
-                    return (
-                      <div key={key} className="flex">
-                        <Checkbox
-                          key={key}
-                          option={option}
-                          dispatch={dispatch}
-                          settings={settings}
-                        />
+                          <span className="b f6">{option.name}</span>
+                        </div>
                         <div
                           style={{
                             marginLeft: 'auto',
@@ -394,9 +349,42 @@ const SettingsPanel = ({
                           />
                         </div>
                       </div>
-                    );
-                  }
-                )}
+                      {generalSettings[key] ? (
+                        <CustomSlider
+                          key={key}
+                          option={option}
+                          settings={settings}
+                          profile={profile}
+                          handleUpdateSettings={handleUpdateSettings}
+                        />
+                      ) : null}
+                    </Fragment>
+                  ))}
+                </Accordion>
+                <Divider />
+                {settings_general[profile].boolean.map((option, key) => {
+                  return (
+                    <div key={key} className="flex">
+                      <Checkbox
+                        key={key}
+                        option={option}
+                        dispatch={dispatch}
+                        settings={settings}
+                      />
+                      <div
+                        style={{
+                          marginLeft: 'auto',
+                        }}
+                      >
+                        <Popup
+                          content={option.description}
+                          size="tiny"
+                          trigger={<Icon color="grey" name="help circle" />}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
                 {settings_general.all.boolean.map((option, key) => {
                   return (
                     <div key={key} className="flex">

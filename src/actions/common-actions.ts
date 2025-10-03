@@ -16,7 +16,11 @@ import {
   settings_general,
 } from '../controls/settings-options';
 import type { Profile } from '@/reducers/common';
-import type { PossibleSettings, ThunkResult } from '@/common/types';
+import type {
+  PossibleSettings,
+  SettingsObject,
+  ThunkResult,
+} from '@/common/types';
 
 export const showLoading = (loading: boolean) => ({
   type: LOADING,
@@ -37,11 +41,6 @@ export const sendMessage = (message_object: MessageObject) => ({
     ...message_object,
   },
 });
-
-interface SettingsObject {
-  name: string;
-  value: string | number | boolean | string[];
-}
 
 export const updateSettings = (object: SettingsObject) => ({
   type: UPDATE_SETTINGS,
