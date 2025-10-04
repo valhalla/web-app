@@ -1,5 +1,5 @@
-type Coordinate = [number, number]; // [latitude, longitude]
-type RangeHeightPoint = [number, number]; // [distance, elevation]
+import type { Coordinate, RangeHeightPoint } from '@/map/types';
+
 type LineStringCoordinate = [number, number, number]; // [longitude, latitude, elevation]
 type HeightClass = -5 | -4 | -3 | -2 | -1 | 0 | 1 | 2 | 3 | 4 | 5;
 

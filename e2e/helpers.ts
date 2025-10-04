@@ -1,7 +1,9 @@
 import type {
+  HeightResponse,
   LocateResponse,
   NominatimResponse,
   StatusResponse,
+  ValhallaRouteResponse,
 } from '@/common/types';
 import type { Page, Route } from '@playwright/test';
 
@@ -73,7 +75,7 @@ export const mockNominatimResponse: NominatimResponse = {
   },
 };
 
-export const mockRouteResponse = {
+export const mockRouteResponse: ValhallaRouteResponse = {
   trip: {
     locations: [
       {
@@ -87,6 +89,7 @@ export const mockRouteResponse = {
         type: 'break',
         lat: 52.502429,
         lon: 13.373451,
+        side_of_street: 'right',
         original_index: 1,
       },
     ],
@@ -575,7 +578,7 @@ export const mockRouteResponse = {
   id: 'valhalla_directions',
 };
 
-export const mockHeightResponse = {
+export const mockHeightResponse: HeightResponse = {
   shape: [
     {
       lat: 52.517317,

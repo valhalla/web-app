@@ -1,3 +1,4 @@
+import type { RangeHeightPoint } from '@/map/types';
 import type { Profile } from '@/reducers/common';
 import type { RootState } from '@/store';
 import type { AnyAction } from 'redux';
@@ -328,4 +329,11 @@ export interface LocateResponse {
     percent_along: number;
   }[];
   nodes: LatLonLocation[];
+}
+
+export interface HeightResponse {
+  shape: LatLonLocation[];
+  height?: number[];
+  id: string;
+  range_height?: RangeHeightPoint[];
 }

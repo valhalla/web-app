@@ -1,3 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+// todo: disabling these eslint rules temporarily until we transition from Leaflet to OSM vector tiles
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
@@ -12,7 +19,13 @@ import axios from 'axios';
 
 import * as R from 'ramda';
 import ExtraMarkers from './extra-markers';
-import { Button, Label, Icon, Popup } from 'semantic-ui-react';
+import {
+  Button,
+  Label,
+  Icon,
+  Popup,
+  type ButtonProps,
+} from 'semantic-ui-react';
 import { ToastContainer } from 'react-toastify';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import {
@@ -31,7 +44,11 @@ import { formatDuration } from '@/utils/date-time';
 import makeResizable from '@/utils/resizable';
 import './map.css';
 import { convertDDToDMS } from './utils';
-import type { LastCenterStorageValue } from './types';
+import type {
+  Coordinate,
+  LastCenterStorageValue,
+  RangeHeightPoint,
+} from './types';
 import type { RootState } from '@/store';
 import type { AnyAction } from 'redux';
 import type { ThunkDispatch } from 'redux-thunk';
@@ -39,11 +56,19 @@ import type { DirectionsState } from '@/reducers/directions';
 import type { IsochroneState } from '@/reducers/isochrones';
 import type { Profile } from '@/reducers/common';
 import type {
+  HeightResponse,
   LatLngLocation,
   LatLonLocation,
   LocateResponse,
   ParsedDirectionsGeometry,
+  Summary,
 } from '@/common/types';
+
+interface WaypointPositionInput {
+  latLng: LatLng;
+  index: number;
+  fromDrag?: boolean;
+}
 
 const OSMTiles = L.tileLayer(process.env.REACT_APP_TILE_SERVER_URL!, {
   attribution:
@@ -174,7 +199,7 @@ const Map = ({
     excludePolygonsLayer.eachLayer((layer) => {
       const lngLatArray: number[][] = [];
       // @ts-expect-error _latlngs is not typed
-      for (const coords of layer._latlngs[0]) {
+      for (const coords of (layer._latlngs as LatLng[][])[0]) {
         lngLatArray.push([coords.lng, coords.lat]);
       }
       excludePolygons.push(lngLatArray);
@@ -190,12 +215,14 @@ const Map = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const updateWaypointPosition = useCallback((object) => {
-    dispatch(fetchReverseGeocode(object));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const updateWaypointPosition = useCallback(
+    (object: WaypointPositionInput) => {
+      dispatch(fetchReverseGeocode(object));
+    },
+    [dispatch]
+  );
 
-  const updateIsoPosition = useCallback((coord) => {
+  const updateIsoPosition = useCallback((coord: LatLngLocation) => {
     dispatch(fetchReverseGeocodeIso(coord.lng, coord.lat));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -214,7 +241,7 @@ const Map = ({
     window.open(osmURL, '_blank');
   }, []);
 
-  const getHeight = useCallback((position) => {
+  const getHeight = useCallback((position: LatLng) => {
     setIsHeightLoading(true);
     axios
       .post(
@@ -226,8 +253,8 @@ const Map = ({
           },
         }
       )
-      .then(({ data }) => {
-        if ('height' in data) {
+      .then(({ data }: { data: HeightResponse }) => {
+        if (data.height) {
           setElevation(data.height[0] + ' m');
         }
       })
@@ -266,11 +293,11 @@ const Map = ({
   );
 
   const handleAddWaypoint = useCallback(
-    (data, e) => {
+    (event, data: ButtonProps) => {
       mapRef.current!.closePopup();
       updateWaypointPosition({
-        latLng: latLng,
-        index: e.index,
+        latLng: latLng as LatLng,
+        index: data.index as number,
       });
     },
     [latLng, updateWaypointPosition]
@@ -278,7 +305,7 @@ const Map = ({
 
   const handleAddIsoWaypoint = useCallback(() => {
     mapRef.current!.closePopup();
-    updateIsoPosition(latLng);
+    updateIsoPosition(latLng as LatLng);
   }, [latLng, updateIsoPosition]);
 
   const getHeightData = useCallback(() => {
@@ -300,16 +327,18 @@ const Map = ({
             'Content-Type': 'application/json',
           },
         })
-        .then(({ data }) => {
+        .then(({ data }: { data: HeightResponse }) => {
           // lets build geojson object with steepness for the height graph
-          const reversedGeometry = JSON.parse(
+          const deepClone = JSON.parse(
             JSON.stringify(results[VALHALLA_OSM_URL!]!.data.decodedGeometry)
-          ).map((pair: number[]) => {
+          ) as number[][];
+
+          const reversedGeometry = deepClone.map((pair: number[]) => {
             return [...pair.reverse()];
-          });
+          }) as Coordinate[];
           const heightData = buildHeightgraphData(
             reversedGeometry,
-            data.range_height
+            data.range_height as RangeHeightPoint[]
           );
           const { inclineTotal, declineTotal } = heightData[0]!.properties;
           dispatch(
@@ -573,7 +602,7 @@ const Map = ({
   }, [coordinates, showDirectionsPanel, showSettings]);
 
   const zoomTo = useCallback(
-    (idx) => {
+    (idx: number) => {
       const { results } = directions;
 
       if (!results[VALHALLA_OSM_URL!]?.data?.decodedGeometry) {
@@ -645,7 +674,7 @@ const Map = ({
     `;
   }, []);
 
-  const getRouteToolTip = useCallback((summary) => {
+  const getRouteToolTip = useCallback((summary: Summary) => {
     return `
     <div class="ui list">
         <div class="item">
@@ -727,7 +756,7 @@ const Map = ({
             icon: wpMarker,
             draggable: true,
             // @ts-expect-error this is not typed
-            index: index,
+            index,
             pmIgnore: true,
           })
             .addTo(routeMarkersLayer)
@@ -738,7 +767,7 @@ const Map = ({
             .on('dragend', (e) => {
               updateWaypointPosition({
                 latLng: e.target.getLatLng(),
-                index: e.target.options.index,
+                index: e.target.options.index as number,
                 fromDrag: true,
               });
             });
