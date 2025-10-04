@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  type DropResult,
+} from 'react-beautiful-dnd';
 import { connect } from 'react-redux';
 
 import Waypoint from './waypoint';
@@ -63,7 +68,7 @@ const Waypoints = ({ directions, dispatch }: WaypointsProps) => {
   }, [dispatch, directions.waypoints.length]);
 
   const onDragEnd = useCallback(
-    (result) => {
+    (result: DropResult) => {
       // dropped outside the list
       if (!result.destination) {
         return;
