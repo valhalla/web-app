@@ -1,4 +1,5 @@
-// todo: we should get ride of @typescript-eslint/no-unsafe-assignment when we updating redux to redux-toolkit
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+// todo: disabling this eslint rules temporarily until state management is overhauled
 
 import {
   UPDATE_SETTINGS,
@@ -66,7 +67,13 @@ export const common = (
     case MESSAGE_HANDLER: {
       return {
         ...state,
-        message: action.payload,
+        message: action.payload as {
+          receivedAt: number;
+          type: null;
+          icon: null;
+          topic: null;
+          description: null;
+        },
       };
     }
     case LOADING: {

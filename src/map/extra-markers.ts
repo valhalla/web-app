@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+// todo: disabling these eslint rules temporarily until we transition from Leaflet to OSM vector tiles
+
 import * as L from 'leaflet';
 
 interface ExtraMarkersInterface {

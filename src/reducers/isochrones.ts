@@ -1,4 +1,7 @@
-// todo: we should get ride of @typescript-eslint/no-unsafe-assignment when we updating redux to redux-toolkit
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+// todo: disabling these eslint rules temporarily until state management is overhauled
 
 import {
   RECEIVE_GEOCODE_RESULTS_ISO,
@@ -105,7 +108,6 @@ export const isochrones = (
         userInput: payload.userInput,
         selectedAddress: state.geocodeResults[
           action.payload.addressindex
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ] as any,
         geocodeResults: state.geocodeResults.map((result, i) =>
           i === action.payload.addressindex

@@ -1,4 +1,7 @@
-// todo: we should get ride of @typescript-eslint/no-unsafe-assignment when we updating redux to redux-toolkit
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+// todo: disabling these eslint rules temporarily until state management is overhauled
 
 import {
   ADD_WAYPOINT,
