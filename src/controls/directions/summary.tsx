@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { connect } from 'react-redux';
 
-import { Icon, Checkbox, Popup } from 'semantic-ui-react';
+import { Icon, Checkbox, Popup, type CheckboxProps } from 'semantic-ui-react';
 import { showProvider } from '../../actions/directions-actions';
 
 import { formatDuration } from '@/utils/date-time';
@@ -30,8 +30,10 @@ const Summary = ({
   idx,
 }: SummaryProps) => {
   const handleChange = useCallback(
-    (event, data) => {
-      dispatch(showProvider(data.provider, data.checked, idx));
+    (event, data: CheckboxProps) => {
+      dispatch(
+        showProvider(data.provider as string, data.checked as boolean, idx)
+      );
     },
     [dispatch, idx]
   );

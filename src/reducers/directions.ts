@@ -48,7 +48,7 @@ interface RouteResult {
 }
 
 interface InclineDeclineTotal {
-  [key: string]: unknown;
+  [key: string]: number;
 }
 
 export interface DirectionsState {

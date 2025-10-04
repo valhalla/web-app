@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
-import { Checkbox, Icon } from 'semantic-ui-react';
+import { Checkbox, Icon, type CheckboxProps } from 'semantic-ui-react';
 import { showProvider } from '@/actions/directions-actions';
 
 import { downloadFile } from '@/actions/common-actions';
@@ -21,8 +21,8 @@ interface SummaryProps {
 
 const Summary = ({ dispatch, results, provider }: SummaryProps) => {
   const handleChange = useCallback(
-    (event, data) => {
-      dispatch(showProvider(data.provider, data.checked));
+    (event, data: CheckboxProps) => {
+      dispatch(showProvider(data.provider as string, data.checked as boolean));
     },
     [dispatch]
   );
