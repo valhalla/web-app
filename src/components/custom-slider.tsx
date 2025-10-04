@@ -34,36 +34,31 @@ const CustomSlider = ({
 }: CustomSliderProps) => {
   const { min, max, step } = option.settings;
   const [sliderVal, setSliderVal] = useState(
-    parseFloat(String(settings[option.param] ?? 0))
+    parseFloat(JSON.stringify(settings[option.param])) || 0
   );
 
   useEffect(() => {
-    setSliderVal(parseFloat(String(settings[option.param] ?? 0)));
+    setSliderVal(parseFloat(JSON.stringify(settings[option.param])) || 0);
   }, [settings, option.param]);
 
-  // todo: in here, handle change can be undefined, number and string in same time.
-  // we should come up with better type instead of any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleChange = (value?: any) => {
+  const handleChange = (value?: number) => {
     // reset
 
-    if (isNaN(value)) {
+    if (!value) {
       value =
         profile === 'truck'
-          ? (settingsInitTruckOverride as Record<string, unknown>)[option.param]
-          : (settingsInit as Record<string, unknown>)[option.param];
-    }
-    if (value < min) {
-      value = min;
-    } else if (value > max) {
-      value = max;
+          ? ((settingsInitTruckOverride as Record<string, unknown>)[
+              option.param
+            ] as number)
+          : ((settingsInit as Record<string, unknown>)[option.param] as number);
     }
 
-    setSliderVal(parseFloat(value));
+    value = Math.min(Math.max(min, value), max);
+
+    setSliderVal(value);
     handleUpdateSettings({
       name: option.param,
-
-      value: parseFloat(value),
+      value,
     });
   };
 
@@ -85,7 +80,9 @@ const CustomSlider = ({
           value={sliderVal}
           placeholder="Enter Value"
           name={option.param}
-          onChange={(e) => handleChange((e.target as HTMLInputElement).value)}
+          onChange={(e) =>
+            handleChange(parseFloat((e.target as HTMLInputElement).value))
+          }
         />
         <Popup
           content="Units"
@@ -108,7 +105,7 @@ const CustomSlider = ({
           aria-label="Default"
           valueLabelDisplay="auto"
           onChange={(e) => {
-            handleChange((e.target as HTMLInputElement).value);
+            handleChange(parseFloat((e.target as HTMLInputElement).value));
           }}
         />
       </div>
