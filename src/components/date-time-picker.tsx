@@ -4,7 +4,7 @@ import { Input, Dropdown } from 'semantic-ui-react';
 export interface DateTimePickerProps {
   type: number;
   value: string;
-  onChange: (field: 'type' | 'value', value: number | string) => void;
+  onChange: (field: 'type' | 'value', value: string) => void;
 }
 
 export const DateTimePicker = ({
@@ -26,7 +26,7 @@ export const DateTimePicker = ({
         defaultValue={type}
         style={{ marginLeft: '3px' }}
         onChange={(e, data) => {
-          onChange('type', data.value as string | number);
+          onChange('type', data.value as string);
         }}
       />
       <Input placeholder="Search..." style={{ marginLeft: '3px' }}>

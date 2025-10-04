@@ -75,7 +75,7 @@ const DirectionsControl = ({
   }, [dispatch]);
 
   const handleDateTime = useCallback(
-    (type, value) => {
+    (type: 'type' | 'value', value: string) => {
       dispatch(doUpdateDateTime(type, value));
     },
     [dispatch]

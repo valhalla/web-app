@@ -80,10 +80,10 @@ const Waypoint = ({
   );
 
   const handleSearchChange = useCallback(
-    (event) => {
+    (event: React.MouseEvent<HTMLElement>) => {
       dispatch(
         updateTextInput({
-          inputValue: event.target.value,
+          inputValue: (event.target as HTMLInputElement).value,
           index: index,
         })
       );
@@ -93,9 +93,9 @@ const Waypoint = ({
   );
 
   const handleResultSelect = useCallback(
-    (e, { result }) => {
+    (e, { result }: { result: ActiveWaypoint }) => {
       setOpen(false);
-      dispatch(zoomTo([[result.addresslnglat[1], result.addresslnglat[0]]]));
+      dispatch(zoomTo([[result.addresslnglat![1], result.addresslnglat![0]]]));
       dispatch(
         updateTextInput({
           inputValue: result.title,
