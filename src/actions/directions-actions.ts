@@ -38,16 +38,14 @@ import {
 
 import type {
   ActiveWaypoint,
+  LatLngLocation,
   NominatimResponse,
   ParsedDirectionsGeometry,
   ThunkResult,
+  ValhallaRequest,
+  ValhallaRouteErrorResponse,
   ValhallaRouteResponse,
 } from '@/common/types';
-
-interface LatLng {
-  lng: number;
-  lat: number;
-}
 
 interface FetchReverseGeocodePermaObject {
   index: number;
@@ -88,10 +86,6 @@ interface Waypoint {
   geocodeResults: ActiveWaypoint[];
   isFetching: boolean;
   userInput: string;
-}
-
-interface ValhallaRequest {
-  json: Record<string, unknown>;
 }
 
 interface HighlightSegment {
@@ -182,18 +176,18 @@ const fetchValhallaDirections =
         );
         dispatch(zoomTo((data as ParsedDirectionsGeometry).decodedGeometry));
       })
-      .catch(({ response }) => {
-        let error_msg = response.data.error;
-        if (response.data.error_code === 154) {
+      .catch((error: ValhallaRouteErrorResponse) => {
+        let error_msg = error.response.data.error;
+        if (error.response.data.error_code === 154) {
           error_msg += ` for ${valhallaRequest.json.costing}.`;
         }
-        dispatch(clearRoutes(VALHALLA_OSM_URL!));
+        dispatch(clearRoutes(VALHALLA_OSM_URL));
         dispatch(
           sendMessage({
             type: 'warning',
             icon: 'warning',
             description: `${serverMapping[VALHALLA_OSM_URL!]}: ${error_msg}`,
-            title: `${response.data.status}`,
+            title: `${error.response.data.status}`,
           })
         );
       })
@@ -420,7 +414,7 @@ export const doRemoveWaypoint =
       }
       waypoints = getState().directions.waypoints;
       if (getActiveWaypoints(waypoints).length < 2) {
-        dispatch(clearRoutes(VALHALLA_OSM_URL!));
+        dispatch(clearRoutes(VALHALLA_OSM_URL));
       }
     }
     dispatch(updatePermalink());
@@ -434,7 +428,7 @@ export const isWaypoint =
       waypoints[index]?.geocodeResults.length &&
       waypoints[index]?.geocodeResults.length > 0
     ) {
-      dispatch(clearRoutes(VALHALLA_OSM_URL!));
+      dispatch(clearRoutes(VALHALLA_OSM_URL));
     }
   };
 

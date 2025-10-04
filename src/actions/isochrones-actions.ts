@@ -24,9 +24,11 @@ import {
 import { calcArea } from '@/utils/geom';
 import type {
   ActiveWaypoint,
+  Center,
   NominatimResponse,
   ThunkResult,
   ValhallaIsochroneResponse,
+  ValhallaRouteErrorResponse,
 } from '@/common/types';
 
 const serverMapping = {
@@ -47,24 +49,17 @@ export const makeIsochronesRequest =
     // console.log(settings)
 
     // if center is selected
-    let center: ActiveWaypoint | undefined = undefined;
-    if (geocodeResults.length > 0) {
-      for (const result of geocodeResults) {
-        if (result.selected) {
-          center = result;
-          break;
-        }
-      }
-    }
+    const center: ActiveWaypoint | undefined = geocodeResults.find(
+      (result) => result.selected
+    );
 
     if (center !== undefined) {
       const valhallaRequest = buildIsochronesRequest({
         profile,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        center: center as any, // Cast to avoid type mismatch between ActiveWaypoint and Center
+        center: center as Center,
         // @ts-expect-error todo: this is not correct. initial settings and filtered settings are not the same but we are changing in later.
         // we should find a better way to do this.
-        settings: settings as Settings,
+        settings,
         maxRange,
         denoise,
         generalize,
@@ -95,14 +90,14 @@ const fetchValhallaIsochrones =
           });
           dispatch(registerIsoResponse(URL!, data));
         })
-        .catch(({ response }) => {
+        .catch((error: ValhallaRouteErrorResponse) => {
           dispatch(registerIsoResponse(URL!, []));
           dispatch(
             sendMessage({
               type: 'warning',
               icon: 'warning',
-              description: `${serverMapping[URL!]}: ${response.data.error}`,
-              title: `${response.data.status}`,
+              description: `${serverMapping[URL!]}: ${error.response.data.error}`,
+              title: `${error.response.data.status}`,
             })
           );
         })

@@ -40,6 +40,7 @@ import type { IsochroneState } from '@/reducers/isochrones';
 import type { Profile } from '@/reducers/common';
 import type {
   LatLngLocation,
+  LatLonLocation,
   LocateResponse,
   ParsedDirectionsGeometry,
 } from '@/common/types';
@@ -156,7 +157,7 @@ const Map = ({
   const [elevation, setElevation] = useState('');
   const [heightPayload, setHeightPayload] = useState<{
     range: boolean;
-    shape: { lat: number; lon: number }[];
+    shape: LatLonLocation[];
     id: string;
   } | null>(null);
 

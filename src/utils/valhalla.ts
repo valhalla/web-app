@@ -7,6 +7,7 @@ import type {
   LatLngLocation,
   LatLonLocation,
   Settings,
+  ValhallaRequest,
   ValhallaRouteResponse,
 } from '@/common/types';
 
@@ -55,7 +56,7 @@ export const buildDirectionsRequest = ({
     valhalla_profile = 'auto';
   }
 
-  const req = {
+  const req: ValhallaRequest = {
     json: {
       costing: valhalla_profile,
       costing_options: {
@@ -70,8 +71,7 @@ export const buildDirectionsRequest = ({
   };
 
   if (dateTime.type > -1) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (req.json as any).date_time = dateTime;
+    req.json.date_time = dateTime;
   }
   return req;
 };

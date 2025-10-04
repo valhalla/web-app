@@ -1,3 +1,4 @@
+import type { Profile } from '@/reducers/common';
 import type { RootState } from '@/store';
 import type { AnyAction } from 'redux';
 import type { ThunkAction } from 'redux-thunk';
@@ -181,6 +182,17 @@ export interface IsochronesRequestParams {
   interval: number;
 }
 
+export interface ActiveWaypoint {
+  title: string;
+  description?: string;
+  selected?: boolean;
+  addresslnglat?: [number, number];
+  sourcelnglat?: [number, number];
+  displaylnglat: [number, number];
+  key: number;
+  addressindex: number;
+}
+
 export interface Center {
   title: string;
   description: string;
@@ -206,6 +218,24 @@ export interface Costing {
   avoid_bad_surfaces: number;
   gate_penalty: number;
   gate_cost: number;
+}
+
+export interface ValhallaRequest {
+  json: {
+    costing: Profile;
+    costing_options: Record<
+      string,
+      {
+        [key in keyof PossibleSettings]: PossibleSettings[key];
+      }
+    >;
+    exclude_polygons: GeoJSON.GeoJSON[];
+    locations: { lon: number; lat: number; type: string }[];
+    units: string;
+    alternates: number;
+    id: string;
+    date_time?: { type: number; value: string };
+  };
 }
 
 export interface Directions {
@@ -249,6 +279,17 @@ export interface ValhallaRouteResponse {
   id: 'valhalla_directions';
   trip: Trip;
   alternates?: ValhallaRouteResponse[];
+}
+
+export interface ValhallaRouteErrorResponse {
+  response: {
+    data: {
+      error: string;
+      error_code: number;
+      status_code: number;
+      status: string;
+    };
+  };
 }
 
 export interface ValhallaIsochroneResponse extends GeoJSON.FeatureCollection {

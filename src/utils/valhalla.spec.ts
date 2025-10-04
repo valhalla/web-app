@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Profile } from '@/reducers/common';
 import type {
   ActiveWaypoints,
+  Center,
   IsochronesRequestParams,
   Settings,
   ValhallaRouteResponse,
@@ -615,7 +616,7 @@ describe('valhalla.ts', () => {
   });
 
   describe('buildIsochronesRequest', () => {
-    const mockCenter: import('@/common/types').Center = {
+    const mockCenter: Center = {
       title: 'Center',
       description: 'Center point',
       selected: true,
