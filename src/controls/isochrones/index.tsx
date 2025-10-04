@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useRef } from 'react';
 import { connect } from 'react-redux';
-import { Divider } from 'semantic-ui-react';
+import { Divider, type ButtonProps } from 'semantic-ui-react';
 
 import Waypoints from './waypoints';
 
@@ -36,8 +36,8 @@ const IsochronesControl = ({
   }>({ profile });
 
   const handleUpdateProfile = useCallback(
-    (event, data) => {
-      dispatch(updateProfile({ profile: data.valhalla_profile }));
+    (event, data: ButtonProps) => {
+      dispatch(updateProfile({ profile: data.valhalla_profile as Profile }));
       dispatch(resetSettings());
       dispatch(updatePermalink());
     },

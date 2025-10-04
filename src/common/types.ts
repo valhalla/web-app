@@ -182,6 +182,14 @@ export interface IsochronesRequestParams {
   interval: number;
 }
 
+export interface UpdateIsoSettingsObject {
+  maxRangeName?: string;
+  intervalName?: string;
+  denoiseName?: string;
+  generalizeName?: string;
+  value: number;
+}
+
 export interface ActiveWaypoint {
   title: string;
   description?: string;

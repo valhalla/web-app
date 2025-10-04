@@ -54,7 +54,7 @@ const DirectionsControl = ({
 
   const handleUpdateProfile = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>, data: ButtonProps) => {
-      dispatch(updateProfile({ profile: data.valhalla_profile }));
+      dispatch(updateProfile({ profile: data.valhalla_profile as Profile }));
       dispatch(resetSettings());
       dispatch(updatePermalink());
     },

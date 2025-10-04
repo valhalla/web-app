@@ -230,7 +230,7 @@ const placeholderAddress =
     dispatch(receiveGeocodeResults({ addresses, index: index }));
     dispatch(
       updateTextInput({
-        inputValue: [lng.toFixed(6), lat.toFixed(6)].join(', '),
+        inputValue: `${lng.toFixed(6)}, ${lat.toFixed(6)}`,
         index: index,
         addressindex: 0,
       })

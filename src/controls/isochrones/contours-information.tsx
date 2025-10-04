@@ -9,6 +9,8 @@ interface ContoursInformationProps {
   provider: string;
 }
 
+type FeatureProperties = { area: number; contour: number } | null;
+
 const ContoursInformation = ({
   results,
   provider,
@@ -29,6 +31,7 @@ const ContoursInformation = ({
       {features
         .filter((feature) => !feature.properties?.type)
         .map((feature, key) => {
+          const featureProperties = feature.properties as FeatureProperties;
           return (
             <div className="flex pb2" key={key}>
               <div
@@ -40,15 +43,15 @@ const ContoursInformation = ({
               >
                 <Icon circular name="time" />
                 <div className="pr2 f6 b pt1 pb1">
-                  {feature.properties?.contour + ' minutes'}
+                  {featureProperties?.contour + ' minutes'}
                 </div>
               </div>
               <div className="flex" style={{ alignSelf: 'center' }}>
                 <Icon circular name="move" />
                 <div className="pa1 b f6">
-                  {(feature.properties?.area > 1
-                    ? feature.properties?.area.toFixed(0)
-                    : feature.properties?.area.toFixed(1)) + ' km²'}
+                  {(featureProperties?.area && featureProperties?.area > 1
+                    ? featureProperties.area.toFixed(0)
+                    : featureProperties?.area.toFixed(1)) + ' km²'}
                 </div>
               </div>
             </div>

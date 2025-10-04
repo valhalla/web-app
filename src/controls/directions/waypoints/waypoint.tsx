@@ -1,6 +1,12 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { connect } from 'react-redux';
-import { Search, Icon, Label, Popup } from 'semantic-ui-react';
+import {
+  Search,
+  Icon,
+  Label,
+  Popup,
+  type SearchResultProps,
+} from 'semantic-ui-react';
 import {
   doRemoveWaypoint,
   updateTextInput,
@@ -103,7 +109,7 @@ const Waypoint = ({
   );
 
   const resultRenderer = useCallback(
-    ({ title, description }) => (
+    ({ title, description }: SearchResultProps) => (
       <div data-testid="search-result" className="flex-column">
         <div>
           <span className="title">{title}</span>

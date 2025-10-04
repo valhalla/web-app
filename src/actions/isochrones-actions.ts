@@ -27,9 +27,15 @@ import type {
   Center,
   NominatimResponse,
   ThunkResult,
+  UpdateIsoSettingsObject,
   ValhallaIsochroneResponse,
   ValhallaRouteErrorResponse,
 } from '@/common/types';
+
+interface UpdateTextInputObject {
+  userInput: string;
+  addressindex?: number;
+}
 
 const serverMapping = {
   [VALHALLA_OSM_URL!]: 'OSM',
@@ -125,21 +131,12 @@ export const registerIsoResponse = (
   },
 });
 
-export const updateTextInput = (obj: {
-  userInput: string;
-  addressindex?: number;
-}) => ({
+export const updateTextInput = (obj: UpdateTextInputObject) => ({
   type: UPDATE_TEXTINPUT_ISO,
   payload: obj,
 });
 
-export const updateIsoSettings = (obj: {
-  maxRangeName?: string;
-  intervalName?: string;
-  denoiseName?: string;
-  generalizeName?: string;
-  value: number;
-}) => ({
+export const updateIsoSettings = (obj: UpdateIsoSettingsObject) => ({
   type: UPDATE_SETTINGS_ISO,
   payload: obj,
 });

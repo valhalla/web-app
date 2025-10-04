@@ -7,13 +7,7 @@ import DirectionsControl from './directions';
 import IsochronesControl from './isochrones';
 import DirectionOutputControl from './directions/output-control';
 import IsochronesOutputControl from './isochrones/output-control';
-import {
-  Segment,
-  Tab,
-  Button,
-  Icon,
-  type ButtonProps,
-} from 'semantic-ui-react';
+import { Segment, Tab, Button, Icon, type TabProps } from 'semantic-ui-react';
 import {
   updateTab,
   updateProfile,
@@ -188,10 +182,10 @@ const MainControl = (props: MainControlProps) => {
 
   const handleTabChange = (
     event: React.MouseEvent<HTMLDivElement>,
-    data: ButtonProps
+    data: TabProps
   ) => {
     const { dispatch } = props;
-    const newActiveTab = data.activeIndex;
+    const newActiveTab = data.activeIndex as number;
 
     dispatch(updateTab({ activeTab: newActiveTab }));
     dispatch(updatePermalink());

@@ -1,7 +1,17 @@
 import { useState, useCallback, useMemo } from 'react';
 import { connect } from 'react-redux';
 
-import { Search, Form, Popup, Icon, Label, Accordion } from 'semantic-ui-react';
+import {
+  Search,
+  Form,
+  Popup,
+  Icon,
+  Label,
+  Accordion,
+  type SearchResultProps,
+  type AccordionTitleProps,
+  type SearchProps,
+} from 'semantic-ui-react';
 import { Slider } from '@mui/material';
 
 import { Settings } from '../settings';
@@ -28,6 +38,7 @@ import type { RootState } from '@/store';
 import type { AnyAction } from 'redux';
 import type { ThunkDispatch } from 'redux-thunk';
 import type { IsochroneState } from '@/reducers/isochrones';
+import type { ActiveWaypoint, UpdateIsoSettingsObject } from '@/common/types';
 
 interface WaypointsProps {
   isochrones: IsochroneState;
@@ -78,7 +89,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }: WaypointsProps) => {
           intervalName,
           denoiseName,
           generalizeName,
-        }) => {
+        }: UpdateIsoSettingsObject) => {
           // maxRangeName can be undefined if interval is being updated
           dispatch(
             updateIsoSettings({
@@ -86,7 +97,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }: WaypointsProps) => {
               intervalName,
               denoiseName,
               generalizeName,
-              value: parseFloat(value),
+              value,
             })
           );
 
@@ -102,17 +113,17 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }: WaypointsProps) => {
   );
 
   const handleClick = useCallback(
-    (e, titleProps) => {
+    (e, titleProps: AccordionTitleProps) => {
       const { index } = titleProps;
       const newIndex = activeIndex === index ? -1 : index;
-      setActiveIndex(newIndex);
+      setActiveIndex(newIndex as number);
     },
     [activeIndex]
   );
 
   const handleSearchChange = useCallback(
-    (event, { value }) => {
-      dispatch(updateTextInput({ userInput: value }));
+    (event, input: SearchProps) => {
+      dispatch(updateTextInput({ userInput: input.value! }));
     },
     [dispatch]
   );
@@ -122,7 +133,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }: WaypointsProps) => {
   }, [dispatch]);
 
   const handleResultSelect = useCallback(
-    (e, { result }) => {
+    (e, { result }: { result: ActiveWaypoint }) => {
       setOpen(false);
 
       dispatch(
@@ -131,20 +142,17 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }: WaypointsProps) => {
           addressindex: result.addressindex,
         })
       );
-      dispatch(zoomTo([[result.addresslnglat[1], result.addresslnglat[0]]]));
+      dispatch(zoomTo([[result.addresslnglat![1], result.addresslnglat![0]]]));
       makeIsochronesRequestDebounced();
     },
     [dispatch, makeIsochronesRequestDebounced]
   );
 
   const handleIntervalChange = useCallback(
-    (e, { value }) => {
+    (e, input: { value: string }) => {
       const { maxRange } = isochrones;
 
-      value = isNaN(parseInt(value)) ? 0 : parseInt(value);
-      if (value > maxRange) {
-        value = maxRange;
-      }
+      const value = Math.min(parseInt(input.value) || 0, maxRange);
 
       const intervalName = 'interval';
 
@@ -157,10 +165,8 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }: WaypointsProps) => {
   );
 
   const handleDenoiseChange = useCallback(
-    (e, { value }) => {
-      value = isNaN(parseFloat(value))
-        ? settingsInit.denoise
-        : parseFloat(value);
+    (e, input: { value: string }) => {
+      const value = parseInt(input.value) || settingsInit.denoise;
 
       const denoiseName = 'denoise';
 
@@ -173,10 +179,8 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }: WaypointsProps) => {
   );
 
   const handleGeneralizeChange = useCallback(
-    (e, { value }) => {
-      value = isNaN(parseInt(value))
-        ? settingsInit.generalize
-        : parseInt(value);
+    (e, input: { value: string }) => {
+      const value = parseInt(input.value) || settingsInit.generalize;
 
       const generalizeName = 'generalize';
 
@@ -189,11 +193,8 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }: WaypointsProps) => {
   );
 
   const handleRangeChange = useCallback(
-    (e, { value }) => {
-      value = isNaN(parseInt(value)) ? 0 : parseInt(value);
-      if (value > 120) {
-        value = 120;
-      }
+    (e, input: { value: string }) => {
+      const value = Math.min(parseInt(input.value) || 0, 120);
 
       const maxRangeName = 'maxRange';
       const intervalName = 'interval';
@@ -209,7 +210,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }: WaypointsProps) => {
   );
 
   const resultRenderer = useCallback(
-    ({ title, description }) => (
+    ({ title, description }: SearchResultProps) => (
       <div data-testid="search-result" className="flex-column">
         <div>
           <span className="title">{title}</span>
@@ -375,7 +376,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }: WaypointsProps) => {
                       handleIsoSliderUpdateSettings({
                         maxRangeName,
                         intervalName,
-                        value: (e.target as HTMLInputElement).value,
+                        value: parseFloat((e.target as HTMLInputElement).value),
                       });
                     }}
                     onChangeCommitted={() => {
@@ -441,7 +442,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }: WaypointsProps) => {
                       const intervalName = controlSettings.interval.param;
                       handleIsoSliderUpdateSettings({
                         intervalName,
-                        value: (e.target as HTMLInputElement).value,
+                        value: parseFloat((e.target as HTMLInputElement).value),
                       });
                     }}
                     onChangeCommitted={() => {
@@ -492,7 +493,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }: WaypointsProps) => {
                       const param = controlSettings.denoise.param;
                       handleIsoSliderUpdateSettings({
                         denoiseName: param,
-                        value: (e.target as HTMLInputElement).value,
+                        value: parseFloat((e.target as HTMLInputElement).value),
                       });
                     }}
                     onChangeCommitted={() => {
@@ -558,7 +559,7 @@ const Waypoints = ({ isochrones, dispatch, use_geocoding }: WaypointsProps) => {
                       const param = controlSettings.generalize.param;
                       handleIsoSliderUpdateSettings({
                         generalizeName: param,
-                        value: (e.target as HTMLInputElement).value,
+                        value: parseFloat((e.target as HTMLInputElement).value),
                       });
                     }}
                     onChangeCommitted={() => {
