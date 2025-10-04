@@ -157,6 +157,7 @@ export interface Maneuver {
   rough?: boolean;
   toll?: boolean;
   ferry?: boolean;
+  sign?: object;
 }
 
 export interface Summary {
