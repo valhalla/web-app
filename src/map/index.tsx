@@ -15,6 +15,7 @@ import Map, {
   NavigationControl,
 } from 'react-map-gl/maplibre';
 import type { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
+import type maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import axios from 'axios';
@@ -34,6 +35,7 @@ import {
   buildLocateRequest,
 } from '@/utils/valhalla';
 import { buildHeightgraphData } from '@/utils/heightgraph';
+import { formatDuration } from '@/utils/date-time';
 import HeightGraph from '@/components/heightgraph';
 import { DrawControl } from './draw-control';
 import './map.css';
@@ -45,7 +47,7 @@ import type { ThunkDispatch } from 'redux-thunk';
 import type { DirectionsState } from '@/reducers/directions';
 import type { IsochroneState } from '@/reducers/isochrones';
 import type { Profile } from '@/reducers/common';
-import type { ParsedDirectionsGeometry } from '@/common/types';
+import type { ParsedDirectionsGeometry, Summary } from '@/common/types';
 import type { Feature, FeatureCollection, LineString } from 'geojson';
 
 // Import the style JSON
@@ -169,6 +171,11 @@ const MapComponent = ({
   const [heightgraphHoverDistance, setHeightgraphHoverDistance] = useState<
     number | null
   >(null);
+  const [routeHoverPopup, setRouteHoverPopup] = useState<{
+    lng: number;
+    lat: number;
+    summary: Summary;
+  } | null>(null);
   const [viewState, setViewState] = useState({
     longitude: center[0],
     latitude: center[1],
@@ -651,6 +658,66 @@ const MapComponent = ({
     localStorage.setItem('last_center', last_center);
   }, []);
 
+  // Handle route line hover
+  const onRouteLineHover = useCallback(
+    (event: maplibregl.MapLayerMouseEvent) => {
+      if (!mapRef.current) return;
+
+      const map = mapRef.current.getMap();
+      map.getCanvas().style.cursor = 'pointer';
+
+      const feature = event.features?.[0];
+      if (feature && feature.properties?.summary) {
+        // Parse the summary if it's a string
+        const summary =
+          typeof feature.properties.summary === 'string'
+            ? JSON.parse(feature.properties.summary)
+            : feature.properties.summary;
+
+        setRouteHoverPopup({
+          lng: event.lngLat.lng,
+          lat: event.lngLat.lat,
+          summary: summary as Summary,
+        });
+      }
+    },
+    []
+  );
+
+  const handleMouseMove = useCallback(
+    (event: maplibregl.MapLayerMouseEvent) => {
+      if (!mapRef.current || showPopup) return; // Don't show if click popup is visible
+
+      const features = event.features;
+      // Check if we're hovering over the routes-line layer
+      const isOverRoute =
+        features &&
+        features.length > 0 &&
+        features[0]?.layer?.id === 'routes-line';
+
+      if (isOverRoute) {
+        onRouteLineHover(event);
+      } else {
+        // Clear popup and cursor when not over route
+        if (routeHoverPopup) {
+          setRouteHoverPopup(null);
+        }
+        const map = mapRef.current.getMap();
+        if (map.getCanvas().style.cursor === 'pointer') {
+          map.getCanvas().style.cursor = '';
+        }
+      }
+    },
+    [showPopup, routeHoverPopup, onRouteLineHover]
+  );
+
+  const handleMouseLeave = useCallback(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current.getMap();
+    map.getCanvas().style.cursor = '';
+    setRouteHoverPopup(null);
+  }, []);
+
   const MarkerIcon = ({
     color,
     number,
@@ -937,6 +1004,9 @@ const MapComponent = ({
           onMoveEnd={handleMoveEnd}
           onClick={handleMapClick}
           onContextMenu={handleMapContextMenu}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          interactiveLayerIds={['routes-line']}
           mapStyle={mapStyle as unknown as maplibregl.StyleSpecification}
           style={{ width: '100%', height: '100vh' }}
           maxBounds={maxBounds}
@@ -1131,6 +1201,59 @@ const MapComponent = ({
               maxWidth="none"
             >
               {MapPopup(showInfoPopup)}
+            </Popup>
+          )}
+
+          {/* Route hover popup */}
+          {routeHoverPopup && (
+            <Popup
+              longitude={routeHoverPopup.lng}
+              latitude={routeHoverPopup.lat}
+              anchor="bottom"
+              closeButton={false}
+              closeOnClick={false}
+              maxWidth="none"
+            >
+              {/* todo: update styling with tailwind when we migrate to it */}
+              <div style={{ padding: '4px 8px', minWidth: '120px' }}>
+                <div
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 'bold',
+                    marginBottom: '4px',
+                    color: '#666',
+                  }}
+                >
+                  Route Summary
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    marginBottom: '2px',
+                  }}
+                >
+                  <Icon
+                    name="arrows alternate horizontal"
+                    size="small"
+                    style={{ margin: 0 }}
+                  />
+                  <span style={{ fontSize: '13px' }}>
+                    {`${routeHoverPopup.summary.length.toFixed(
+                      routeHoverPopup.summary.length > 1000 ? 0 : 1
+                    )} km`}
+                  </span>
+                </div>
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <Icon name="clock" size="small" style={{ margin: 0 }} />
+                  <span style={{ fontSize: '13px' }}>
+                    {formatDuration(routeHoverPopup.summary.time)}
+                  </span>
+                </div>
+              </div>
             </Popup>
           )}
 
