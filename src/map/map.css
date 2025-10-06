@@ -1,7 +1,7 @@
 #osm-button {
   position: absolute;
-  bottom: 20px;
-  right: 60px;
+  bottom: 60px;
+  right: 50px;
   z-index: 1000;
 }
 
