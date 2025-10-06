@@ -8,9 +8,6 @@ import { downloadFile } from '@/actions/common-actions';
 import Summary from './summary';
 import Maneuvers from './maneuvers';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
-// @ts-expect-error todo: json-format is not typed
-import jsonFormat from 'json-format';
-import { jsonConfig } from '@/controls/settings-options';
 import type { RootState } from '@/store';
 import type { ThunkDispatch } from 'redux-thunk';
 import type { AnyAction } from 'redux';
@@ -92,7 +89,7 @@ const OutputControl = ({
       const routeResult = results[VALHALLA_OSM_URL!];
       const data = routeResult?.data;
       if (!data) return;
-      const formattedData = jsonFormat(data, jsonConfig);
+      const formattedData = JSON.stringify(data, null, 2);
       e.preventDefault();
       downloadFile({
         data: formattedData,
@@ -109,9 +106,10 @@ const OutputControl = ({
       const data = routeResult?.data;
       const coordinates = data?.decodedGeometry;
       if (!coordinates) return;
-      const formattedData = jsonFormat(
+      const formattedData = JSON.stringify(
         L.polyline(coordinates as L.LatLngExpression[]).toGeoJSON(),
-        jsonConfig
+        null,
+        2
       );
       e.preventDefault();
       downloadFile({

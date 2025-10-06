@@ -30,7 +30,6 @@
     "@turf/turf": "^6.5.0",
     "axios": "^1.1.3",
     "date-fns": "^2.29.3",
-    "json-format": "^1.0.1",
     "leaflet": "^1.9.3",
     "leaflet-extra-markers": "^1.2.1",
     "leaflet.heightgraph": "^1.4.0",
