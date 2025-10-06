@@ -1,6 +1,7 @@
 import React from 'react';
 import { useControl } from 'react-map-gl/maplibre';
 import { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
+import '@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css';
 
 interface DrawControlProps {
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
