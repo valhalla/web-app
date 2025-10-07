@@ -32,7 +32,6 @@ export function DrawControl(props: DrawControlProps) {
           props.controlRef.current.getTerraDrawInstance();
         if (terraDrawInstance) {
           terraDrawInstance.on('finish', props.onUpdate);
-          terraDrawInstance.on('change', props.onUpdate);
         }
       }
     },
@@ -43,7 +42,6 @@ export function DrawControl(props: DrawControlProps) {
           props.controlRef.current.getTerraDrawInstance();
         if (terraDrawInstance) {
           terraDrawInstance.off('finish', props.onUpdate);
-          terraDrawInstance.off('change', props.onUpdate);
         }
       }
     },

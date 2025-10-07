@@ -113,6 +113,7 @@ export default defineConfig(
       '**/*.test.{js,jsx,ts,tsx}',
       '**/*.d.ts',
       'src/vite-env.d.ts',
+      'vite.config.ts',
     ],
     rules: {
       'check-file/filename-naming-convention': 'off',
