@@ -618,8 +618,7 @@ const MapComponent = ({
         const terraDrawInstance = drawRef.current.getTerraDrawInstance();
         if (terraDrawInstance) {
           const mode = terraDrawInstance.getMode();
-          // Don't show popup if actively drawing (polygon mode, not select/delete)
-          if (mode === 'polygon') {
+          if (mode === 'polygon' || mode === 'select' || mode === 'delete') {
             return;
           }
         }
