@@ -744,6 +744,7 @@ const MapComponent = ({
           position: 'relative',
           cursor: 'pointer',
         }}
+        aria-label={`Map marker ${number}`}
       >
         <svg
           width="35"

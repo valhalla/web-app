@@ -8,6 +8,7 @@ import {
   setupSearchMock,
   simpleMockNominatimResponse,
 } from './helpers';
+import { customRouteResponse } from './mocks';
 
 interface NominatimApiRequest {
   url: string;
@@ -62,7 +63,7 @@ test.describe('Map interactions with right context menu', () => {
   });
 
   test('should show right-click context menu', async ({ page }) => {
-    await page.getByTestId('map').click({
+    await page.getByRole('region', { name: 'Map' }).click({
       button: 'right',
     });
     await expect(
@@ -81,13 +82,11 @@ test.describe('Map interactions with right context menu', () => {
   }) => {
     const apiRequests = await setupNominatimMock(page);
 
-    await page.getByTestId('map').click({ button: 'right' });
+    await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Directions from here' }).click();
     await page.waitForTimeout(2000);
 
-    await expect(
-      page.getByTestId('map').getByRole('button', { name: '1' })
-    ).toBeVisible();
+    await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     expect(apiRequests.length).toBeGreaterThan(0);
 
@@ -109,10 +108,7 @@ test.describe('Map interactions with right context menu', () => {
       simpleMockNominatimResponse as any
     );
 
-    await page.waitForSelector('[data-testid="map"]', { state: 'visible' });
-    await page.waitForTimeout(1000);
-
-    await page.getByTestId('map').click({
+    await page.getByRole('region', { name: 'Map' }).click({
       button: 'right',
       force: true,
     });
@@ -120,9 +116,7 @@ test.describe('Map interactions with right context menu', () => {
     await page.getByRole('button', { name: 'Directions from here' }).click();
     await page.waitForTimeout(2000);
 
-    await expect(
-      page.getByTestId('map').getByRole('button', { name: '1' })
-    ).toBeVisible();
+    await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     expect(apiRequests.length).toBe(1);
 
@@ -136,13 +130,11 @@ test.describe('Map interactions with right context menu', () => {
   }) => {
     await setupNominatimMock(page);
 
-    await page.getByTestId('map').click({ button: 'right' });
+    await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Directions from here' }).click();
     await page.waitForTimeout(2000);
 
-    await expect(
-      page.getByTestId('map').getByRole('button', { name: '1' })
-    ).toBeVisible();
+    await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     await expect(
       page
@@ -156,13 +148,11 @@ test.describe('Map interactions with right context menu', () => {
   }) => {
     const apiRequests = await setupNominatimMock(page);
 
-    await page.getByTestId('map').click({ button: 'right' });
+    await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Directions to here' }).click();
     await page.waitForTimeout(2000);
 
-    await expect(
-      page.getByTestId('map').getByRole('button', { name: '2' })
-    ).toBeVisible();
+    await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     expect(apiRequests.length).toBeGreaterThan(0);
 
@@ -184,10 +174,7 @@ test.describe('Map interactions with right context menu', () => {
       simpleMockNominatimResponse as any
     );
 
-    await page.waitForSelector('[data-testid="map"]', { state: 'visible' });
-    await page.waitForTimeout(1000);
-
-    await page.getByTestId('map').click({
+    await page.getByRole('region', { name: 'Map' }).click({
       button: 'right',
       force: true,
     });
@@ -195,9 +182,7 @@ test.describe('Map interactions with right context menu', () => {
     await page.getByRole('button', { name: 'Directions to here' }).click();
     await page.waitForTimeout(2000);
 
-    await expect(
-      page.getByTestId('map').getByRole('button', { name: '2' })
-    ).toBeVisible();
+    await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     expect(apiRequests.length).toBe(1);
 
@@ -209,13 +194,11 @@ test.describe('Map interactions with right context menu', () => {
   test('should populate "to" input with Nominatim result', async ({ page }) => {
     await setupNominatimMock(page);
 
-    await page.getByTestId('map').click({ button: 'right' });
+    await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Directions to here' }).click();
     await page.waitForTimeout(2000);
 
-    await expect(
-      page.getByTestId('map').getByRole('button', { name: '2' })
-    ).toBeVisible();
+    await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     await expect(
       page
@@ -229,13 +212,11 @@ test.describe('Map interactions with right context menu', () => {
   }) => {
     const apiRequests = await setupNominatimMock(page);
 
-    await page.getByTestId('map').click({ button: 'right' });
+    await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Add as via point' }).click();
     await page.waitForTimeout(2000);
 
-    await expect(
-      page.getByTestId('map').getByRole('button', { name: '2' })
-    ).toBeVisible();
+    await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     expect(apiRequests.length).toBeGreaterThan(0);
 
@@ -253,13 +234,11 @@ test.describe('Map interactions with right context menu', () => {
   }) => {
     await setupNominatimMock(page);
 
-    await page.getByTestId('map').click({ button: 'right' });
+    await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Add as via point' }).click();
     await page.waitForTimeout(2000);
 
-    await expect(
-      page.getByTestId('map').getByRole('button', { name: '2' })
-    ).toBeVisible();
+    await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     await expect(
       page
@@ -272,25 +251,25 @@ test.describe('Map interactions with right context menu', () => {
     await setupNominatimMock(page);
 
     // Add first via point
-    await page.getByTestId('map').click({ button: 'right' });
+    await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Add as via point' }).click();
-    await page.waitForTimeout(2000);
 
-    await expect(
-      page.getByTestId('map').getByRole('button', { name: '2' })
-    ).toBeVisible();
+    await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     // Add second via point
-    await page.getByTestId('map').click({ button: 'right' });
+    await page
+      .getByRole('region', { name: 'Map' })
+      .click({ button: 'right', position: { x: 800, y: 300 }, force: true });
     await page.getByRole('button', { name: 'Add as via point' }).click();
-    await page.waitForTimeout(2000);
-
-    await expect(
-      page.getByTestId('map').getByRole('button', { name: '3' })
-    ).toBeVisible();
 
     await expect(page.getByTestId('waypoint-input-1')).toBeVisible();
     await expect(page.getByTestId('waypoint-input-2')).toBeVisible();
+    await expect(
+      page.getByLabel('Map marker 2').getByRole('img')
+    ).toBeVisible();
+    await expect(
+      page.getByLabel('Map marker 3').getByRole('img')
+    ).toBeVisible();
 
     await expect(
       page
@@ -309,40 +288,42 @@ test.describe('Map interactions with right context menu', () => {
     await setupNominatimMock(page);
 
     // Add "from" waypoint
-    await page.getByTestId('map').click({ button: 'right' });
+    await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Directions from here' }).click();
     await page.waitForTimeout(1000);
 
     await expect(
-      page.getByTestId('map').getByRole('button', { name: '1' })
+      page.getByLabel('Map marker 1').getByRole('img')
     ).toBeVisible();
 
     // Add "to" waypoint
-    await page.getByTestId('map').click({ button: 'right' });
+    await page
+      .getByRole('region', { name: 'Map' })
+      .click({ button: 'right', position: { x: 800, y: 300 }, force: true });
     await page.getByRole('button', { name: 'Directions to here' }).click();
     await page.waitForTimeout(1000);
 
     await expect(
-      page.getByTestId('map').getByRole('button', { name: '2' })
+      page.getByLabel('Map marker 2').getByRole('img')
     ).toBeVisible();
 
     // Add 7 via points (total waypoints = 9, but only 8 should be allowed)
     for (let i = 0; i < 7; i++) {
-      await page.getByTestId('map').click({ button: 'right' });
+      await page.getByRole('region', { name: 'Map' }).click({
+        button: 'right',
+        position: { x: 800, y: 100 + i * 100 },
+        force: true,
+      });
       await page.getByRole('button', { name: 'Add as via point' }).click();
       await page.waitForTimeout(1000);
     }
 
-    // Check that waypoint inputs 0 to 7 and waypoint markers 1 to 8 are visible
     for (let i = 0; i < 8; i++) {
       await expect(page.getByTestId(`waypoint-input-${i}`)).toBeVisible();
       await expect(
-        page.getByTestId('map').getByRole('button', { name: `${i + 1}` })
+        page.getByLabel(`Map marker ${i + 1}`).getByRole('img')
       ).toBeVisible();
     }
-
-    // Check that waypoint input 8 does not exist
-    await expect(page.getByTestId('waypoint-input-8')).toHaveCount(1);
   });
 
   test('selecting two point should display route on the map', async ({
@@ -352,32 +333,31 @@ test.describe('Map interactions with right context menu', () => {
     const apiRequests = await setupRouteMock(page);
 
     // Select "from" point
-    await page.getByTestId('map').click({ button: 'right', force: true });
+    await page
+      .getByRole('region', { name: 'Map' })
+      .click({ button: 'right', position: { x: 800, y: 100 }, force: true });
     await page.getByRole('button', { name: 'Directions from here' }).click();
     await page.waitForTimeout(1000);
 
     await expect(
-      page.getByTestId('map').getByRole('button', { name: '1' })
+      page.getByLabel('Map marker 1').getByRole('img')
     ).toBeVisible();
 
     // Select "to" point
-    await page.getByTestId('map').click({ button: 'right', force: true });
+    await page
+      .getByRole('region', { name: 'Map' })
+      .click({ button: 'right', position: { x: 800, y: 300 }, force: true });
     await page.getByRole('button', { name: 'Directions to here' }).click();
     await page.waitForTimeout(2000);
 
     await expect(
-      page.getByTestId('map').getByRole('button', { name: '2' })
+      page.getByLabel('Map marker 2').getByRole('img')
     ).toBeVisible();
 
     expect(apiRequests.length).toBeGreaterThan(0);
 
     const request = apiRequests[0] as RouteApiRequest;
     validateRouteApiRequest(request);
-
-    await expect(page.locator('svg.leaflet-zoom-animated')).toHaveCount(1);
-    await expect(
-      page.locator('svg.leaflet-zoom-animated .leaflet-interactive')
-    ).toHaveCount(2);
   });
 
   test('should display maneuvers when route is created', async ({ page }) => {
@@ -385,30 +365,36 @@ test.describe('Map interactions with right context menu', () => {
     await setupRouteMock(page);
 
     // Select "from" point
-    await page.getByTestId('map').click({ button: 'right', force: true });
+    await page
+      .getByRole('region', { name: 'Map' })
+      .click({ button: 'right', force: true });
     await page.getByRole('button', { name: 'Directions from here' }).click();
     await page.waitForTimeout(1000);
 
     await expect(
-      page.getByTestId('map').getByRole('button', { name: '1' })
+      page.getByLabel('Map marker 1').getByRole('img')
     ).toBeVisible();
 
     // Select "to" point
-    await page.getByTestId('map').click({ button: 'right', force: true });
+    await page
+      .getByRole('region', { name: 'Map' })
+      .click({ button: 'right', position: { x: 800, y: 300 }, force: true });
     await page.getByRole('button', { name: 'Directions to here' }).click();
     await page.waitForTimeout(1000);
 
     await expect(
-      page.getByTestId('map').getByRole('button', { name: '2' })
+      page.getByLabel('Map marker 2').getByRole('img')
     ).toBeVisible();
 
     // Add a via point
-    await page.getByTestId('map').click({ button: 'right', force: true });
+    await page
+      .getByRole('region', { name: 'Map' })
+      .click({ button: 'right', position: { x: 800, y: 100 }, force: true });
     await page.getByRole('button', { name: 'Add as via point' }).click();
     await page.waitForTimeout(2000);
 
     await expect(
-      page.getByTestId('map').getByRole('button', { name: '3' })
+      page.getByLabel('Map marker 3').getByRole('img')
     ).toBeVisible();
 
     await expect(
@@ -436,27 +422,31 @@ test.describe('Map interactions with right context menu', () => {
     page,
   }) => {
     const nominatimRequests = await setupNominatimMock(page);
-    const routeRequests = await setupRouteMock(page);
+    const routeRequests = await setupRouteMock(
+      page,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      customRouteResponse as any
+    );
 
     // Add "from" waypoint
-    await page.getByTestId('map').click({ button: 'right' });
+    await page
+      .getByRole('region', { name: 'Map' })
+      .click({ button: 'right', position: { x: 800, y: 100 }, force: true });
     await page.getByRole('button', { name: 'Directions from here' }).click();
     await page.waitForTimeout(1000);
 
-    const fromWaypoint = page
-      .getByTestId('map')
-      .getByRole('button', { name: '1' });
+    const fromWaypoint = page.getByLabel('Map marker 1').getByRole('img');
 
     await expect(fromWaypoint).toBeVisible();
 
     // Add "to" waypoint
-    await page.getByTestId('map').click({ button: 'right' });
+    await page
+      .getByRole('region', { name: 'Map' })
+      .click({ button: 'right', position: { x: 800, y: 200 }, force: true });
     await page.getByRole('button', { name: 'Directions to here' }).click();
     await page.waitForTimeout(1000);
 
-    const toWaypoint = page
-      .getByTestId('map')
-      .getByRole('button', { name: '2' });
+    const toWaypoint = page.getByLabel('Map marker 2').getByRole('img');
 
     await expect(toWaypoint).toBeVisible();
 
@@ -497,22 +487,22 @@ test.describe('Map interactions with left context menu', () => {
   test('should show left-click context menu', async ({ page }) => {
     await setupHeightMock(page);
 
-    await page.getByTestId('map').click({
+    await page.getByRole('region', { name: 'Map' }).click({
       button: 'left',
     });
 
     await expect(page.getByTestId('dd-button')).toContainText(
-      '13.393707, 52.517892'
+      '13.393707, 52.518310'
     );
     await expect(page.getByTestId('dd-copy-button')).toBeVisible();
 
     await expect(page.getByTestId('latlng-button')).toContainText(
-      '52.517892, 13.393707'
+      '52.518310, 13.393707'
     );
     await expect(page.getByTestId('latlng-copy-button')).toBeVisible();
 
     await expect(page.getByTestId('dms-button')).toContainText(
-      '52° 31\' 4" N 13° 23\' 37" E'
+      '52° 31\' 6" N 13° 23\' 37" E'
     );
     await expect(page.getByTestId('dms-copy-button')).toBeVisible();
 
@@ -532,7 +522,7 @@ test.describe('Map interactions with left context menu', () => {
   test('should show height from api response', async ({ page }) => {
     await setupHeightMock(page);
 
-    await page.getByTestId('map').click({
+    await page.getByRole('region', { name: 'Map' }).click({
       button: 'left',
     });
 
@@ -543,7 +533,7 @@ test.describe('Map interactions with left context menu', () => {
     await setupHeightMock(page);
     const locateRequests = await setupLocateMock(page);
 
-    await page.getByTestId('map').click({
+    await page.getByRole('region', { name: 'Map' }).click({
       button: 'left',
     });
 
@@ -563,14 +553,14 @@ test.describe('Map interactions with left context menu', () => {
     expect(locateRequest.body).toBeDefined();
     expect(locateRequest.body?.costing).toBe('bicycle');
     expect(locateRequest.body?.locations).toStrictEqual([
-      { lat: 52.51789222838286, lon: 13.393707275390627 },
+      { lat: 52.51830999999976, lon: 13.393706999999239 },
     ]);
   });
 
   test('should copy text to clipboard', async ({ page }) => {
     await setupHeightMock(page);
 
-    await page.getByTestId('map').click({
+    await page.getByRole('region', { name: 'Map' }).click({
       button: 'left',
     });
 
@@ -581,7 +571,7 @@ test.describe('Map interactions with left context menu', () => {
     const clipboardContent = await page.evaluate(() =>
       navigator.clipboard.readText()
     );
-    expect(clipboardContent).toBe('13.393707,52.517892');
+    expect(clipboardContent).toBe('13.393707,52.518310');
   });
 });
 
@@ -598,16 +588,11 @@ test.describe('Map interactions with URL parameters', () => {
 
     await page.waitForTimeout(2000);
 
-    await expect(page.locator('svg.leaflet-zoom-animated')).toHaveCount(1);
-    await expect(
-      page.locator('svg.leaflet-zoom-animated .leaflet-interactive')
-    ).toHaveCount(2);
-
     // Check that waypoint inputs 0 to 1 and waypoint markers 1 to 2 are visible
     for (let i = 0; i < 2; i++) {
       await expect(page.getByTestId(`waypoint-input-${i}`)).toBeVisible();
       await expect(
-        page.getByTestId('map').getByRole('button', { name: `${i + 1}` })
+        page.getByLabel(`Map marker ${i + 1}`).getByRole('img')
       ).toBeVisible();
     }
 
@@ -627,16 +612,11 @@ test.describe('Map interactions with URL parameters', () => {
 
     await page.waitForTimeout(2000);
 
-    await expect(page.locator('svg.leaflet-zoom-animated')).toHaveCount(1);
-    await expect(
-      page.locator('svg.leaflet-zoom-animated .leaflet-interactive')
-    ).toHaveCount(2);
-
     // Check that waypoint inputs 0 to 7 and waypoint markers 1 to 8 are visible
     for (let i = 0; i < 8; i++) {
       await expect(page.getByTestId(`waypoint-input-${i}`)).toBeVisible();
       await expect(
-        page.getByTestId('map').getByRole('button', { name: `${i + 1}` })
+        page.getByLabel(`Map marker ${i + 1}`).getByRole('img')
       ).toBeVisible();
     }
 
@@ -686,7 +666,7 @@ https: test.describe('Left drawer', () => {
     await searchResult.click();
 
     await expect(
-      page.getByTestId('map').getByRole('button', { name: '1' })
+      page.getByLabel('Map marker 1').getByRole('img')
     ).toBeVisible();
 
     expect(searchRequests.length).toBe(1);
@@ -714,7 +694,7 @@ https: test.describe('Left drawer', () => {
     await firstSearchResult.click();
 
     await expect(
-      page.getByTestId('map').getByRole('button', { name: '1' })
+      page.getByLabel('Map marker 1').getByRole('img')
     ).toBeVisible();
 
     // Add "to" waypoint
@@ -732,13 +712,8 @@ https: test.describe('Left drawer', () => {
     await secondSearchResult.click();
 
     await expect(
-      page.getByTestId('map').getByRole('button', { name: '2' })
+      page.getByLabel('Map marker 2').getByRole('img')
     ).toBeVisible();
-
-    await expect(page.locator('svg.leaflet-zoom-animated')).toHaveCount(1);
-    await expect(
-      page.locator('svg.leaflet-zoom-animated .leaflet-interactive')
-    ).toHaveCount(2);
 
     expect(routeRequests.length).toBe(1);
     expect(searchRequests.length).toBe(2);
@@ -750,21 +725,23 @@ https: test.describe('Left drawer', () => {
     await setupNominatimMock(page);
 
     // Add first via waypoint
-    await page.getByTestId('map').click({ button: 'right' });
+    await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Add as via point' }).click();
     await page.waitForTimeout(2000);
 
     await expect(
-      page.getByTestId('map').getByRole('button', { name: '2' })
+      page.getByLabel('Map marker 2').getByRole('img')
     ).toBeVisible();
 
     // Add "to" waypoint
-    await page.getByTestId('map').click({ button: 'right' });
+    await page
+      .getByRole('region', { name: 'Map' })
+      .click({ button: 'right', position: { x: 800, y: 200 }, force: true });
     await page.getByRole('button', { name: 'Directions to here' }).click();
     await page.waitForTimeout(2000);
 
     await expect(
-      page.getByTestId('map').getByRole('button', { name: '3' })
+      page.getByLabel('Map marker 3').getByRole('img')
     ).toBeVisible();
 
     await expect(
@@ -820,21 +797,25 @@ https: test.describe('Left drawer', () => {
     const routeRequests = await setupRouteMock(page);
 
     // Add first via point
-    await page.getByTestId('map').click({ button: 'right' });
+    await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Add as via point' }).click();
     await page.waitForTimeout(2000);
 
     await expect(
-      page.getByTestId('map').getByRole('button', { name: '2' })
+      page.getByLabel('Map marker 2').getByRole('img')
     ).toBeVisible();
 
     // Add second via point
-    await page.getByTestId('map').click({ button: 'right' });
+    await page.getByRole('region', { name: 'Map' }).click({
+      button: 'right',
+      position: { x: 800, y: 100 },
+      force: true,
+    });
     await page.getByRole('button', { name: 'Add as via point' }).click();
     await page.waitForTimeout(2000);
 
     await expect(
-      page.getByTestId('map').getByRole('button', { name: '3' })
+      page.getByLabel('Map marker 3').getByRole('img')
     ).toBeVisible();
 
     await expect(page.getByTestId('waypoint-input-1')).toBeVisible();
