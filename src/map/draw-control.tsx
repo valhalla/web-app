@@ -14,7 +14,7 @@ export function DrawControl(props: DrawControlProps) {
     // onCreate
     () => {
       const control = new MaplibreTerradrawControl({
-        modes: ['polygon', 'select', 'delete'],
+        modes: ['polygon', 'select', 'delete-selection'],
         open: true,
       });
 
@@ -32,6 +32,7 @@ export function DrawControl(props: DrawControlProps) {
           props.controlRef.current.getTerraDrawInstance();
         if (terraDrawInstance) {
           terraDrawInstance.on('finish', props.onUpdate);
+          terraDrawInstance.on('change', props.onUpdate);
         }
       }
     },
@@ -42,6 +43,7 @@ export function DrawControl(props: DrawControlProps) {
           props.controlRef.current.getTerraDrawInstance();
         if (terraDrawInstance) {
           terraDrawInstance.off('finish', props.onUpdate);
+          terraDrawInstance.off('change', props.onUpdate);
         }
       }
     },

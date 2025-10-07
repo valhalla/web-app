@@ -618,7 +618,7 @@ const MapComponent = ({
         const terraDrawInstance = drawRef.current.getTerraDrawInstance();
         if (terraDrawInstance) {
           const mode = terraDrawInstance.getMode();
-          if (mode === 'polygon' || mode === 'select' || mode === 'delete') {
+          if (mode === 'polygon' || mode === 'select' || mode === 'delete-selection') {
             return;
           }
         }
