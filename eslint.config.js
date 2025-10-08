@@ -114,6 +114,7 @@ export default defineConfig(
       '**/*.d.ts',
       'src/vite-env.d.ts',
       'vite.config.ts',
+      'vitest.config.ts',
     ],
     rules: {
       'check-file/filename-naming-convention': 'off',
