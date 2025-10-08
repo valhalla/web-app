@@ -41,7 +41,7 @@ const initialState = {
   activeTab: 0,
   showSettings: false,
   showDirectionsPanel: true,
-  coordinates: [],
+  coordinates: [] as number[][],
   loading: false,
   message: {
     receivedAt: 0,

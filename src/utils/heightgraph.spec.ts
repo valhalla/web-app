@@ -187,7 +187,7 @@ describe('buildHeightgraphData', () => {
 
       // Check coordinate format: [longitude, latitude, elevation]
       const firstCoord = feature.geometry.coordinates[0]!;
-      expect(firstCoord).toHaveLength(3);
+      expect(firstCoord).toHaveLength(4);
       expect(firstCoord[0]).toBe(40.7128); // longitude (first element from coordinates)
       expect(firstCoord[1]).toBe(-74.006); // latitude (second element from coordinates)
       expect(firstCoord[2]).toBe(100); // elevation from rangeHeightData

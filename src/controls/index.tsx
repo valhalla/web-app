@@ -286,20 +286,20 @@ const MainControl = (props: MainControlProps) => {
             <IsochronesOutputControl />
           )}
         </div>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-start',
-            margin: '1rem',
-          }}
-        >
-          Last Data Update:{' '}
-          {lastUpdate
-            ? `${lastUpdate.toISOString().slice(0, 10)}, ${lastUpdate
-                .toISOString()
-                .slice(11, 16)}`
-            : '0000-00-00, 00:00'}
-        </div>
+        {lastUpdate && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-start',
+              margin: '1rem',
+            }}
+          >
+            Last Data Update:{' '}
+            {`${lastUpdate.toISOString().slice(0, 10)}, ${lastUpdate
+              .toISOString()
+              .slice(11, 16)}`}
+          </div>
+        )}
       </Drawer>
     </>
   );
