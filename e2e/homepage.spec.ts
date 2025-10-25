@@ -36,7 +36,7 @@ test('has default elements in the page', async ({ page }) => {
   await expect(page.getByTestId('add-waypoint-button')).toBeVisible();
   await expect(page.getByTestId('reset-waypoints-button')).toBeVisible();
 
-  await expect(page.getByText('Nonspecific timeNonspecific')).toBeVisible();
+  await expect(page.getByText('No specific time')).toBeVisible();
   await expect(page.getByTestId('date-time-picker')).toBeVisible();
 
   await expect(
