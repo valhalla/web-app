@@ -16,21 +16,6 @@ export default defineConfig(
       'coverage',
       'playwright-report',
       'test-results',
-      '**/*.css',
-      '**/*.scss',
-      '**/*.less',
-      '**/*.svg',
-      '**/*.png',
-      '**/*.jpg',
-      '**/*.jpeg',
-      '**/*.gif',
-      '**/*.ico',
-      '**/*.woff',
-      '**/*.woff2',
-      '**/*.ttf',
-      '**/*.eot',
-      '**/*.DS_Store',
-      'src/vite-env.d.ts',
     ],
   },
   {
@@ -103,7 +88,7 @@ export default defineConfig(
     },
   },
   {
-    files: ['src/**/*.*'],
+    files: ['**/*.ts', '**/*.tsx'],
     plugins: { 'check-file': checkFile },
     rules: {
       'check-file/filename-naming-convention': [
@@ -128,6 +113,8 @@ export default defineConfig(
       '**/*.test.{js,jsx,ts,tsx}',
       '**/*.d.ts',
       'src/vite-env.d.ts',
+      'vite.config.ts',
+      'vitest.config.ts',
     ],
     rules: {
       'check-file/filename-naming-convention': 'off',

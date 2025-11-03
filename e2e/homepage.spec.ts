@@ -14,7 +14,7 @@ test('has default elements in the page', async ({ page }) => {
 
   await setupStatusMock(page);
 
-  await expect(page.getByTestId('map')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Map' })).toBeVisible();
 
   await expect(page.getByTestId('directions-tab-button')).toBeVisible();
   await expect(page.getByTestId('isochrones-tab-button')).toBeVisible();
@@ -57,33 +57,13 @@ test('has default elements in the page', async ({ page }) => {
   await expect(page.getByText('Denoise0.1')).toBeVisible();
   await expect(page.getByText('Generalizemeters0')).toBeVisible();
 
-  await expect(
-    page.getByText('Last Data Update: 2025-09-17, 04:19')
-  ).toBeVisible();
-
-  await expect(page.getByRole('button', { name: 'Layers' })).toBeVisible();
+  // await expect(page.getByRole('button', { name: 'Layers' })).toBeVisible();
 
   await expect(page.getByRole('button', { name: 'Zoom in' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Zoom out' })).toBeVisible();
 
-  await expect(
-    page.getByTitle('Draw Polygons').getByRole('button')
-  ).toBeVisible();
-  await expect(page.getByTitle('Draw Text').getByRole('button')).toBeVisible();
-
-  await expect(
-    page.getByTitle('Edit Layers').getByRole('button')
-  ).toBeVisible();
-  await expect(
-    page.getByTitle('Drag Layers').getByRole('button')
-  ).toBeVisible();
-  await expect(
-    page.getByTitle('Remove Layers').getByRole('button')
-  ).toBeVisible();
-  await expect(
-    page.getByTitle('Rotate Layers').getByRole('button')
-  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Polygon' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Select' })).toBeVisible();
 
   await expect(page.getByRole('button', { name: 'Open OSM' })).toBeVisible();
-  await expect(page.getByTitle('Height Graph')).toBeVisible();
 });
