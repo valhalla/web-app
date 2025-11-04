@@ -17,7 +17,7 @@ export const DateTimePicker = ({
       <Dropdown
         clearable
         options={[
-          { key: 0, text: 'Nonspecific time', value: -1 },
+          { key: 0, text: 'No specific time', value: -1 },
           { key: 1, text: 'Leave now', value: 0 },
           { key: 2, text: 'Depart at', value: 1 },
           { key: 3, text: 'Arrive at', value: 2 },
