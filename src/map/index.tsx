@@ -52,6 +52,8 @@ import type { Feature, FeatureCollection, LineString } from 'geojson';
 
 // Import the style JSON
 import mapStyle from './style.json';
+import cartoStyle from './carto.json';
+import { ResetBoundsControl, getInitialMapStyle } from './map-style-control';
 
 const centerCoords = process.env.REACT_APP_CENTER_COORDS!.split(',');
 
@@ -181,6 +183,9 @@ const MapComponent = ({
     latitude: center[1],
     zoom: zoom_initial,
   });
+  const [currentMapStyle, setCurrentMapStyle] = useState<
+    'shortbread' | 'carto'
+  >(getInitialMapStyle);
 
   const mapRef = useRef<MapRef>(null);
   const drawRef = useRef<MaplibreTerradrawControl | null>(null);
@@ -190,6 +195,21 @@ const MapComponent = ({
     () => throttle(50, setHeightgraphHoverDistance),
     []
   );
+
+  // Handle map style changes
+  const handleStyleChange = useCallback((style: 'shortbread' | 'carto') => {
+    setCurrentMapStyle(style);
+
+    // Update URL params (only add 'style' param if not shortbread)
+    const url = new URL(window.location.href);
+    if (style === 'carto') {
+      url.searchParams.set('style', 'carto');
+    } else {
+      // Remove style param for shortbread (it's the default)
+      url.searchParams.delete('style');
+    }
+    window.history.replaceState({}, '', url.toString());
+  }, []);
 
   const updateExcludePolygons = useCallback(() => {
     if (!drawRef.current) return;
@@ -1011,7 +1031,11 @@ const MapComponent = ({
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           interactiveLayerIds={['routes-line']}
-          mapStyle={mapStyle as unknown as maplibregl.StyleSpecification}
+          mapStyle={
+            (currentMapStyle === 'carto'
+              ? cartoStyle
+              : mapStyle) as unknown as maplibregl.StyleSpecification
+          }
           style={{ width: '100%', height: '100vh' }}
           maxBounds={maxBounds}
           minZoom={2}
@@ -1024,6 +1048,7 @@ const MapComponent = ({
             onUpdate={updateExcludePolygons}
             controlRef={drawRef}
           />
+          <ResetBoundsControl onStyleChange={handleStyleChange} />
 
           {/* Route lines */}
           {routeGeoJSON && (

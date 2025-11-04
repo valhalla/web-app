@@ -33,6 +33,7 @@
     "d3": "^7.9.0",
     "date-fns": "^2.29.3",
     "json-format": "^1.0.1",
+    "lucide-react": "^0.552.0",
     "maplibre-gl": "^5.8.0",
     "prop-types": "^15.8.1",
     "ramda": "^0.28.0",
