@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { connect } from 'react-redux';
 import { Segment, Button, Icon } from 'semantic-ui-react';
-import L from 'leaflet';
 
 import { makeRequest } from '@/actions/directions-actions';
 import { downloadFile } from '@/actions/common-actions';
@@ -109,10 +108,19 @@ const OutputControl = ({
       const data = routeResult?.data;
       const coordinates = data?.decodedGeometry;
       if (!coordinates) return;
-      const formattedData = jsonFormat(
-        L.polyline(coordinates as L.LatLngExpression[]).toGeoJSON(),
-        jsonConfig
-      );
+
+      const geoJsonCoordinates = coordinates.map(([lat, lng]) => [lng, lat]);
+
+      const geoJson = {
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: geoJsonCoordinates,
+        },
+        properties: {},
+      };
+
+      const formattedData = jsonFormat(geoJson, jsonConfig);
       e.preventDefault();
       downloadFile({
         data: formattedData,

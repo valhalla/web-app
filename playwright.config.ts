@@ -1,3 +1,4 @@
+/* eslint-disable check-file/filename-naming-convention */
 import { defineConfig, devices } from '@playwright/test';
 
 /**

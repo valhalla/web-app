@@ -1,6 +1,6 @@
 type Coordinate = [number, number]; // [latitude, longitude]
 type RangeHeightPoint = [number, number]; // [distance, elevation]
-type LineStringCoordinate = [number, number, number]; // [longitude, latitude, elevation]
+type LineStringCoordinate = [number, number, number, number]; // [longitude, latitude, elevation, distance]
 type HeightClass = -5 | -4 | -3 | -2 | -1 | 0 | 1 | 2 | 3 | 4 | 5;
 
 interface HeightGraphFeature {
@@ -107,9 +107,10 @@ export const buildHeightgraphData = (
       if (previousHeightClass !== heightClass) {
         // since at this point we have a change in height class this will be the last point in current LineString
         LineStringCoordinates.push([
-          coordinates[index]![0],
-          coordinates[index]![1],
-          rangeHeightData[index]![1],
+          coordinates[index]![0], // lng
+          coordinates[index]![1], // lat
+          rangeHeightData[index]![1], // elevation
+          rangeHeightData[index]![0], // distance from start
         ]);
 
         // add current LineString as one feature in GeoJSON
@@ -130,9 +131,10 @@ export const buildHeightgraphData = (
       }
       // current point is also the stratting point for new LineString
       LineStringCoordinates.push([
-        coordinates[index]![0],
-        coordinates[index]![1],
-        rangeHeightData[index]![1],
+        coordinates[index]![0], // lng
+        coordinates[index]![1], // lat
+        rangeHeightData[index]![1], // elevation
+        rangeHeightData[index]![0], // distance from start
       ]);
       // replace previousHeightClass with current heightClass
       previousHeightClass = heightClass;
