@@ -189,6 +189,8 @@ const MapComponent = ({
 
   const mapRef = useRef<MapRef>(null);
   const drawRef = useRef<MaplibreTerradrawControl | null>(null);
+  const touchStartTimeRef = useRef<number | null>(null);
+  const touchLocationRef = useRef<{ x: number; y: number } | null>(null);
 
   // Throttle heightgraph hover updates for better performance
   const throttledSetHeightgraphHoverDistance = useMemo(
@@ -681,6 +683,51 @@ const MapComponent = ({
     localStorage.setItem('last_center', last_center);
   }, []);
 
+  const handleTouchStart = useCallback((event: maplibregl.MapTouchEvent) => {
+    touchStartTimeRef.current = new Date().getTime();
+    touchLocationRef.current = { x: event.point.x, y: event.point.y };
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (event: maplibregl.MapTouchEvent) => {
+      const longTouchTimeMS = 100;
+      const acceptableMoveDistance = 20;
+
+      if (touchStartTimeRef.current && touchLocationRef.current) {
+        const touchTime = new Date().getTime() - touchStartTimeRef.current;
+        const didNotMoveMap =
+          Math.abs(event.point.x - touchLocationRef.current.x) <
+            acceptableMoveDistance &&
+          Math.abs(event.point.y - touchLocationRef.current.y) <
+            acceptableMoveDistance;
+
+        if (touchTime > longTouchTimeMS && didNotMoveMap) {
+          if (drawRef.current) {
+            const terraDrawInstance = drawRef.current.getTerraDrawInstance();
+            if (terraDrawInstance) {
+              const mode = terraDrawInstance.getMode();
+              if (
+                mode === 'polygon' ||
+                mode === 'select' ||
+                mode === 'delete-selection'
+              ) {
+                touchStartTimeRef.current = null;
+                touchLocationRef.current = null;
+                return;
+              }
+            }
+          }
+
+          handleMapContextMenu({ lngLat: event.lngLat });
+        }
+      }
+
+      touchStartTimeRef.current = null;
+      touchLocationRef.current = null;
+    },
+    [handleMapContextMenu]
+  );
+
   // Handle route line hover
   const onRouteLineHover = useCallback(
     (event: maplibregl.MapLayerMouseEvent) => {
@@ -1028,6 +1075,8 @@ const MapComponent = ({
           onMoveEnd={handleMoveEnd}
           onClick={handleMapClick}
           onContextMenu={handleMapContextMenu}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           interactiveLayerIds={['routes-line']}
