@@ -191,6 +191,7 @@ const MapComponent = ({
   const drawRef = useRef<MaplibreTerradrawControl | null>(null);
   const touchStartTimeRef = useRef<number | null>(null);
   const touchLocationRef = useRef<{ x: number; y: number } | null>(null);
+  const handledLongPressRef = useRef<boolean>(false);
 
   // Throttle heightgraph hover updates for better performance
   const throttledSetHeightgraphHoverDistance = useMemo(
@@ -635,6 +636,12 @@ const MapComponent = ({
   // Handle map click
   const handleMapClick = useCallback(
     (event: { lngLat: { lng: number; lat: number } }) => {
+      // Prevent click if we just handled a long press
+      if (handledLongPressRef.current) {
+        handledLongPressRef.current = false;
+        return;
+      }
+
       // Check if TerraDraw is in an active drawing mode
       if (drawRef.current) {
         const terraDrawInstance = drawRef.current.getTerraDrawInstance();
@@ -686,6 +693,7 @@ const MapComponent = ({
   const handleTouchStart = useCallback((event: maplibregl.MapTouchEvent) => {
     touchStartTimeRef.current = new Date().getTime();
     touchLocationRef.current = { x: event.point.x, y: event.point.y };
+    handledLongPressRef.current = false;
   }, []);
 
   const handleTouchEnd = useCallback(
@@ -718,6 +726,7 @@ const MapComponent = ({
             }
           }
 
+          handledLongPressRef.current = true;
           handleMapContextMenu({ lngLat: event.lngLat });
         }
       }
