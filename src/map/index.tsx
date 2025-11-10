@@ -189,6 +189,9 @@ const MapComponent = ({
 
   const mapRef = useRef<MapRef>(null);
   const drawRef = useRef<MaplibreTerradrawControl | null>(null);
+  const touchStartTimeRef = useRef<number | null>(null);
+  const touchLocationRef = useRef<{ x: number; y: number } | null>(null);
+  const handledLongPressRef = useRef<boolean>(false);
 
   // Throttle heightgraph hover updates for better performance
   const throttledSetHeightgraphHoverDistance = useMemo(
@@ -633,6 +636,12 @@ const MapComponent = ({
   // Handle map click
   const handleMapClick = useCallback(
     (event: { lngLat: { lng: number; lat: number } }) => {
+      // Prevent click if we just handled a long press
+      if (handledLongPressRef.current) {
+        handledLongPressRef.current = false;
+        return;
+      }
+
       // Check if TerraDraw is in an active drawing mode
       if (drawRef.current) {
         const terraDrawInstance = drawRef.current.getTerraDrawInstance();
@@ -680,6 +689,53 @@ const MapComponent = ({
     });
     localStorage.setItem('last_center', last_center);
   }, []);
+
+  const handleTouchStart = useCallback((event: maplibregl.MapTouchEvent) => {
+    touchStartTimeRef.current = new Date().getTime();
+    touchLocationRef.current = { x: event.point.x, y: event.point.y };
+    handledLongPressRef.current = false;
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (event: maplibregl.MapTouchEvent) => {
+      const longTouchTimeMS = 100;
+      const acceptableMoveDistance = 20;
+
+      if (touchStartTimeRef.current && touchLocationRef.current) {
+        const touchTime = new Date().getTime() - touchStartTimeRef.current;
+        const didNotMoveMap =
+          Math.abs(event.point.x - touchLocationRef.current.x) <
+            acceptableMoveDistance &&
+          Math.abs(event.point.y - touchLocationRef.current.y) <
+            acceptableMoveDistance;
+
+        if (touchTime > longTouchTimeMS && didNotMoveMap) {
+          if (drawRef.current) {
+            const terraDrawInstance = drawRef.current.getTerraDrawInstance();
+            if (terraDrawInstance) {
+              const mode = terraDrawInstance.getMode();
+              if (
+                mode === 'polygon' ||
+                mode === 'select' ||
+                mode === 'delete-selection'
+              ) {
+                touchStartTimeRef.current = null;
+                touchLocationRef.current = null;
+                return;
+              }
+            }
+          }
+
+          handledLongPressRef.current = true;
+          handleMapContextMenu({ lngLat: event.lngLat });
+        }
+      }
+
+      touchStartTimeRef.current = null;
+      touchLocationRef.current = null;
+    },
+    [handleMapContextMenu]
+  );
 
   // Handle route line hover
   const onRouteLineHover = useCallback(
@@ -1028,6 +1084,8 @@ const MapComponent = ({
           onMoveEnd={handleMoveEnd}
           onClick={handleMapClick}
           onContextMenu={handleMapContextMenu}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           interactiveLayerIds={['routes-line']}
