@@ -1,15 +1,16 @@
-import React, { useCallback } from 'react';
-import { connect } from 'react-redux';
-import { Header, Icon, Divider, Popup } from 'semantic-ui-react';
+import React from 'react';
 
 import {
   highlightManeuver,
   zoomToManeuver,
 } from '@/actions/directions-actions';
-import type { RootState } from '@/store';
-import type { ThunkDispatch } from 'redux-thunk';
+import type { AppDispatch } from '@/store';
 import type { Leg } from '@/common/types';
-import type { AnyAction } from 'redux';
+import { useDispatch } from 'react-redux';
+import { Clock, MoveHorizontal, DollarSign, Ship } from 'lucide-react';
+import { MetricItem } from '@/components/ui/metric-item';
+import { RouteAttributes } from '@/components/ui/route-attributes';
+import { formatDuration } from '@/utils/date-time';
 
 const getLength = (length: number) => {
   const visibleLength = length * 1000;
@@ -20,46 +21,36 @@ const getLength = (length: number) => {
 };
 
 interface ManeuversProps {
-  dispatch: ThunkDispatch<RootState, unknown, AnyAction>;
   legs: Leg[];
-  idx: number;
+  index: number;
 }
 
-const Maneuvers = ({ dispatch, legs, idx }: ManeuversProps) => {
-  const highlightMnv = useCallback(
-    (sIdx: number, eIdx: number) => {
-      dispatch(
-        highlightManeuver({ startIndex: sIdx, endIndex: eIdx, alternate: idx })
-      );
-    },
-    [dispatch, idx]
-  );
+export const Maneuvers = ({ legs, index }: ManeuversProps) => {
+  const dispatch = useDispatch<AppDispatch>();
 
-  const zoomToMnv = useCallback(
-    (sIdx: number) => {
-      dispatch(zoomToManeuver({ index: sIdx, timeNow: Date.now() }));
-    },
-    [dispatch]
-  );
+  const highlightMnv = (startIndex: number, endIndex: number) => {
+    dispatch(highlightManeuver({ startIndex, endIndex, alternate: index }));
+  };
 
-  const startIndices: number[] = [0];
+  const zoomToMnv = (startIndex: number) => {
+    dispatch(zoomToManeuver({ index: startIndex, timeNow: Date.now() }));
+  };
 
-  if (legs) {
-    for (let i = 0; i < legs.length - 1; i++) {
-      const endShapeIndex =
-        legs[i]!.maneuvers[legs[i]!.maneuvers.length - 1]!.end_shape_index;
-      startIndices[i + 1] = endShapeIndex;
-    }
-  }
+  const startIndices: number[] = [
+    0,
+    ...(legs
+      ?.slice(0, -1)
+      .map((leg) => leg.maneuvers[leg.maneuvers.length - 1]!.end_shape_index) ??
+      []),
+  ];
 
   return (
-    <React.Fragment>
+    <div className="flex flex-col gap-2">
       {legs?.map((leg, i) =>
         leg.maneuvers.map((mnv, j) => (
           <React.Fragment key={j}>
             <div
-              style={{ maxWidth: '300px' }}
-              className="flex-column pt3 pb3 pointer"
+              className="flex border justify-between rounded-md p-2 bg-background items-center"
               onMouseEnter={() =>
                 highlightMnv(
                   startIndices[i]! + mnv.begin_shape_index,
@@ -76,93 +67,38 @@ const Maneuvers = ({ dispatch, legs, idx }: ManeuversProps) => {
                 zoomToMnv(startIndices[i]! + mnv.begin_shape_index)
               }
             >
-              <div className="pb2">
-                <Header as="h4">{mnv.instruction}</Header>
-              </div>
-              {mnv.type !== 4 && mnv.type !== 5 && mnv.type !== 6 && (
-                <div className="flex justify-between">
-                  <div
-                    style={{
-                      alignSelf: 'center',
-                      flexBasis: '100px',
-                    }}
-                  >
-                    <Icon
-                      circular
-                      name="arrows alternate horizontal"
-                      size="small"
+              <div>
+                <p>{mnv.instruction}</p>
+                {mnv.type !== 4 && mnv.type !== 5 && mnv.type !== 6 && (
+                  <div className="flex items-center gap-2">
+                    <MetricItem
+                      icon={MoveHorizontal}
+                      label="Length"
+                      value={getLength(mnv.length)}
+                      variant="outline"
                     />
-                    <div className="dib pa1 f6">{getLength(mnv.length)}</div>
+                    <MetricItem
+                      icon={Clock}
+                      label="Time"
+                      value={formatDuration(mnv.time)}
+                      variant="outline"
+                    />
                   </div>
-                  <div
-                    style={{
-                      alignSelf: 'center',
-                      flexGrow: 1,
-                    }}
-                  >
-                    <Icon circular name="time" size="small" />
-                    <div className="dib pa1 f6">
-                      {new Date(mnv.time * 1000).toISOString().substr(11, 8)}
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent:
-                        mnv.toll && mnv.ferry ? 'space-between' : 'flex-start',
-                      flexBasis: '80px',
-                    }}
-                  >
-                    {mnv.toll && (
-                      <div className="flex align-center">
-                        <Popup
-                          content="Toll"
-                          size="tiny"
-                          offset={[-6, 0]}
-                          trigger={
-                            <div>
-                              <Icon circular name="dollar" size="small" />
-                              <div className="dib pa1 f6"></div>
-                            </div>
-                          }
-                        />
-                      </div>
-                    )}
-                    {mnv.ferry && (
-                      <div className="flex align-center">
-                        <Popup
-                          content="Ferry"
-                          size="tiny"
-                          offset={[-6, 0]}
-                          trigger={
-                            <div>
-                              <Icon circular name="ship" size="small" />
-                              <div className="dib pa1 f6"></div>
-                            </div>
-                          }
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
+              <div>
+                <RouteAttributes
+                  attributes={[
+                    { icon: DollarSign, label: 'Toll', flag: mnv.toll },
+                    { icon: Ship, label: 'Ferry', flag: mnv.ferry },
+                  ]}
+                  variant="outline-destructive"
+                />
+              </div>
             </div>
-            {mnv.type !== 4 && mnv.type !== 5 && mnv.type !== 6 && (
-              <Divider fitted />
-            )}
           </React.Fragment>
         ))
       )}
-    </React.Fragment>
+    </div>
   );
 };
-
-const mapStateToProps = (state: RootState) => {
-  const { results } = state.directions;
-  return {
-    results,
-  };
-};
-
-export default connect(mapStateToProps)(Maneuvers);

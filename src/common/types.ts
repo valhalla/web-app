@@ -243,3 +243,11 @@ export type ThunkResult<T = void> = ThunkAction<
   unknown,
   AnyAction
 >;
+
+export interface FetchGeocodeObject {
+  inputValue: string;
+  lngLat?: [number, number];
+  index?: number;
+}
+
+export type PossibleTabValues = 'directions' | 'isochrones';

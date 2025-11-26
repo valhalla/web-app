@@ -5,14 +5,13 @@ import {
   UPDATE_PROFILE,
   UPDATE_TAB,
   LOADING,
-  MESSAGE_HANDLER,
   SHOW_SETTINGS,
   ZOOM_TO,
   RESET_SETTINGS,
   TOGGLE_DIRECTIONS,
   UPDATE_DATETIME,
 } from '@/actions/types';
-import type { PossibleSettings } from '@/common/types';
+import type { PossibleSettings, PossibleTabValues } from '@/common/types';
 import {
   settingsInit,
   settingsInitTruckOverride,
@@ -38,18 +37,11 @@ export interface Message {
 }
 
 const initialState = {
-  activeTab: 0,
+  activeTab: 'directions' as PossibleTabValues,
   showSettings: false,
   showDirectionsPanel: true,
   coordinates: [] as number[][],
   loading: false,
-  message: {
-    receivedAt: 0,
-    type: null,
-    icon: null,
-    topic: null,
-    description: null,
-  },
   profile: 'bicycle' as Profile,
   settings: { ...settingsInit } as PossibleSettings,
   dateTime: {
@@ -63,12 +55,6 @@ export const common = (
   action: AnyAction
 ): typeof initialState => {
   switch (action.type) {
-    case MESSAGE_HANDLER: {
-      return {
-        ...state,
-        message: action.payload,
-      };
-    }
     case LOADING: {
       return {
         ...state,

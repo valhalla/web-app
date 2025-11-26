@@ -1,5 +1,4 @@
 import {
-  MESSAGE_HANDLER,
   UPDATE_PROFILE,
   UPDATE_SETTINGS,
   UPDATE_TAB,
@@ -16,26 +15,15 @@ import {
   settings_general,
 } from '../controls/settings-options';
 import type { Profile } from '@/reducers/common';
-import type { PossibleSettings, ThunkResult } from '@/common/types';
+import type {
+  PossibleSettings,
+  PossibleTabValues,
+  ThunkResult,
+} from '@/common/types';
 
 export const showLoading = (loading: boolean) => ({
   type: LOADING,
   payload: loading,
-});
-
-interface MessageObject {
-  type: 'info' | 'warning' | 'error' | 'success'; // this might be not correct, but currently only warning is used
-  icon: 'info' | 'warning' | 'error' | 'success'; // this might be not correct, but currently only warning is used
-  description: string;
-  title: string;
-}
-
-export const sendMessage = (message_object: MessageObject) => ({
-  type: MESSAGE_HANDLER,
-  payload: {
-    receivedAt: Date.now(),
-    ...message_object,
-  },
 });
 
 interface SettingsObject {
@@ -53,7 +41,7 @@ export const updateProfile = (object: { profile: Profile }) => ({
   payload: object,
 });
 
-export const updateTab = (object: { activeTab: number }) => ({
+export const updateTab = (object: { activeTab: PossibleTabValues }) => ({
   type: UPDATE_TAB,
   payload: object,
 });
@@ -89,7 +77,7 @@ export const updatePermalink = (): ThunkResult => (_, getState) => {
   queryParams.set('profile', profile);
 
   let path = '/directions?';
-  if (activeTab === 0) {
+  if (activeTab === 'directions') {
     const wps = [];
     for (const wp of waypoints) {
       for (const result of wp.geocodeResults) {

@@ -1,110 +1,59 @@
-import React, { useEffect, useCallback, useRef } from 'react';
-import { connect } from 'react-redux';
-import { Divider } from 'semantic-ui-react';
+import { useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
-import Waypoints from './waypoints';
+import { Waypoints } from './waypoints';
 
 import { ProfilePicker } from '@/components/profile-picker';
 import { SettingsButton } from '@/components/settings-button';
 import { SettingsFooter } from '@/components/settings-footer';
 
-import {
-  updateProfile,
-  doShowSettings,
-  updatePermalink,
-  resetSettings,
-} from '@/actions/common-actions';
 import { makeIsochronesRequest } from '@/actions/isochrones-actions';
-import type { RootState } from '@/store';
-import type { AnyAction } from 'redux';
-import type { ThunkDispatch } from 'redux-thunk';
-import type { Profile } from '@/reducers/common';
+import type { AppDispatch, RootState } from '@/store';
+import { Separator } from '@/components/ui/separator';
+import { IsochronesOutputControl } from './output-control';
+import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 
-interface IsochronesControlProps {
-  profile: Profile;
-  loading: boolean;
-  dispatch: ThunkDispatch<RootState, unknown, AnyAction>;
-}
+export const IsochronesControl = () => {
+  const { results } = useSelector((state: RootState) => state.isochrones);
+  const { profile, loading } = useSelector((state: RootState) => state.common);
+  const dispatch = useDispatch<AppDispatch>();
 
-const IsochronesControl = ({
-  profile,
-  loading,
-  dispatch,
-}: IsochronesControlProps) => {
-  const prevPropsRef = useRef<{
-    profile: Profile;
-  }>({ profile });
-
-  const handleUpdateProfile = useCallback(
-    (event, data) => {
-      dispatch(updateProfile({ profile: data.valhalla_profile }));
-      dispatch(resetSettings());
-      dispatch(updatePermalink());
-    },
-    [dispatch]
-  );
-
-  useEffect(() => {
-    if (prevPropsRef.current && prevPropsRef.current.profile !== profile) {
-      dispatch(makeIsochronesRequest());
-    }
-  }, [profile, dispatch]);
-
-  useEffect(() => {
-    prevPropsRef.current = { profile };
-  });
-
-  const handleSettings = useCallback(() => {
-    dispatch(doShowSettings());
+  const handleProfileChange = useCallback(() => {
+    dispatch(makeIsochronesRequest());
   }, [dispatch]);
 
-  // handleRemoveIsos = () => {
-  //   const { dispatch } = this.props
-  //   dispatch(clearIsos())
-  // }
-
   return (
-    <React.Fragment>
-      <div className="flex flex-column content-between">
-        <div className="pa2 flex flex-row justify-between">
+    <>
+      <div className="flex flex-col gap-3 border rounded-md p-2">
+        <div className="flex justify-between">
           <ProfilePicker
-            group="directions"
             loading={loading}
             profiles={[
-              'bicycle',
-              'pedestrian',
-              'car',
-              'truck',
-              'bus',
-              'motor_scooter',
-            ]}
-            popupContent={[
-              'Bicycle',
-              'Pedestrian',
-              'Car',
-              'Truck',
-              'Bus',
-              'Motor Scooter',
+              { value: 'bicycle', label: 'Bicycle' },
+              { value: 'pedestrian', label: 'Pedestrian' },
+              { value: 'car', label: 'Car' },
+              { value: 'truck', label: 'Truck' },
+              { value: 'bus', label: 'Bus' },
+              { value: 'motor_scooter', label: 'Motor Scooter' },
             ]}
             activeProfile={profile}
-            handleUpdateProfile={handleUpdateProfile}
+            onProfileChange={handleProfileChange}
           />
-          <SettingsButton handleSettings={handleSettings} />
+          <SettingsButton />
         </div>
         <Waypoints />
-        <Divider fitted />
+        <Separator />
         <SettingsFooter />
       </div>
-    </React.Fragment>
+      {results[VALHALLA_OSM_URL!]!.data && (
+        <div>
+          <h3 className="font-bold mb-2">Isochrones</h3>
+          <IsochronesOutputControl
+            data={results[VALHALLA_OSM_URL!]!.data}
+            showOnMap={results[VALHALLA_OSM_URL!]!.show}
+          />
+        </div>
+      )}
+    </>
   );
 };
-
-const mapStateToProps = (state: RootState) => {
-  const { profile, loading } = state.common;
-  return {
-    profile,
-    loading,
-  };
-};
-
-export default connect(mapStateToProps)(IsochronesControl);

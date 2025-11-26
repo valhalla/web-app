@@ -1,19 +1,9 @@
-import React, { useEffect } from 'react';
-import { connect } from 'react-redux';
-import Drawer from 'react-modern-drawer';
-import 'react-modern-drawer/dist/index.css';
-import { toast } from 'react-toastify';
-import DirectionsControl from './directions';
-import IsochronesControl from './isochrones';
-import DirectionOutputControl from './directions/output-control';
-import IsochronesOutputControl from './isochrones/output-control';
-import {
-  Segment,
-  Tab,
-  Button,
-  Icon,
-  type ButtonProps,
-} from 'semantic-ui-react';
+import { useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { DirectionsControl } from './directions';
+import { IsochronesControl } from './isochrones';
 import {
   updateTab,
   updateProfile,
@@ -22,296 +12,201 @@ import {
   resetSettings,
   toggleDirections,
 } from '@/actions/common-actions';
-import { fetchReverseGeocodePerma } from '@/actions/directions-actions';
 import {
-  fetchReverseGeocodeIso,
-  updateIsoSettings,
-} from '@/actions/isochrones-actions';
+  fetchReverseGeocodePerma,
+  makeRequest,
+} from '@/actions/directions-actions';
+import { fetchReverseGeocodeIso } from '@/actions/isochrones-actions';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
-import type { RootState } from '@/store';
-import type { AnyAction } from 'redux';
-import type { ThunkDispatch } from 'redux-thunk';
-import type { Message, Profile } from '@/reducers/common';
+import type { AppDispatch, RootState } from '@/store';
+import type { Profile } from '@/reducers/common';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { PossibleTabValues } from '@/common/types';
+import { pairwise } from '@/utils/pairwise';
+import { parseUrlParams } from '@/utils/parse-url-params';
+import { isValidProfile, parseWaypoints } from './utils';
 
-const pairwise = (
-  arr: number[],
-  func: (current: number, next: number, index: number) => void
-) => {
-  let cnt = 0;
-  for (let i = 0; i < arr.length - 1; i += 2) {
-    func(arr[i]!, arr[i + 1]!, cnt);
-    cnt += 1;
-  }
-};
+export const MainControl = () => {
+  const { activeTab, showDirectionsPanel } = useSelector(
+    (state: RootState) => state.common
+  );
+  const { waypoints } = useSelector((state: RootState) => state.directions);
+  const dispatch = useDispatch<AppDispatch>();
+  const urlParamsProcessed = useRef(false);
+  const initialUrlParams = useRef(parseUrlParams());
 
-interface MainControlProps {
-  dispatch: ThunkDispatch<RootState, unknown, AnyAction>;
-  message: Message;
-  activeTab: number;
-  showDirectionsPanel: boolean;
-}
-
-const MainControl = (props: MainControlProps) => {
-  const { activeTab } = props;
-  const [lastUpdate, setLastUpdate] = React.useState<Date | null>(null);
-  const prevMessageRef = React.useRef<number | null>(null);
-
-  const getLastUpdate = async () => {
-    const response = await fetch(`${VALHALLA_OSM_URL}/status`);
-    const data = await response.json();
-    setLastUpdate(new Date(data.tileset_last_modified * 1000));
-  };
-
-  useEffect(() => {
-    const { dispatch } = props;
-
-    getLastUpdate();
-
-    toast.success(
-      'Welcome to Valhalla! Global Routing Service - funded by FOSSGIS e.V.',
-      {
-        position: 'bottom-center',
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: 'light',
-      }
-    );
-
-    const params = Object.fromEntries(
-      new URL(document.location.href).searchParams
-    );
-
-    if ('profile' in params) {
-      dispatch(updateProfile({ profile: params.profile as Profile }));
-    }
-
-    if (
-      window.location.pathname === '/' ||
-      window.location.pathname === '/directions'
-    ) {
-      dispatch(updateTab({ activeTab: 0 }));
-    } else if (window.location.pathname === '/isochrones') {
-      dispatch(updateTab({ activeTab: 1 }));
-    }
-
-    if ('wps' in params && params.wps.length > 0) {
-      const coordinates = params.wps.split(',').map(Number);
-      const processedCoords: number[][] = [];
-      pairwise(coordinates, (current, next, i) => {
-        const latLng = { lat: next, lng: current };
-        const payload = {
-          latLng,
-          fromPerma: true,
-          permaLast: i === coordinates.length / 2 - 1,
-          index: i,
-        };
-        processedCoords.push([latLng.lat, latLng.lng]);
-        if (activeTab === 0) {
-          dispatch(fetchReverseGeocodePerma(payload));
-        } else {
-          dispatch(fetchReverseGeocodeIso(current, next));
-
-          if ('range' in params && 'interval' in params) {
-            const maxRangeName = 'maxRange';
-            const intervalName = 'interval';
-            const maxRangeValue = params.range;
-            const intervalValue = params.interval;
-
-            dispatch(
-              updateIsoSettings({
-                maxRangeName,
-                intervalName,
-                value: parseInt(maxRangeValue, 10),
-              })
-            );
-            dispatch(
-              updateIsoSettings({
-                intervalName,
-                value: parseInt(intervalValue, 10),
-              })
-            );
-          }
-
-          if ('denoise' in params) {
-            dispatch(
-              updateIsoSettings({
-                denoiseName: 'denoise',
-                value: parseInt(params.denoise, 10),
-              })
-            );
-          }
-          if ('generalize' in params) {
-            dispatch(
-              updateIsoSettings({
-                generalizeName: 'generalize',
-                value: parseInt(params.generalize, 10),
-              })
-            );
-          }
-        }
-      });
-      dispatch(zoomTo(processedCoords));
-      dispatch(resetSettings());
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const {
+    data: lastUpdate,
+    isLoading: isLoadingLastUpdate,
+    isError: isErrorLastUpdate,
+  } = useQuery({
+    queryKey: ['lastUpdate'],
+    queryFn: async () => {
+      const response = await fetch(`${VALHALLA_OSM_URL}/status`);
+      const data = await response.json();
+      return new Date(data.tileset_last_modified * 1000);
+    },
+    staleTime: 1000 * 60 * 60,
+    refetchOnWindowFocus: false,
+  });
 
   useEffect(() => {
-    const { message } = props;
-    if (!message) {
+    const profileParam = initialUrlParams.current.profile;
+
+    if (profileParam && isValidProfile(profileParam)) {
+      dispatch(updateProfile({ profile: profileParam }));
+    } else {
+      const defaultProfile: Profile = 'bicycle';
+      dispatch(updateProfile({ profile: defaultProfile }));
+
+      const url = new URL(window.location.href);
+      url.searchParams.set('profile', defaultProfile);
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    const pathname = window.location.pathname;
+
+    if (pathname === '/directions') {
+      dispatch(updateTab({ activeTab: 'directions' }));
+    } else if (pathname === '/isochrones') {
+      dispatch(updateTab({ activeTab: 'isochrones' }));
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    const wpsParam = initialUrlParams.current.wps;
+
+    if (!wpsParam || wpsParam.length === 0) {
       return;
     }
 
-    const prevReceivedAt = prevMessageRef.current;
+    const requiredWaypoints = activeTab === 'directions' ? 2 : 1;
 
-    if (prevReceivedAt != null && message.receivedAt > prevReceivedAt) {
-      toast[message.type!](message.description, {
-        position: 'bottom-center',
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: 'light',
-      });
+    if (waypoints.length < requiredWaypoints) {
+      return;
     }
 
-    prevMessageRef.current = message.receivedAt;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.message]);
+    if (urlParamsProcessed.current) {
+      return;
+    }
+    urlParamsProcessed.current = true;
 
-  const handleTabChange = (
-    event: React.MouseEvent<HTMLDivElement>,
-    data: ButtonProps
-  ) => {
-    const { dispatch } = props;
-    const newActiveTab = data.activeIndex;
+    const parsedWaypoints = parseWaypoints(wpsParam);
+    const coordinates = wpsParam.split(',').map(Number);
 
-    dispatch(updateTab({ activeTab: newActiveTab }));
+    pairwise(coordinates, (lng, lat, index) => {
+      const latLng = { lat, lng };
+      const payload = { latLng, fromPerma: true, index };
+
+      if (activeTab === 'directions') {
+        dispatch(fetchReverseGeocodePerma(payload));
+      } else {
+        dispatch(fetchReverseGeocodeIso(lng, lat));
+      }
+    });
+
+    if (activeTab === 'directions') {
+      dispatch(makeRequest());
+    }
+
+    dispatch(zoomTo(parsedWaypoints));
+    dispatch(resetSettings());
+  }, [activeTab, dispatch, waypoints.length]);
+
+  const handleTabChange = (value: PossibleTabValues) => {
+    dispatch(updateTab({ activeTab: value }));
     dispatch(updatePermalink());
   };
 
   const handleDirectionsToggle = () => {
-    const { dispatch } = props;
-    const { showDirectionsPanel } = props;
-    if (!showDirectionsPanel) {
-      document
-        ?.getElementsByClassName('heightgraph-container')[0]
-        ?.setAttribute('width', (window.innerWidth * 0.75).toString());
-    } else {
-      document
-        ?.getElementsByClassName('heightgraph-container')[0]
-        ?.setAttribute('width', (window.innerWidth * 0.9).toString());
-    }
     dispatch(toggleDirections());
   };
 
-  const appPanes = [
-    {
-      menuItem: {
-        'data-testid': 'directions-tab-button',
-        key: 'directions-tab-button',
-        content: 'Directions',
-      },
-      render: () => (
-        <Tab.Pane style={{ padding: '0 0 0 0' }} attached={false}>
-          <DirectionsControl />
-        </Tab.Pane>
-      ),
-    },
-    {
-      menuItem: {
-        'data-testid': 'isochrones-tab-button',
-        key: 'isochrones-tab-button',
-        content: 'Isochrones',
-      },
-      render: () => (
-        <Tab.Pane style={{ padding: '0 0 0 0' }} attached={false}>
-          <IsochronesControl />
-        </Tab.Pane>
-      ),
-    },
-  ];
-
   return (
-    <>
-      <Button
-        primary
-        style={{
-          zIndex: 998,
-          top: '10px',
-          left: '10px',
-          position: 'absolute',
-        }}
-        onClick={handleDirectionsToggle}
-        data-testid="open-directions-button"
+    <Sheet open={showDirectionsPanel} modal={false}>
+      <SheetTrigger className="absolute top-4 left-4 z-10" asChild>
+        <Button
+          onClick={handleDirectionsToggle}
+          data-testid="open-directions-button"
+        >
+          {activeTab === 'directions' ? 'Directions' : 'Isochrones'}
+        </Button>
+      </SheetTrigger>
+      <Tabs
+        value={activeTab}
+        className="w-[400px]"
+        onValueChange={(value) => handleTabChange(value as PossibleTabValues)}
       >
-        {activeTab === 0 ? 'Directions' : 'Isochrones'}
-      </Button>
-      <Drawer
-        enableOverlay={false}
-        open={props.showDirectionsPanel}
-        direction="left"
-        size="400"
-        style={{
-          zIndex: 1000,
-          overflow: 'auto',
-        }}
-      >
-        <div>
-          <Segment basic style={{ paddingBottom: 0 }}>
-            <div>
-              <Button
-                icon
-                style={{ float: 'right', marginLeft: '5px' }}
-                onClick={handleDirectionsToggle}
-                data-testid="close-directions-button"
+        <SheetContent
+          side="left"
+          className="w-[400px] sm:max-w-[unset] max-h-screen overflow-y-auto"
+        >
+          <SheetHeader className="flex justify-between px-2 pb-0 gap-0">
+            <TabsList>
+              <TabsTrigger
+                value="directions"
+                data-testid="directions-tab-button"
               >
-                <Icon name="close" />
-              </Button>
-              <Tab
-                activeIndex={activeTab}
-                onTabChange={handleTabChange}
-                menu={{ pointing: true }}
-                panes={appPanes}
-              />
-            </div>
-          </Segment>
-          {(activeTab === 0 && <DirectionOutputControl />) || (
-            <IsochronesOutputControl />
-          )}
-        </div>
-        {lastUpdate && (
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-start',
-              margin: '1rem',
-            }}
-          >
-            Last Data Update:{' '}
-            {`${lastUpdate.toISOString().slice(0, 10)}, ${lastUpdate
-              .toISOString()
-              .slice(11, 16)}`}
+                Directions
+              </TabsTrigger>
+              <TabsTrigger
+                value="isochrones"
+                data-testid="isochrones-tab-button"
+              >
+                Isochrones
+              </TabsTrigger>
+            </TabsList>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-2"
+              onClick={handleDirectionsToggle}
+              data-testid="close-directions-button"
+            >
+              <X className="size-4" />
+            </Button>
+            <SheetTitle className="sr-only">
+              {activeTab === 'directions' ? 'Directions' : 'Isochrones'}
+            </SheetTitle>
+          </SheetHeader>
+
+          <TabsContent value="directions" className="flex flex-col gap-3 px-2">
+            <DirectionsControl />
+          </TabsContent>
+          <TabsContent value="isochrones" className="flex flex-col gap-3 px-2">
+            <IsochronesControl />
+          </TabsContent>
+
+          <div className="flex p-2 text-sm">
+            {isLoadingLastUpdate && (
+              <span className="text-muted-foreground">
+                Loading last update...
+              </span>
+            )}
+            {isErrorLastUpdate && (
+              <span className="text-destructive">
+                Failed to load last update
+              </span>
+            )}
+            {lastUpdate && (
+              <span>
+                Last Data Update: {format(lastUpdate, 'yyyy-MM-dd, HH:mm')}
+              </span>
+            )}
           </div>
-        )}
-      </Drawer>
-    </>
+        </SheetContent>
+      </Tabs>
+    </Sheet>
   );
 };
-
-const mapStateToProps = (state: RootState) => {
-  const { message, activeTab, showDirectionsPanel } = state.common;
-  return {
-    message,
-    activeTab,
-    showDirectionsPanel,
-  };
-};
-
-export default connect(mapStateToProps)(MainControl);

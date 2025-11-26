@@ -41,7 +41,7 @@ export const getInitialMapStyle = (): MapStyleType => {
     : 'shortbread';
 };
 
-interface ResetBoundsControlProps {
+interface MapStyleControlProps {
   onStyleChange?: (style: MapStyleType) => void;
 }
 
@@ -121,9 +121,7 @@ const MapStyleOption = memo(
 
 MapStyleOption.displayName = 'MapStyleOption';
 
-export const ResetBoundsControl = ({
-  onStyleChange,
-}: ResetBoundsControlProps) => {
+export const MapStyleControl = ({ onStyleChange }: MapStyleControlProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedStyle, setSelectedStyle] =
     useState<MapStyleType>(getInitialMapStyle);

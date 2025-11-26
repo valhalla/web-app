@@ -1,10 +1,21 @@
-import PropTypes from 'prop-types';
-import { Input, Dropdown } from 'semantic-ui-react';
+// import { Input, Dropdown } from 'semantic-ui-react';
+
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from './ui/label';
 
 export interface DateTimePickerProps {
   type: number;
   value: string;
-  onChange: (field: 'type' | 'value', value: number | string) => void;
+  onChange: (field: 'type' | 'value', value: string) => void;
 }
 
 export const DateTimePicker = ({
@@ -13,37 +24,35 @@ export const DateTimePicker = ({
   onChange,
 }: DateTimePickerProps) => {
   return (
-    <div className="pa2 flex flex-wrap justify-between">
-      <Dropdown
-        clearable
-        options={[
-          { key: 0, text: 'Nonspecific time', value: -1 },
-          { key: 1, text: 'Leave now', value: 0 },
-          { key: 2, text: 'Depart at', value: 1 },
-          { key: 3, text: 'Arrive at', value: 2 },
-        ]}
-        selection
-        defaultValue={type}
-        style={{ marginLeft: '3px' }}
-        onChange={(e, data) => {
-          onChange('type', data.value as string | number);
-        }}
-      />
-      <Input placeholder="Search..." style={{ marginLeft: '3px' }}>
-        <input
+    <div className="flex flex-col gap-2">
+      <Label htmlFor="date-time-picker-value">When to travel?</Label>
+      <div className="flex gap-3">
+        <Select
+          value={type.toString()}
+          onValueChange={(value) => onChange('type', value)}
+        >
+          <SelectTrigger id="date-time-picker-type" className="w-full">
+            <SelectValue placeholder="When to travel?" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Time</SelectLabel>
+              <SelectItem value="-1">Non-specific time</SelectItem>
+              <SelectItem value="0">Leave now</SelectItem>
+              <SelectItem value="1">Depart at</SelectItem>
+              <SelectItem value="2">Arrive at</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Input
+          id="date-time-picker-value"
           data-testid="date-time-picker"
           type="datetime-local"
           value={value}
           onChange={(e) => onChange('value', e.target.value)}
           disabled={type < 0}
         />
-      </Input>
+      </div>
     </div>
   );
-};
-
-DateTimePicker.propTypes = {
-  type: PropTypes.number,
-  value: PropTypes.string,
-  onChange: PropTypes.func,
 };

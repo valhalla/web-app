@@ -1,62 +1,44 @@
-import { useEffect, useCallback, useRef } from 'react';
-import { connect } from 'react-redux';
-import type { ThunkDispatch } from 'redux-thunk';
-import { Divider, type ButtonProps } from 'semantic-ui-react';
+import { useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
-import Waypoints from './waypoints';
+import { Waypoints } from './waypoints';
 
 import { ProfilePicker } from '@/components/profile-picker';
 import { SettingsButton } from '@/components/settings-button';
 import { SettingsFooter } from '@/components/settings-footer';
-import { Settings } from './settings';
 import { DateTimePicker } from '@/components/date-time-picker';
+import { Separator } from '@/components/ui/separator';
 
 import {
+  clearRoutes,
   doAddWaypoint,
   doRemoveWaypoint,
   makeRequest,
-  clearRoutes,
 } from '@/actions/directions-actions';
-import {
-  updateProfile,
-  doShowSettings,
-  updatePermalink,
-  resetSettings,
-  doUpdateDateTime,
-} from '@/actions/common-actions';
-import type { RootState } from '@/store';
-import type { Profile } from '@/reducers/common';
-import type { AnyAction } from 'redux';
+import { doUpdateDateTime } from '@/actions/common-actions';
+import type { AppDispatch, RootState } from '@/store';
+import type { ParsedDirectionsGeometry } from '@/common/types';
+import { Button } from '@/components/ui/button';
+import { MapPinPlus, MapPinXInside } from 'lucide-react';
+import { RouteCard } from './route-card';
+import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 
-interface DirectionsControlProps {
-  profile: Profile;
-  dispatch: ThunkDispatch<RootState, unknown, AnyAction>;
-  loading: boolean;
-  dateTime: {
-    type: number;
-    value: string;
-  };
-}
+export const DirectionsControl = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { results } = useSelector((state: RootState) => state.directions);
 
-const DirectionsControl = ({
-  profile,
-  dispatch,
-  loading,
-  dateTime,
-}: DirectionsControlProps) => {
-  const prevPropsRef = useRef<{
-    profile: Profile;
-    dateTime: {
-      type: number;
-      value: string;
-    };
-  }>({ profile, dateTime });
+  const { profile, loading, dateTime } = useSelector(
+    (state: RootState) => state.common
+  );
 
-  const handleUpdateProfile = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>, data: ButtonProps) => {
-      dispatch(updateProfile({ profile: data.valhalla_profile }));
-      dispatch(resetSettings());
-      dispatch(updatePermalink());
+  const handleProfileChange = useCallback(() => {
+    dispatch(makeRequest());
+  }, [dispatch]);
+
+  const handleDateTimeChange = useCallback(
+    (field: 'type' | 'value', value: string) => {
+      dispatch(doUpdateDateTime(field, value));
+      dispatch(makeRequest());
     },
     [dispatch]
   );
@@ -70,90 +52,72 @@ const DirectionsControl = ({
     dispatch(clearRoutes());
   }, [dispatch]);
 
-  const handleSettings = useCallback(() => {
-    dispatch(doShowSettings());
-  }, [dispatch]);
-
-  const handleDateTime = useCallback(
-    (type, value) => {
-      dispatch(doUpdateDateTime(type, value));
-    },
-    [dispatch]
-  );
-
-  useEffect(() => {
-    if (
-      prevPropsRef.current &&
-      (prevPropsRef.current.dateTime.type !== dateTime.type ||
-        prevPropsRef.current.dateTime.value !== dateTime.value ||
-        prevPropsRef.current.profile !== profile)
-    ) {
-      dispatch(makeRequest());
-    }
-  }, [dateTime.type, dateTime.value, profile, dispatch]);
-
-  useEffect(() => {
-    prevPropsRef.current = { profile, dateTime };
-  });
+  const routeResult = results[VALHALLA_OSM_URL!];
 
   return (
-    <div className="flex flex-column content-between">
-      <div>
-        <div className="pa2 flex flex-row justify-between">
+    <>
+      <div className="flex flex-col gap-3 border rounded-md p-2">
+        <div className="flex justify-between">
           <ProfilePicker
-            group="directions"
             profiles={[
-              'bicycle',
-              'pedestrian',
-              'car',
-              'truck',
-              'bus',
-              'motor_scooter',
-              'motorcycle',
+              { value: 'bicycle', label: 'Bicycle' },
+              { value: 'pedestrian', label: 'Pedestrian' },
+              { value: 'car', label: 'Car' },
+              { value: 'truck', label: 'Truck' },
+              { value: 'bus', label: 'Bus' },
+              { value: 'motor_scooter', label: 'Motor Scooter' },
+              { value: 'motorcycle', label: 'Motorcycle' },
             ]}
             loading={loading}
-            popupContent={[
-              'Bicycle',
-              'Pedestrian',
-              'Car',
-              'Truck',
-              'Bus',
-              'Motor Scooter',
-              'Motorcycle',
-            ]}
             activeProfile={profile}
-            handleUpdateProfile={handleUpdateProfile}
+            onProfileChange={handleProfileChange}
           />
-          <SettingsButton handleSettings={handleSettings} />
+          <SettingsButton />
         </div>
-        <div className="flex flex-wrap justify-between">
-          <Waypoints />
-        </div>
-        <div className="pa2 flex flex-wrap justify-between">
-          <Settings
-            handleAddWaypoint={handleAddWaypoint}
-            handleRemoveWaypoints={handleRemoveWaypoints}
-          />
+        <Waypoints />
+        <div className="flex justify-between gap-4">
+          <Button
+            variant="outline"
+            onClick={handleAddWaypoint}
+            data-testid="add-waypoint-button"
+            className="w-full shrink"
+          >
+            <MapPinPlus className="size-5" />
+            Add Waypoint
+          </Button>
+          <Button
+            variant="destructive-outline"
+            onClick={handleRemoveWaypoints}
+            data-testid="reset-waypoints-button"
+            className="w-full shrink"
+          >
+            <MapPinXInside className="size-5" />
+            Reset Waypoints
+          </Button>
         </div>
         <DateTimePicker
           type={dateTime.type}
           value={dateTime.value}
-          onChange={handleDateTime}
+          onChange={handleDateTimeChange}
         />
+        <Separator />
+        <SettingsFooter />
       </div>
-      <Divider fitted />
-      <SettingsFooter />
-    </div>
+      {routeResult?.data && (
+        <div>
+          <h3 className="font-bold mb-2">Directions</h3>
+          <div className="flex flex-col gap-3">
+            <RouteCard data={routeResult.data} index={-1} />
+            {routeResult.data.alternates?.map((alternate, index) => (
+              <RouteCard
+                data={alternate as ParsedDirectionsGeometry}
+                key={alternate.id}
+                index={index}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
-
-const mapStateToProps = (state: RootState) => {
-  const { profile, loading, dateTime } = state.common;
-  return {
-    profile,
-    loading,
-    dateTime,
-  };
-};
-
-export default connect(mapStateToProps)(DirectionsControl);

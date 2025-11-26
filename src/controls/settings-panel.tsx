@@ -1,12 +1,5 @@
-import React, {
-  Fragment,
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-} from 'react';
-import * as R from 'ramda';
-import { connect } from 'react-redux';
+import React, { Fragment, useState, useEffect, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from 'throttle-debounce';
 import Drawer from 'react-modern-drawer';
 import 'react-modern-drawer/dist/index.css';
@@ -36,30 +29,18 @@ import CustomSlider from '../components/custom-slider';
 import { makeRequest } from '@/actions/directions-actions';
 import { makeIsochronesRequest } from '@/actions/isochrones-actions';
 import { Checkbox } from '@/components/checkbox';
-import type { RootState } from '@/store';
+import type { AppDispatch, RootState } from '@/store';
 import type { Profile } from '@/reducers/common';
 import type { PossibleSettings } from '@/common/types';
-import type { ThunkDispatch } from 'redux-thunk';
-import type { AnyAction } from 'redux';
 
 // Define the profile keys that have settings (excluding 'auto')
 type ProfileWithSettings = Exclude<Profile, 'auto'>;
 
-interface SettingsPanelProps {
-  dispatch: ThunkDispatch<RootState, unknown, AnyAction>;
-  profile: ProfileWithSettings;
-  settings: PossibleSettings;
-  showSettings: boolean;
-  activeTab: number;
-}
-
-const SettingsPanel = ({
-  dispatch,
-  profile,
-  settings,
-  showSettings,
-  activeTab,
-}: SettingsPanelProps) => {
+export const SettingsPanel = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { profile, settings, activeTab, showSettings } = useSelector(
+    (state: RootState) => state.common
+  );
   const [generalSettings, setGeneralSettings] = useState<
     Record<number, boolean>
   >({});
@@ -70,13 +51,6 @@ const SettingsPanel = ({
     Record<number, boolean>
   >({});
   const [copied, setCopied] = useState(false);
-
-  const prevPropsRef = useRef<{
-    profile: ProfileWithSettings;
-    settings: PossibleSettings;
-    showSettings: boolean;
-    activeTab: number;
-  }>({ profile, settings, showSettings, activeTab });
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleUpdateSettings = useCallback(
@@ -92,53 +66,32 @@ const SettingsPanel = ({
   );
 
   useEffect(() => {
-    if (
-      prevPropsRef.current &&
-      !R.equals(profile, prevPropsRef.current.profile)
-    ) {
-      setGeneralSettings((prev) => {
-        const newSettings = { ...prev };
-        Object.keys(newSettings).forEach(
-          (v) => (newSettings[Number(v)] = false)
-        );
-        return newSettings;
-      });
+    setGeneralSettings((prev) => {
+      const newSettings = { ...prev };
+      Object.keys(newSettings).forEach((v) => (newSettings[Number(v)] = false));
+      return newSettings;
+    });
 
-      setExtraSettings((prev) => {
-        const newSettings = { ...prev };
-        Object.keys(newSettings).forEach(
-          (v) => (newSettings[Number(v)] = false)
-        );
-        return newSettings;
-      });
+    setExtraSettings((prev) => {
+      const newSettings = { ...prev };
+      Object.keys(newSettings).forEach((v) => (newSettings[Number(v)] = false));
+      return newSettings;
+    });
 
-      setDirectionsSettings((prev) => {
-        const newSettings = { ...prev };
-        Object.keys(newSettings).forEach(
-          (v) => (newSettings[Number(v)] = false)
-        );
-        return newSettings;
-      });
-    }
+    setDirectionsSettings((prev) => {
+      const newSettings = { ...prev };
+      Object.keys(newSettings).forEach((v) => (newSettings[Number(v)] = false));
+      return newSettings;
+    });
   }, [profile]);
 
   useEffect(() => {
-    if (
-      prevPropsRef.current &&
-      R.equals(profile, prevPropsRef.current.profile) &&
-      !R.equals(settings, prevPropsRef.current.settings)
-    ) {
-      if (activeTab === 0) {
-        dispatch(makeRequest());
-      } else {
-        dispatch(makeIsochronesRequest());
-      }
+    if (activeTab === 'directions') {
+      dispatch(makeRequest());
+    } else {
+      dispatch(makeIsochronesRequest());
     }
-  }, [settings, profile, activeTab, dispatch]);
-
-  useEffect(() => {
-    prevPropsRef.current = { profile, settings, showSettings, activeTab };
-  });
+  }, [settings, activeTab, dispatch]);
 
   const handleShowSettings = useCallback(
     (
@@ -186,9 +139,12 @@ const SettingsPanel = ({
     dispatch(resetSettings());
   }, [dispatch]);
 
-  const extractSettings = useCallback((profileParam, settingsParam) => {
-    return JSON.stringify(filterProfileSettings(profileParam, settingsParam));
-  }, []);
+  const extractSettings = useCallback(
+    (profileParam: ProfileWithSettings, settingsParam: PossibleSettings) => {
+      return JSON.stringify(filterProfileSettings(profileParam, settingsParam));
+    },
+    []
+  );
 
   const no_profile_settings =
     profile_settings[profile as ProfileWithSettings].boolean.length === 0;
@@ -468,7 +424,7 @@ const SettingsPanel = ({
           <Grid.Row>
             <Grid.Column width={16}>
               <CopyToClipboard
-                text={extractSettings(profile, settings)}
+                text={extractSettings(profile as ProfileWithSettings, settings)}
                 onCopy={handleColorCopy}
               >
                 <Button
@@ -499,28 +455,3 @@ const SettingsPanel = ({
     </Drawer>
   );
 };
-
-const MemoizedSettingsPanel = React.memo(
-  SettingsPanel,
-  (prevProps, nextProps) => {
-    return (
-      R.equals(prevProps.settings, nextProps.settings) &&
-      R.equals(prevProps.profile, nextProps.profile) &&
-      R.equals(prevProps.showSettings, nextProps.showSettings) &&
-      R.equals(prevProps.activeTab, nextProps.activeTab)
-    );
-  }
-);
-
-const mapStateToProps = (state: RootState) => {
-  const { message, profile, settings, activeTab, showSettings } = state.common;
-  return {
-    showSettings,
-    message,
-    profile: profile as ProfileWithSettings,
-    settings,
-    activeTab,
-  };
-};
-
-export default connect(mapStateToProps)(MemoizedSettingsPanel);

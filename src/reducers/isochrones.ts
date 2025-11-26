@@ -44,7 +44,7 @@ const initialState: IsochroneState = {
   generalize: 0,
   results: {
     [VALHALLA_OSM_URL!]: {
-      data: {},
+      data: null,
       show: true,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any,

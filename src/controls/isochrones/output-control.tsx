@@ -1,76 +1,103 @@
-import { useEffect, useRef } from 'react';
-import { connect } from 'react-redux';
-import { Segment, Divider } from 'semantic-ui-react';
-
-import Summary from './summary';
-import { makeIsochronesRequest } from '@/actions/isochrones-actions';
-import ContoursInformation from './contours-information';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
-import type { RootState } from '@/store';
-import type { ThunkDispatch } from 'redux-thunk';
-import type { AnyAction } from 'redux';
+import { cn } from '@/lib/utils';
+import type { ValhallaIsochroneResponse } from '@/common/types';
+import { ClockIcon, MoveIcon } from 'lucide-react';
+import { exportDataAsJson } from '@/utils/export';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '@/store';
+import { showProvider } from '@/actions/isochrones-actions';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Download } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { MetricItem } from '@/components/ui/metric-item';
 
-interface OutputControlProps {
-  dispatch: ThunkDispatch<RootState, unknown, AnyAction>;
-  activeTab: number;
-  successful: boolean;
+interface IsochronesOutputControlProps {
+  data: ValhallaIsochroneResponse;
+  showOnMap: boolean;
 }
 
-const OutputControl = ({
-  dispatch,
-  activeTab,
-  successful,
-}: OutputControlProps) => {
-  const prevPropsRef = useRef<{ activeTab: number }>({ activeTab });
+export const IsochronesOutputControl = ({
+  data,
+  showOnMap,
+}: IsochronesOutputControlProps) => {
+  const dispatch = useDispatch<AppDispatch>();
 
-  // Handle activeTab changes - make API request when switching from directions to isochrones tab
-  // necessary to calculate new routes the tab was changed from isochrone tab
-  // need to do this every time, because "profile" is global (otherwise we would
-  // calculate new when the profile was changed while being on the iso tab)
-  useEffect(() => {
-    if (
-      prevPropsRef.current &&
-      activeTab === 1 &&
-      prevPropsRef.current.activeTab === 0
-    ) {
-      dispatch(makeIsochronesRequest());
-    }
-  }, [activeTab, dispatch]);
-
-  useEffect(() => {
-    prevPropsRef.current = { activeTab };
-  });
-
-  if (activeTab === 0) {
-    return null;
-  }
+  const handleChange = (checked: boolean) => {
+    dispatch(showProvider(VALHALLA_OSM_URL!, checked));
+  };
 
   return (
-    <Segment
-      style={{
-        margin: '0 1rem 10px',
-        display: successful ? 'block' : 'none',
-      }}
+    <div
+      className={cn(
+        'flex flex-col gap-2.5 border rounded-md p-2',
+        'focus-within:bg-muted/50 hover:bg-muted/50'
+      )}
     >
-      <div className="flex-column">
-        <div className="flex justify-between pointer">
-          <Summary provider={VALHALLA_OSM_URL!} />
-        </div>
-        <Divider />
-        <ContoursInformation provider={VALHALLA_OSM_URL!} />
-      </div>
-    </Segment>
+      {data.features.length > 0 ? (
+        <>
+          <div className="flex items-center justify-between">
+            <span className="font-bold">Main Isochrone</span>
+            <div className="flex items-center justify-end space-x-2">
+              <Switch
+                id="show-on-map"
+                checked={showOnMap}
+                onCheckedChange={handleChange}
+              />
+              <Label htmlFor="show-on-map">Show on map</Label>
+            </div>
+          </div>
+          <div className="flex justify-between gap-2">
+            {data.features
+              .filter((feature) => !feature.properties?.type)
+              .map((feature, key) => {
+                return (
+                  <div className="flex flex-wrap gap-2" key={key}>
+                    <MetricItem
+                      variant="outline"
+                      icon={ClockIcon}
+                      label="Contour"
+                      value={feature.properties?.contour + ' minutes'}
+                    />
+                    <MetricItem
+                      variant="outline"
+                      icon={MoveIcon}
+                      label="Area"
+                      value={
+                        (feature.properties?.area > 1
+                          ? feature.properties?.area.toFixed(0)
+                          : feature.properties?.area.toFixed(1)) + ' km²'
+                      }
+                    />
+                  </div>
+                );
+              })}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Download className="size-4" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem
+                  onClick={() => exportDataAsJson(data, 'valhalla-directions')}
+                >
+                  JSON
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </>
+      ) : (
+        <div>No isochrones found</div>
+      )}
+    </div>
   );
 };
-
-const mapStateToProps = (state: RootState) => {
-  const { profile, activeTab } = state.common;
-  const { successful } = state.isochrones;
-  return {
-    profile,
-    activeTab,
-    successful,
-  };
-};
-
-export default connect(mapStateToProps)(OutputControl);

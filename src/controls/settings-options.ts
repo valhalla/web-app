@@ -1043,8 +1043,3 @@ export const settings_general = {
     numeric: [alternates],
   },
 };
-
-export const jsonConfig = {
-  type: 'space',
-  size: 2,
-};

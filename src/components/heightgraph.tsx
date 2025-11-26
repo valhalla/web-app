@@ -291,7 +291,7 @@ const HeightGraph: React.FC<HeightGraphProps> = ({
         title="Height Graph"
         style={{
           position: 'absolute',
-          bottom: '60px',
+          bottom: '84px',
           right: '10px',
           width: '36px',
           height: '36px',

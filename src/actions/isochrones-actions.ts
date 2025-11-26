@@ -13,10 +13,10 @@ import {
   forward_geocode,
   parseGeocodeResponse,
 } from '@/utils/nominatim';
+import { toast } from 'sonner';
 import { VALHALLA_OSM_URL, buildIsochronesRequest } from '@/utils/valhalla';
 
 import {
-  sendMessage,
   showLoading,
   updatePermalink,
   filterProfileSettings,
@@ -43,8 +43,6 @@ export const makeIsochronesRequest =
     // @ts-expect-error todo: this is not correct. initial settings and filtered settings are not the same but we are changing in later.
     // we should find a better way to do this.
     settings = filterProfileSettings(profile, settings);
-
-    // console.log(settings)
 
     // if center is selected
     let center: ActiveWaypoint | undefined = undefined;
@@ -97,14 +95,12 @@ const fetchValhallaIsochrones =
         })
         .catch(({ response }) => {
           dispatch(registerIsoResponse(URL!, []));
-          dispatch(
-            sendMessage({
-              type: 'warning',
-              icon: 'warning',
-              description: `${serverMapping[URL!]}: ${response.data.error}`,
-              title: `${response.data.status}`,
-            })
-          );
+          toast.warning(`${response.data.status}`, {
+            description: `${serverMapping[URL!]}: ${response.data.error}`,
+            position: 'bottom-center',
+            duration: 5000,
+            closeButton: true,
+          });
         })
         .finally(() => {
           setTimeout(() => {
@@ -243,14 +239,12 @@ const processGeocodeResponse =
     const addresses = parseGeocodeResponse(data, lngLat!);
     // if no address can be found
     if (addresses.length === 0) {
-      dispatch(
-        sendMessage({
-          type: 'warning',
-          icon: 'warning',
-          description: 'Sorry, no addresses can be found.',
-          title: 'No addresses',
-        })
-      );
+      toast.warning(`No addresses`, {
+        description: 'Sorry, no addresses can be found.',
+        position: 'bottom-center',
+        duration: 5000,
+        closeButton: true,
+      });
     }
     dispatch({
       type: RECEIVE_GEOCODE_RESULTS_ISO,

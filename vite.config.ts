@@ -12,6 +12,7 @@ import {
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import path from 'path';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({ mode }: ConfigEnv) => {
   setEnv(mode);
@@ -26,6 +27,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       importPrefixPlugin(),
       htmlPlugin(mode),
       svgrPlugin(),
+      tailwindcss(),
     ],
     resolve: {
       alias: {

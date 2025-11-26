@@ -7,7 +7,6 @@ import {
   CLEAR_WAYPOINTS,
   EMPTY_WAYPOINT,
   UPDATE_TEXTINPUT,
-  REQUEST_GEOCODE_RESULTS,
   RECEIVE_GEOCODE_RESULTS,
   RECEIVE_ROUTE_RESULTS,
   CLEAR_ROUTES,
@@ -24,7 +23,6 @@ import type { ActiveWaypoint, ParsedDirectionsGeometry } from '@/common/types';
 export interface Waypoint {
   id: string;
   geocodeResults: ActiveWaypoint[];
-  isFetching: boolean;
   userInput: string;
 }
 
@@ -74,7 +72,7 @@ const initialState: DirectionsState = {
   selectedAddresses: '',
   results: {
     [VALHALLA_OSM_URL!]: {
-      data: {},
+      data: null,
       show: {
         '-1': true,
       },
@@ -158,19 +156,8 @@ export const directions = (
           i === action.payload.index
             ? {
                 ...waypoint,
-                isFetching: false,
                 geocodeResults: action.payload.addresses,
               }
-            : waypoint
-        ),
-      };
-
-    case REQUEST_GEOCODE_RESULTS:
-      return {
-        ...state,
-        waypoints: state.waypoints.map((waypoint, i) =>
-          i === action.payload.index
-            ? { ...waypoint, isFetching: true }
             : waypoint
         ),
       };
