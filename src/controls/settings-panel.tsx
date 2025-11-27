@@ -1,22 +1,7 @@
-import React, { Fragment, useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from 'throttle-debounce';
-import Drawer from 'react-modern-drawer';
-import 'react-modern-drawer/dist/index.css';
-import {
-  Divider,
-  Form,
-  Grid,
-  Header,
-  Icon,
-  Popup,
-  Segment,
-  Accordion,
-  Dropdown,
-  Button,
-  type DropdownProps,
-} from 'semantic-ui-react';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
+import { Button } from '@/components/ui/button';
 import { profile_settings, settings_general } from './settings-options';
 import {
   updateSettings,
@@ -25,13 +10,21 @@ import {
   resetSettings,
 } from '@/actions/common-actions';
 
-import CustomSlider from '../components/custom-slider';
+import { SliderSetting } from '@/components/ui/slider-setting';
+import { CheckboxSetting } from '@/components/ui/checkbox-setting';
+import { SelectSetting } from '@/components/ui/select-setting';
 import { makeRequest } from '@/actions/directions-actions';
 import { makeIsochronesRequest } from '@/actions/isochrones-actions';
-import { Checkbox } from '@/components/checkbox';
 import type { AppDispatch, RootState } from '@/store';
 import type { Profile } from '@/reducers/common';
-import type { PossibleSettings } from '@/common/types';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { X, Copy, RotateCcw } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 // Define the profile keys that have settings (excluding 'auto')
 type ProfileWithSettings = Exclude<Profile, 'auto'>;
@@ -41,20 +34,11 @@ export const SettingsPanel = () => {
   const { profile, settings, activeTab, showSettings } = useSelector(
     (state: RootState) => state.common
   );
-  const [generalSettings, setGeneralSettings] = useState<
-    Record<number, boolean>
-  >({});
-  const [extraSettings, setExtraSettings] = useState<Record<number, boolean>>(
-    {}
-  );
-  const [directionsSettings, setDirectionsSettings] = useState<
-    Record<number, boolean>
-  >({});
   const [copied, setCopied] = useState(false);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleUpdateSettings = useCallback(
-    debounce(300, ({ name, value }) => {
+    debounce(0, ({ name, value }) => {
       dispatch(
         updateSettings({
           name,
@@ -66,26 +50,6 @@ export const SettingsPanel = () => {
   );
 
   useEffect(() => {
-    setGeneralSettings((prev) => {
-      const newSettings = { ...prev };
-      Object.keys(newSettings).forEach((v) => (newSettings[Number(v)] = false));
-      return newSettings;
-    });
-
-    setExtraSettings((prev) => {
-      const newSettings = { ...prev };
-      Object.keys(newSettings).forEach((v) => (newSettings[Number(v)] = false));
-      return newSettings;
-    });
-
-    setDirectionsSettings((prev) => {
-      const newSettings = { ...prev };
-      Object.keys(newSettings).forEach((v) => (newSettings[Number(v)] = false));
-      return newSettings;
-    });
-  }, [profile]);
-
-  useEffect(() => {
     if (activeTab === 'directions') {
       dispatch(makeRequest());
     } else {
@@ -93,365 +57,255 @@ export const SettingsPanel = () => {
     }
   }, [settings, activeTab, dispatch]);
 
-  const handleShowSettings = useCallback(
-    (
-      settingsType: 'generalSettings' | 'extraSettings' | 'directionsSettings',
-      i: number
-    ) => {
-      const setterMap = {
-        generalSettings: setGeneralSettings,
-        extraSettings: setExtraSettings,
-        directionsSettings: setDirectionsSettings,
-      };
-
-      const setter = setterMap[settingsType];
-      if (setter) {
-        setter((prev: Record<number, boolean>) => ({
-          ...prev,
-          [i]: !prev[i],
-        }));
-      }
-    },
-    []
-  );
-
-  const handleColorCopy = useCallback(() => {
+  const handleCopySettings = useCallback(async () => {
+    const text = JSON.stringify(
+      filterProfileSettings(profile as ProfileWithSettings, settings)
+    );
+    await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => {
       setCopied(false);
     }, 1000);
-  }, []);
-
-  const handleBikeTypeChange = useCallback(
-    (e: React.SyntheticEvent, data: DropdownProps) => {
-      const { value, name } = data;
-      dispatch(
-        updateSettings({
-          name: name as string,
-          value: value as string,
-        })
-      );
-    },
-    [dispatch]
-  );
+  }, [profile, settings]);
 
   const resetConfigSettings = useCallback(() => {
     dispatch(resetSettings());
   }, [dispatch]);
 
-  const extractSettings = useCallback(
-    (profileParam: ProfileWithSettings, settingsParam: PossibleSettings) => {
-      return JSON.stringify(filterProfileSettings(profileParam, settingsParam));
-    },
-    []
-  );
-
-  const no_profile_settings =
-    profile_settings[profile as ProfileWithSettings].boolean.length === 0;
-  const width = no_profile_settings ? 200 : 400;
+  const hasProfileSettings =
+    profile_settings[profile as ProfileWithSettings].boolean.length > 0;
 
   return (
-    <Drawer
-      enableOverlay={false}
-      open={showSettings}
-      direction="right"
-      size="400"
-      style={{
-        zIndex: 1001,
-        maxWidth: width,
-        overflow: 'auto',
-      }}
-    >
-      <Segment>
-        <Grid columns={16} divided>
-          <Grid.Row>
-            {!no_profile_settings && (
-              <Grid.Column width={8}>
-                <Form size="small">
-                  <Header as="h4">Extra Settings</Header>
+    <Sheet open={showSettings} modal={false}>
+      <SheetContent
+        side="right"
+        className="w-[350px] sm:max-w-[unset] max-h-screen overflow-y-auto gap-1"
+      >
+        <SheetHeader className="justify-between">
+          <SheetTitle>Settings</SheetTitle>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => dispatch(doShowSettings())}
+            data-testid="close-settings-button"
+          >
+            <X className="size-4" />
+          </Button>
+        </SheetHeader>
+        <div className="px-3">
+          <div className="flex flex-col gap-3 border rounded-md p-2 px-3">
+            {hasProfileSettings && (
+              <section>
+                <div className="flex items-baseline justify-between">
+                  <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    Profile Settings
+                  </h3>
+                  <span className="text-xs text-muted-foreground capitalize">
+                    {profile}
+                  </span>
+                </div>
+                <div className="space-y-1.25">
                   {profile_settings[profile as ProfileWithSettings].numeric.map(
                     (option, key) => (
-                      <Fragment key={key}>
-                        <div className="flex pointer">
-                          <div
-                            onClick={() =>
-                              handleShowSettings('extraSettings', key)
-                            }
-                          >
-                            <Icon
-                              name={
-                                extraSettings[key]
-                                  ? 'caret down'
-                                  : 'caret right'
-                              }
-                            />
-                            <span className="b f6">{option.name}</span>
-                          </div>
-                          <div
-                            style={{
-                              marginLeft: 'auto',
-                            }}
-                          >
-                            <Popup
-                              content={option.description}
-                              size="tiny"
-                              trigger={<Icon color="grey" name="help circle" />}
-                            />
-                          </div>
-                        </div>
-                        {extraSettings[key] ? (
-                          <CustomSlider
-                            key={key}
-                            option={option}
-                            settings={settings}
-                            profile={profile}
-                            handleUpdateSettings={handleUpdateSettings}
-                          />
-                        ) : null}
-                      </Fragment>
-                    )
-                  )}
-                  <Divider />
-                  <Fragment>
-                    {profile_settings[
-                      profile as ProfileWithSettings
-                    ].boolean.map((option, key) => {
-                      return (
-                        <div key={key} className="flex">
-                          <Checkbox
-                            option={option}
-                            dispatch={dispatch}
-                            settings={settings}
-                          />
-                          <div
-                            style={{
-                              marginLeft: 'auto',
-                            }}
-                          >
-                            <Popup
-                              content={option.description}
-                              size="tiny"
-                              trigger={<Icon color="grey" name="help circle" />}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </Fragment>
-                  <Divider />
-                  <Fragment>
-                    {profile_settings[profile as ProfileWithSettings].enum.map(
-                      (option, key) => {
-                        return (
-                          <div key={key} className="flex">
-                            <Dropdown
-                              placeholder="Select Bicycle Type"
-                              fluid
-                              onChange={handleBikeTypeChange}
-                              value={settings.bicycle_type}
-                              selection
-                              name="bicycle_type"
-                              options={option.enums}
-                            />
-
-                            <div
-                              style={{
-                                marginLeft: 'auto',
-                              }}
-                            >
-                              <Popup
-                                content={option.description}
-                                size="tiny"
-                                trigger={
-                                  <Icon color="grey" name="help circle" />
-                                }
-                              />
-                            </div>
-                          </div>
-                        );
-                      }
-                    )}
-                  </Fragment>
-                </Form>
-              </Grid.Column>
-            )}
-            <Grid.Column width={no_profile_settings ? 16 : 8}>
-              <Form size="small">
-                <div className="flex flex-row justify-between">
-                  <Header as="h4">General Settings</Header>
-                  <Button icon onClick={() => dispatch(doShowSettings())}>
-                    <Icon name="close" />
-                  </Button>
-                </div>
-                <Accordion>
-                  {settings_general[profile as ProfileWithSettings].numeric.map(
-                    (option, key) => (
-                      <Fragment key={key}>
-                        <div className="flex pointer">
-                          <div
-                            onClick={() =>
-                              handleShowSettings('generalSettings', key)
-                            }
-                          >
-                            <Icon
-                              name={
-                                generalSettings[key]
-                                  ? 'caret down'
-                                  : 'caret right'
-                              }
-                            />
-                            <span className="b f6">{option.name}</span>
-                          </div>
-                          <div
-                            style={{
-                              marginLeft: 'auto',
-                            }}
-                          >
-                            <Popup
-                              content={option.description}
-                              size="tiny"
-                              trigger={<Icon color="grey" name="help circle" />}
-                            />
-                          </div>
-                        </div>
-                        {generalSettings[key] ? (
-                          <CustomSlider
-                            key={key}
-                            option={option}
-                            settings={settings}
-                            profile={profile}
-                            handleUpdateSettings={handleUpdateSettings}
-                          />
-                        ) : null}
-                      </Fragment>
-                    )
-                  )}
-                </Accordion>
-                <Divider />
-                {settings_general[profile as ProfileWithSettings].boolean.map(
-                  (option, key) => {
-                    return (
-                      <div key={key} className="flex">
-                        <Checkbox
-                          key={key}
-                          option={option}
-                          dispatch={dispatch}
-                          settings={settings}
-                        />
-                        <div
-                          style={{
-                            marginLeft: 'auto',
-                          }}
-                        >
-                          <Popup
-                            content={option.description}
-                            size="tiny"
-                            trigger={<Icon color="grey" name="help circle" />}
-                          />
-                        </div>
-                      </div>
-                    );
-                  }
-                )}
-                {settings_general.all.boolean.map((option, key) => {
-                  return (
-                    <div key={key} className="flex">
-                      <Checkbox
+                      <SliderSetting
                         key={key}
-                        option={option}
-                        dispatch={dispatch}
-                        settings={settings}
-                      />
-                      <div
-                        style={{
-                          marginLeft: 'auto',
+                        id={option.param}
+                        label={option.name}
+                        description={option.description}
+                        min={option.settings.min}
+                        max={option.settings.max}
+                        step={option.settings.step}
+                        value={(settings[option.param] as number) ?? 0}
+                        unit={option.unit}
+                        onValueChange={(values) => {
+                          handleUpdateSettings({
+                            name: option.param,
+                            value: values[0],
+                          });
                         }}
-                      >
-                        <Popup
-                          content={option.description}
-                          size="tiny"
-                          trigger={<Icon color="grey" name="help circle" />}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-                {settings_general.all.numeric.map((option, key) => {
-                  return (
-                    <Fragment key={key}>
-                      <div className="flex pointer">
-                        <div
-                          onClick={() =>
-                            handleShowSettings('directionsSettings', key)
-                          }
-                        >
-                          <Icon
-                            name={
-                              directionsSettings[key]
-                                ? 'caret down'
-                                : 'caret right'
-                            }
-                          />
-                          <span className="b f6">{option.name}</span>
-                        </div>
-                        <div
-                          style={{
-                            marginLeft: 'auto',
-                          }}
-                        >
-                          <Popup
-                            content={option.description}
-                            size="tiny"
-                            trigger={<Icon color="grey" name="help circle" />}
-                          />
-                        </div>
-                      </div>
-                      {directionsSettings[key] ? (
-                        <CustomSlider
-                          key={key}
-                          option={option}
-                          settings={settings}
-                          profile={profile}
-                          handleUpdateSettings={handleUpdateSettings}
-                        />
-                      ) : null}
-                    </Fragment>
-                  );
-                })}
-              </Form>
-            </Grid.Column>
-          </Grid.Row>
-          <Grid.Row>
-            <Grid.Column width={16}>
-              <CopyToClipboard
-                text={extractSettings(profile as ProfileWithSettings, settings)}
-                onCopy={handleColorCopy}
-              >
-                <Button
-                  basic
-                  size="mini"
-                  icon
-                  color={copied ? 'green' : undefined}
-                  labelPosition="left"
-                >
-                  <Icon name="copy" />
-                  Copy to Clipboard
-                </Button>
-              </CopyToClipboard>
+                        onInputChange={(values) => {
+                          let value = values[0] ?? 0;
+                          if (isNaN(value)) value = option.settings.min;
+                          value = Math.max(
+                            option.settings.min,
+                            Math.min(value, option.settings.max)
+                          );
+                          handleUpdateSettings({
+                            name: option.param,
+                            value,
+                          });
+                        }}
+                      />
+                    )
+                  )}
+                  {profile_settings[profile as ProfileWithSettings].boolean.map(
+                    (option, key) => (
+                      <CheckboxSetting
+                        key={key}
+                        id={option.param}
+                        label={option.name}
+                        description={option.description}
+                        checked={Boolean(settings[option.param])}
+                        onCheckedChange={(checked) => {
+                          handleUpdateSettings({
+                            name: option.param,
+                            value: checked,
+                          });
+                        }}
+                      />
+                    )
+                  )}
+                  {profile_settings[profile as ProfileWithSettings].enum.map(
+                    (option, key) => (
+                      <SelectSetting
+                        key={key}
+                        id={option.param}
+                        label={option.name}
+                        description={option.description}
+                        placeholder="Select Bicycle Type"
+                        value={settings.bicycle_type as string}
+                        options={option.enums}
+                        onValueChange={(value) => {
+                          handleUpdateSettings({
+                            name: option.param,
+                            value,
+                          });
+                        }}
+                      />
+                    )
+                  )}
+                </div>
+              </section>
+            )}
+
+            <Separator />
+
+            <section>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  General Settings
+                </h3>
+              </div>
+              <div className="space-y-1.25">
+                {settings_general[profile as ProfileWithSettings].numeric.map(
+                  (option, key) => (
+                    <SliderSetting
+                      key={key}
+                      id={option.param}
+                      label={option.name}
+                      description={option.description}
+                      min={option.settings.min}
+                      max={option.settings.max}
+                      step={option.settings.step}
+                      value={(settings[option.param] as number) ?? 0}
+                      unit={option.unit}
+                      onValueChange={(values) => {
+                        handleUpdateSettings({
+                          name: option.param,
+                          value: values[0],
+                        });
+                      }}
+                      onInputChange={(values) => {
+                        let value = values[0] ?? 0;
+                        if (isNaN(value)) value = option.settings.min;
+                        value = Math.max(
+                          option.settings.min,
+                          Math.min(value, option.settings.max)
+                        );
+                        handleUpdateSettings({
+                          name: option.param,
+                          value,
+                        });
+                      }}
+                    />
+                  )
+                )}
+                {settings_general[profile as ProfileWithSettings].boolean.map(
+                  (option, key) => (
+                    <CheckboxSetting
+                      key={key}
+                      id={option.param}
+                      label={option.name}
+                      description={option.description}
+                      checked={Boolean(settings[option.param])}
+                      onCheckedChange={(checked) => {
+                        handleUpdateSettings({
+                          name: option.param,
+                          value: checked,
+                        });
+                      }}
+                    />
+                  )
+                )}
+                {settings_general.all.boolean.map((option, key) => (
+                  <CheckboxSetting
+                    key={key}
+                    id={option.param}
+                    label={option.name}
+                    description={option.description}
+                    checked={Boolean(settings[option.param])}
+                    onCheckedChange={(checked) => {
+                      handleUpdateSettings({
+                        name: option.param,
+                        value: checked,
+                      });
+                    }}
+                  />
+                ))}
+                {settings_general.all.numeric.map((option, key) => (
+                  <SliderSetting
+                    key={key}
+                    id={option.param}
+                    label={option.name}
+                    description={option.description}
+                    min={option.settings.min}
+                    max={option.settings.max}
+                    step={option.settings.step}
+                    value={(settings[option.param] as number) ?? 0}
+                    unit={option.unit}
+                    onValueChange={(values) => {
+                      handleUpdateSettings({
+                        name: option.param,
+                        value: values[0],
+                      });
+                    }}
+                    onInputChange={(values) => {
+                      let value = values[0] ?? 0;
+                      if (isNaN(value)) value = option.settings.min;
+                      value = Math.max(
+                        option.settings.min,
+                        Math.min(value, option.settings.max)
+                      );
+                      handleUpdateSettings({
+                        name: option.param,
+                        value,
+                      });
+                    }}
+                  />
+                ))}
+              </div>
+            </section>
+
+            <Separator />
+
+            <div className="flex gap-2 pt-1">
               <Button
-                basic
-                size="mini"
-                icon
-                onClick={resetConfigSettings}
-                labelPosition="left"
+                variant={copied ? 'default' : 'outline'}
+                size="sm"
+                onClick={handleCopySettings}
+                className={copied ? 'bg-green-600 hover:bg-green-600' : ''}
               >
-                <Icon name="remove" />
+                <Copy className="size-3.5" />
+                {copied ? 'Copied!' : 'Copy to Clipboard'}
+              </Button>
+              <Button variant="outline" size="sm" onClick={resetConfigSettings}>
+                <RotateCcw className="size-3.5" />
                 Reset
               </Button>
-            </Grid.Column>
-          </Grid.Row>
-        </Grid>
-      </Segment>
-    </Drawer>
+            </div>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };

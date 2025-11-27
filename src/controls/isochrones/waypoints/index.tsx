@@ -242,7 +242,6 @@ export const Waypoints = () => {
             max={1}
             step={0.1}
             value={denoise}
-            inputType="float"
             onValueChange={(values) => {
               const value = values[0] ?? 0;
               handleIsoSliderUpdateSettings({

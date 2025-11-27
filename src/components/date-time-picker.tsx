@@ -1,5 +1,3 @@
-// import { Input, Dropdown } from 'semantic-ui-react';
-
 import {
   Select,
   SelectContent,

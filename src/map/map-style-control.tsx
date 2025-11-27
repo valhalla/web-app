@@ -1,5 +1,4 @@
-import { useState, useEffect, useMemo, memo } from 'react';
-import { Popup } from 'semantic-ui-react';
+import { useState, useEffect, useMemo, memo, useRef } from 'react';
 import { LayersIcon } from 'lucide-react';
 import Map, { useMap } from 'react-map-gl/maplibre';
 import type maplibregl from 'maplibre-gl';
@@ -75,13 +74,9 @@ const MapStyleOption = memo(
       <div>
         <div
           onClick={() => onSelect(id)}
-          style={{
-            border: `3px solid ${isSelected ? '#2185d0' : 'transparent'}`,
-            borderRadius: '4px',
-            cursor: 'pointer',
-            transition: 'border-color 0.2s ease',
-            overflow: 'hidden',
-          }}
+          className={`cursor-pointer overflow-hidden rounded border-3 transition-colors ${
+            isSelected ? 'border-primary' : 'border-transparent'
+          }`}
         >
           <Map
             id={`${id}-map`}
@@ -104,13 +99,11 @@ const MapStyleOption = memo(
           />
         </div>
         <div
-          style={{
-            marginTop: '6px',
-            fontSize: '13px',
-            fontWeight: isSelected ? 'bold' : 'normal',
-            color: isSelected ? '#2185d0' : '#666',
-            textAlign: 'center',
-          }}
+          className={`mt-1.5 text-center text-[13px] ${
+            isSelected
+              ? 'font-bold text-primary'
+              : 'font-normal text-muted-foreground'
+          }`}
         >
           {label}
         </div>
@@ -125,6 +118,7 @@ export const MapStyleControl = ({ onStyleChange }: MapStyleControlProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedStyle, setSelectedStyle] =
     useState<MapStyleType>(getInitialMapStyle);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { current: map } = useMap();
   const mapCenter = map?.getCenter();
@@ -135,6 +129,26 @@ export const MapStyleControl = ({ onStyleChange }: MapStyleControlProps) => {
     localStorage.setItem(MAP_STYLE_STORAGE_KEY, selectedStyle);
     onStyleChange?.(selectedStyle);
   }, [selectedStyle, onStyleChange]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const toggleDrawer = () => {
     setIsOpen((prevState) => !prevState);
@@ -151,44 +165,32 @@ export const MapStyleControl = ({ onStyleChange }: MapStyleControlProps) => {
   );
 
   return (
-    <Popup
-      trigger={
-        <CustomControl position="topRight">
-          <ControlButton
-            title="Map Styles"
-            onClick={toggleDrawer}
-            icon={<LayersIcon size={17} />}
-          />
-        </CustomControl>
-      }
-      content={
-        isOpen ? (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
-            }}
-          >
-            {mapOptions.map((mapOption) => (
-              <MapStyleOption
-                key={mapOption.id}
-                id={mapOption.id}
-                label={mapOption.label}
-                style={mapOption.style}
-                isSelected={mapOption.isSelected}
-                onSelect={setSelectedStyle}
-                mapCenter={mapCenter}
-                zoom={zoom}
-              />
-            ))}
+    <CustomControl position="topRight">
+      <div ref={containerRef} className="relative">
+        <ControlButton
+          title="Map Styles"
+          onClick={toggleDrawer}
+          icon={<LayersIcon size={17} />}
+        />
+        {isOpen && (
+          <div className="absolute right-0 top-full mt-1 z-50 rounded-md border bg-popover p-4 shadow-md animate-in fade-in-0 zoom-in-95">
+            <div className="flex flex-col gap-2.5">
+              {mapOptions.map((mapOption) => (
+                <MapStyleOption
+                  key={mapOption.id}
+                  id={mapOption.id}
+                  label={mapOption.label}
+                  style={mapOption.style}
+                  isSelected={mapOption.isSelected}
+                  onSelect={setSelectedStyle}
+                  mapCenter={mapCenter}
+                  zoom={zoom}
+                />
+              ))}
+            </div>
           </div>
-        ) : null
-      }
-      on="click"
-      open={isOpen}
-      onClose={() => setIsOpen(false)}
-      onOpen={() => setIsOpen(true)}
-    />
+        )}
+      </div>
+    </CustomControl>
   );
 };

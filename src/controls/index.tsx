@@ -150,9 +150,9 @@ export const MainControl = () => {
       >
         <SheetContent
           side="left"
-          className="w-[400px] sm:max-w-[unset] max-h-screen overflow-y-auto"
+          className="w-[400px] sm:max-w-[unset] max-h-screen overflow-y-auto gap-1"
         >
-          <SheetHeader className="flex justify-between px-2 pb-0 gap-0">
+          <SheetHeader className="justify-between">
             <TabsList>
               <TabsTrigger
                 value="directions"
@@ -170,7 +170,6 @@ export const MainControl = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-4 right-2"
               onClick={handleDirectionsToggle}
               data-testid="close-directions-button"
             >
