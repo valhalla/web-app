@@ -7,7 +7,7 @@ import {
 import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import type { ActiveWaypoint } from '@/common/types';
+import type { ActiveWaypoint } from '@/components/types';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,

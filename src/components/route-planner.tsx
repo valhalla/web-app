@@ -30,12 +30,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { PossibleTabValues } from '@/common/types';
+import type { PossibleTabValues } from '@/components/types';
 import { pairwise } from '@/utils/pairwise';
 import { parseUrlParams } from '@/utils/parse-url-params';
 import { isValidProfile, parseWaypoints } from './utils';
 
-export const MainControl = () => {
+export const RoutePlanner = () => {
   const { activeTab, showDirectionsPanel } = useSelector(
     (state: RootState) => state.common
   );

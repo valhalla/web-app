@@ -5,7 +5,7 @@ import {
   zoomToManeuver,
 } from '@/actions/directions-actions';
 import type { AppDispatch } from '@/store';
-import type { Leg } from '@/common/types';
+import type { Leg } from '@/components/types';
 import { useDispatch } from 'react-redux';
 import { Clock, MoveHorizontal, DollarSign, Ship } from 'lucide-react';
 import { MetricItem } from '@/components/ui/metric-item';

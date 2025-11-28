@@ -36,7 +36,7 @@ import type {
   ParsedDirectionsGeometry,
   ThunkResult,
   ValhallaRouteResponse,
-} from '@/common/types';
+} from '@/components/types';
 import { toast } from 'sonner';
 
 interface LatLng {

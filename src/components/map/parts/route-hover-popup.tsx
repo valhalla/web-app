@@ -1,7 +1,7 @@
 import { Popup } from 'react-map-gl/maplibre';
 import { MoveHorizontal, Clock } from 'lucide-react';
 import { formatDuration } from '@/utils/date-time';
-import type { Summary } from '@/common/types';
+import type { Summary } from '@/components/types';
 
 interface RouteHoverPopupProps {
   lng: number;

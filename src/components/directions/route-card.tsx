@@ -4,7 +4,7 @@ import { downloadFile } from '@/actions/common-actions';
 import { Summary } from './summary';
 import { Maneuvers } from './maneuvers';
 import { Button } from '@/components/ui/button';
-import type { ParsedDirectionsGeometry } from '@/common/types';
+import type { ParsedDirectionsGeometry } from '@/components/types';
 import {
   Collapsible,
   CollapsibleContent,

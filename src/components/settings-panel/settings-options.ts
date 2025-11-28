@@ -1,4 +1,4 @@
-import type { BicycleType } from '@/common/types';
+import type { BicycleType } from '@/components/types';
 
 interface NumericSetting {
   name: string;

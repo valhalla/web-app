@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Waypoints } from './waypoints';
+import { Waypoints } from './waypoints/waypoint-list';
 
 import { ProfilePicker } from '@/components/profile-picker';
 import { SettingsButton } from '@/components/settings-button';
@@ -17,7 +17,7 @@ import {
 } from '@/actions/directions-actions';
 import { doUpdateDateTime } from '@/actions/common-actions';
 import type { AppDispatch, RootState } from '@/store';
-import type { ParsedDirectionsGeometry } from '@/common/types';
+import type { ParsedDirectionsGeometry } from '@/components/types';
 import { Button } from '@/components/ui/button';
 import { MapPinPlus, MapPinXInside } from 'lucide-react';
 import { RouteCard } from './route-card';

@@ -7,7 +7,7 @@ import {
 } from '@hello-pangea/dnd';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Waypoint } from './waypoint';
+import { Waypoint } from './waypoint-item';
 import {
   doAddWaypoint,
   setWaypoints,

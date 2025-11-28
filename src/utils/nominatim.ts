@@ -1,4 +1,4 @@
-import type { NominationResponse } from '@/common/types';
+import type { NominationResponse } from '@/components/types';
 import axios from 'axios';
 
 export const NOMINATIM_URL = `${process.env.REACT_APP_NOMINATIM_URL}/search`;

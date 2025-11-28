@@ -10,7 +10,7 @@ import { SettingsFooter } from '@/components/settings-footer';
 import { makeIsochronesRequest } from '@/actions/isochrones-actions';
 import type { AppDispatch, RootState } from '@/store';
 import { Separator } from '@/components/ui/separator';
-import { IsochronesOutputControl } from './output-control';
+import { IsochronesOutputControl } from './isochrone-card';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 
 export const IsochronesControl = () => {

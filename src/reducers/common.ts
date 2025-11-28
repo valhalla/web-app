@@ -11,11 +11,11 @@ import {
   TOGGLE_DIRECTIONS,
   UPDATE_DATETIME,
 } from '@/actions/types';
-import type { PossibleSettings, PossibleTabValues } from '@/common/types';
+import type { PossibleSettings, PossibleTabValues } from '@/components/types';
 import {
   settingsInit,
   settingsInitTruckOverride,
-} from '@/controls/settings-options';
+} from '@/components/settings-panel/settings-options';
 import type { AnyAction } from 'redux';
 
 export type Profile =

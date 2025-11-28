@@ -27,7 +27,7 @@ import type {
   NominationResponse,
   ThunkResult,
   ValhallaIsochroneResponse,
-} from '@/common/types';
+} from '@/components/types';
 
 const serverMapping = {
   [VALHALLA_OSM_URL!]: 'OSM',

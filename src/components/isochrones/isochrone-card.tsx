@@ -1,6 +1,6 @@
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import { cn } from '@/lib/utils';
-import type { ValhallaIsochroneResponse } from '@/common/types';
+import type { ValhallaIsochroneResponse } from '@/components/types';
 import { ClockIcon, MoveIcon } from 'lucide-react';
 import { exportDataAsJson } from '@/utils/export';
 import { useDispatch } from 'react-redux';

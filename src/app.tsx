@@ -1,6 +1,6 @@
-import { MapComponent } from './map';
-import { MainControl } from './controls';
-import { SettingsPanel } from './controls/settings-panel';
+import { MapComponent } from './components/map';
+import { RoutePlanner } from './components/route-planner';
+import { SettingsPanel } from './components/settings-panel/settings-panel';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
@@ -19,7 +19,7 @@ export const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <MapComponent />
-      <MainControl />
+      <RoutePlanner />
       <SettingsPanel />
       <Toaster position="bottom-center" duration={5000} richColors />
     </QueryClientProvider>

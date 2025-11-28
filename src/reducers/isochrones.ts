@@ -12,7 +12,7 @@ import {
 
 import { VALHALLA_OSM_URL } from '../utils/valhalla';
 import type { AnyAction } from 'redux';
-import type { ActiveWaypoint, ValhallaIsochroneResponse } from '@/common/types';
+import type { ActiveWaypoint, ValhallaIsochroneResponse } from '@/components/types';
 
 interface IsochroneResult {
   data: ValhallaIsochroneResponse;

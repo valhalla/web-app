@@ -5,7 +5,7 @@ import type {
   IsochronesRequestParams,
   Settings,
   ValhallaRouteResponse,
-} from '@/common/types';
+} from '@/components/types';
 import {
   buildLocateRequest,
   buildHeightRequest,
@@ -615,7 +615,7 @@ describe('valhalla.ts', () => {
   });
 
   describe('buildIsochronesRequest', () => {
-    const mockCenter: import('@/common/types').Center = {
+    const mockCenter: import('@/components/types').Center = {
       title: 'Center',
       description: 'Center point',
       selected: true,

@@ -27,7 +27,7 @@ import { buildHeightgraphData } from '@/utils/heightgraph';
 import HeightGraph from '@/components/heightgraph';
 import { DrawControl } from './draw-control';
 import type { AppDispatch, RootState } from '@/store';
-import type { ParsedDirectionsGeometry, Summary } from '@/common/types';
+import type { ParsedDirectionsGeometry, Summary } from '@/components/types';
 import type { Feature, FeatureCollection, LineString } from 'geojson';
 import { Button } from '@/components/ui/button';
 

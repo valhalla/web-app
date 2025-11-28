@@ -6,7 +6,7 @@ import { showProvider } from '../../actions/directions-actions';
 import { formatDuration } from '@/utils/date-time';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import type { AppDispatch, RootState } from '@/store';
-import type { Summary as SummaryType } from '@/common/types';
+import type { Summary as SummaryType } from '@/components/types';
 import {
   ArrowUp,
   Clock,

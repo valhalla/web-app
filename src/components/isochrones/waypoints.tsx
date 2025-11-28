@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { WaypointSearch } from '@/components/ui/waypoint-search';
-import type { ActiveWaypoint } from '@/common/types';
+import type { ActiveWaypoint } from '@/components/types';
 
 import {
   updateTextInput,
@@ -12,7 +12,7 @@ import {
 } from '@/actions/isochrones-actions';
 import { RECEIVE_GEOCODE_RESULTS_ISO } from '@/actions/types';
 
-import { settingsInit } from '@/controls/settings-options';
+import { settingsInit } from '@/components/settings-panel/settings-options';
 
 import { updatePermalink, zoomTo } from '@/actions/common-actions';
 

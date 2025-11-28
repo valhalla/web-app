@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useMutation } from '@tanstack/react-query';
 import { isValidCoordinates } from '@/utils/geom';
 import { forward_geocode, parseGeocodeResponse } from '@/utils/nominatim';
-import type { ActiveWaypoint, NominationResponse } from '@/common/types';
+import type { ActiveWaypoint, NominationResponse } from '@/components/types';
 import type { AppDispatch, RootState } from '@/store';
 import { zoomTo } from '@/actions/common-actions';
 import {
