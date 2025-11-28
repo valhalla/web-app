@@ -10,7 +10,10 @@ import {
   UPDATE_DATETIME,
 } from './types';
 
-import { profileSettings, generalSettings } from '../components/settings-panel/settings-options';
+import {
+  profileSettings,
+  generalSettings,
+} from '../components/settings-panel/settings-options';
 import type { Profile } from '@/reducers/common';
 import type {
   PossibleSettings,

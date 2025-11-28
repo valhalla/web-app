@@ -77,6 +77,7 @@ export default defineConfig(
   {
     ...reactHooks.configs['recommended-latest'],
   },
+  ...eslintPluginTanstackQuery.configs['flat/recommended'],
   {
     linterOptions: {
       reportUnusedDisableDirectives: true,

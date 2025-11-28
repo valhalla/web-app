@@ -23,6 +23,7 @@ import type { Profile } from '@/reducers/common';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -178,6 +179,11 @@ export const RoutePlanner = () => {
             <SheetTitle className="sr-only">
               {activeTab === 'directions' ? 'Directions' : 'Isochrones'}
             </SheetTitle>
+            <SheetDescription className="sr-only">
+              {activeTab === 'directions'
+                ? 'Plan a route between multiple locations'
+                : 'Calculate reachable areas from a location'}
+            </SheetDescription>
           </SheetHeader>
 
           <TabsContent value="directions" className="flex flex-col gap-3 px-2">

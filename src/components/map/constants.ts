@@ -1,6 +1,6 @@
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 
-const centerCoords = process.env.REACT_APP_CENTER_COORDS!.split(',');
+const centerCoords = import.meta.env.VITE_CENTER_COORDS?.split(',') || [];
 
 export const DEFAULT_CENTER: [number, number] = [
   parseFloat(centerCoords[1] || '13.393707'),

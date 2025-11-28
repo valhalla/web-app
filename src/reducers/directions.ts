@@ -18,7 +18,10 @@ import {
 
 import { VALHALLA_OSM_URL } from '../utils/valhalla';
 import type { AnyAction } from 'redux';
-import type { ActiveWaypoint, ParsedDirectionsGeometry } from '@/components/types';
+import type {
+  ActiveWaypoint,
+  ParsedDirectionsGeometry,
+} from '@/components/types';
 
 export interface Waypoint {
   id: string;

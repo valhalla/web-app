@@ -57,7 +57,7 @@ export const WaypointSearch = ({
   const [open, setOpen] = useState(false);
   const [internalValue, setInternalValue] = useState('');
 
-  const geocodeMutation = useMutation({
+  const { mutate: geocodeMutate, isPending: isGeocoding } = useMutation({
     mutationFn: async () => {
       if (use_geocoding) {
         const response = await forward_geocode(internalValue);
@@ -111,8 +111,8 @@ export const WaypointSearch = ({
 
   const fetchGeocodeResults = useCallback(() => {
     if (internalValue.length === 0) return;
-    geocodeMutation.mutate();
-  }, [internalValue, geocodeMutation]);
+    geocodeMutate();
+  }, [internalValue, geocodeMutate]);
 
   const handleResultSelect = useCallback(
     (result: ActiveWaypoint) => {
@@ -159,9 +159,7 @@ export const WaypointSearch = ({
             />
             <CommandList>
               <CommandEmpty>
-                {geocodeMutation.isPending
-                  ? 'Searching...'
-                  : 'No search results found'}
+                {isGeocoding ? 'Searching...' : 'No search results found'}
               </CommandEmpty>
               <CommandGroup>
                 {geocodeResults.map((result) => (
