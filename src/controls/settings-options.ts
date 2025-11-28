@@ -1,5 +1,51 @@
 import type { BicycleType } from '@/common/types';
 
+interface NumericSetting {
+  name: string;
+  param: string;
+  description: string;
+  unit: string;
+  settings: { min: number; max: number; step: number };
+}
+
+interface BooleanSetting {
+  name: string;
+  param: string;
+  description: string;
+}
+
+interface EnumSetting {
+  name: string;
+  param: string;
+  description: string;
+  enums: Array<{ key: string; text: string; value: string }>;
+}
+
+interface SettingsGroup {
+  numeric: NumericSetting[];
+  boolean: BooleanSetting[];
+  enum: EnumSetting[];
+}
+
+export type SettingsProfile =
+  | 'truck'
+  | 'car'
+  | 'bus'
+  | 'pedestrian'
+  | 'motor_scooter'
+  | 'bicycle'
+  | 'motorcycle';
+
+const createSettings = (
+  numeric: NumericSetting[],
+  boolean: BooleanSetting[],
+  enumSettings: EnumSetting[] = []
+): SettingsGroup => ({
+  numeric: [...numeric],
+  boolean: [...boolean],
+  enum: enumSettings,
+});
+
 const length = {
   name: 'Length',
   param: 'length',
@@ -774,9 +820,50 @@ export const settingsInitTruckOverride = {
   height: 4.11,
 };
 
-export const profile_settings = {
-  truck: {
-    numeric: [
+const gateSettings = [maneuverPenalty, gateCost, gatePenalty] as const;
+const borderSettings = [countryCrossingCost, countryCrossingPenalty] as const;
+const serviceSettings = [servicePenalty, serviceFactor] as const;
+const tollSettings = [useTollways, tollBoothCost, tollBoothPenalty] as const;
+const ferrySettings = [useFerry, ferryCost] as const;
+const hovFlags = [includeHOV2, includeHOV3, includeHot] as const;
+const ignoreFlags = [ignoreClosures, ignoreRestrictions, ignoreAccess] as const;
+
+const commonVehicleProfileNumeric = [
+  width,
+  height,
+  topSpeed,
+  fixedSpeed,
+  privateAccessPenalty,
+  closureFactor,
+  ...serviceSettings,
+  ...gateSettings,
+  ...borderSettings,
+] as const;
+
+const commonVehicleProfileBoolean = [
+  shortest,
+  ...hovFlags,
+  ignoreHierarchies,
+] as const;
+
+const commonGeneralNumeric = [
+  turnPenaltyCost,
+  useHighways,
+  ...tollSettings,
+  ...ferrySettings,
+  useLivingStreets,
+  useTracks,
+] as const;
+
+const commonGeneralBoolean = [
+  ...ignoreFlags,
+  excludeUnpaved,
+  excludeCashOnlyTolls,
+] as const;
+
+export const profileSettings: Record<SettingsProfile, SettingsGroup> = {
+  truck: createSettings(
+    [
       length,
       width,
       weight,
@@ -785,74 +872,28 @@ export const profile_settings = {
       axleCount,
       topSpeed,
       fixedSpeed,
-      maneuverPenalty,
-      gateCost,
-      gatePenalty,
+      ...gateSettings,
       privateAccessPenalty,
       closureFactor,
-      servicePenalty,
-      serviceFactor,
-      countryCrossingCost,
-      countryCrossingPenalty,
+      ...serviceSettings,
+      ...borderSettings,
       useTruckRoutes,
     ],
-    boolean: [hazardousMaterials, shortest, ignoreHierarchies],
-    enum: [],
-  },
-  car: {
-    numeric: [
-      width,
-      height,
-      topSpeed,
-      fixedSpeed,
-      privateAccessPenalty,
-      closureFactor,
-      servicePenalty,
-      serviceFactor,
-      maneuverPenalty,
-      gateCost,
-      gatePenalty,
-      countryCrossingCost,
-      countryCrossingPenalty,
-    ],
-    boolean: [
-      shortest,
-      includeHOV2,
-      includeHOV3,
-      includeHot,
-      ignoreHierarchies,
-    ],
-    enum: [],
-  },
-  bus: {
-    numeric: [
-      length,
-      width,
-      weight,
-      height,
-      topSpeed,
-      fixedSpeed,
-      maneuverPenalty,
-      privateAccessPenalty,
-      gateCost,
-      gatePenalty,
-      closureFactor,
-      servicePenalty,
-      serviceFactor,
-      countryCrossingCost,
-      countryCrossingPenalty,
-    ],
-    boolean: [
-      shortest,
-      includeHOV2,
-      includeHOV3,
-      includeHot,
-      ignoreHierarchies,
-    ],
-    enum: [],
-  },
-  pedestrian: {
-    numeric: [
+    [hazardousMaterials, shortest, ignoreHierarchies]
+  ),
+
+  car: createSettings(
+    [...commonVehicleProfileNumeric],
+    [...commonVehicleProfileBoolean]
+  ),
+
+  bus: createSettings(
+    [length, weight, ...commonVehicleProfileNumeric],
+    [...commonVehicleProfileBoolean]
+  ),
+
+  pedestrian: createSettings(
+    [
       useHills,
       useLit,
       walkingSpeed,
@@ -863,181 +904,87 @@ export const profile_settings = {
       stepPenalty,
       maxHikingDifficulty,
     ],
-    boolean: [shortest],
-    enum: [],
-  },
-  motor_scooter: {
-    numeric: [
+    [shortest]
+  ),
+
+  motor_scooter: createSettings(
+    [
       useHills,
       topSpeed,
       usePrimary,
       useLivingStreets,
-      maneuverPenalty,
-      gateCost,
-      gatePenalty,
-      countryCrossingCost,
-      countryCrossingPenalty,
+      ...gateSettings,
+      ...borderSettings,
     ],
-    boolean: [shortest, ignoreHierarchies],
-    enum: [],
-  },
-  bicycle: {
-    numeric: [
-      cyclingSpeed,
-      useRoads,
-      useHills,
-      avoidBadSurfaces,
-      maneuverPenalty,
-      gateCost,
-      gatePenalty,
-    ],
-    boolean: [shortest],
-    enum: [bicycleType],
-  },
-  motorcycle: {
-    numeric: [
-      width,
-      height,
-      topSpeed,
-      fixedSpeed,
-      privateAccessPenalty,
-      closureFactor,
-      servicePenalty,
-      serviceFactor,
-      maneuverPenalty,
-      gateCost,
-      gatePenalty,
-      countryCrossingCost,
-      countryCrossingPenalty,
-    ],
-    boolean: [
-      shortest,
-      includeHOV2,
-      includeHOV3,
-      includeHot,
-      ignoreHierarchies,
-    ],
-    enum: [],
-  },
+    [shortest, ignoreHierarchies]
+  ),
+
+  bicycle: createSettings(
+    [cyclingSpeed, useRoads, useHills, avoidBadSurfaces, ...gateSettings],
+    [shortest],
+    [bicycleType]
+  ),
+
+  motorcycle: createSettings(
+    [...commonVehicleProfileNumeric],
+    [...commonVehicleProfileBoolean]
+  ),
 };
 
-export const settings_general = {
-  truck: {
-    numeric: [
-      turnPenaltyCost,
-      useHighways,
-      useTollways,
-      tollBoothCost,
-      tollBoothPenalty,
-      useFerry,
-      ferryCost,
-      useLivingStreets,
-      useTracks,
-    ],
-    boolean: [
-      ignoreClosures,
-      ignoreRestrictions,
-      ignoreAccess,
-      excludeUnpaved,
-      excludeCashOnlyTolls,
-      includeHOV3,
-      includeHOV2,
-      includeHot,
-    ],
-    enum: [],
-  },
-  car: {
-    numeric: [
-      turnPenaltyCost,
-      useHighways,
-      useTollways,
-      tollBoothCost,
-      tollBoothPenalty,
-      useFerry,
-      ferryCost,
-      useLivingStreets,
-      useTracks,
-    ],
-    boolean: [
-      ignoreClosures,
-      ignoreRestrictions,
-      ignoreAccess,
-      excludeUnpaved,
-      excludeCashOnlyTolls,
-    ],
-    enum: [],
-  },
-  bus: {
-    numeric: [
+export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
+  all: { boolean: BooleanSetting[]; numeric: NumericSetting[] };
+} = {
+  truck: createSettings(
+    [...commonGeneralNumeric],
+    [...commonGeneralBoolean, ...hovFlags]
+  ),
+
+  car: createSettings([...commonGeneralNumeric], [...commonGeneralBoolean]),
+
+  bus: createSettings(
+    [
       turnPenaltyCost,
       useHighways,
       useLivingStreets,
-      useTollways,
-      tollBoothCost,
-      tollBoothPenalty,
-      useFerry,
-      ferryCost,
+      ...tollSettings,
+      ...ferrySettings,
       useTracks,
     ],
-    boolean: [
-      ignoreClosures,
-      ignoreRestrictions,
-      ignoreAccess,
-      excludeUnpaved,
-      excludeCashOnlyTolls,
-    ],
-    enum: [],
-  },
-  pedestrian: {
-    numeric: [
+    [...commonGeneralBoolean]
+  ),
+
+  pedestrian: createSettings(
+    [
       useFerry,
-      servicePenalty,
-      serviceFactor,
+      ...serviceSettings,
       useLivingStreets,
       useTracks,
       transitStartEndMaxDistance,
       transitTransferMaxDistance,
     ],
-    boolean: [],
-    enum: [],
-  },
-  motor_scooter: {
-    numeric: [useFerry, useTracks, servicePenalty],
-    boolean: [],
-    enum: [],
-  },
-  bicycle: {
-    numeric: [
-      useFerry,
-      useLivingStreets,
-      turnPenaltyCost,
-      servicePenalty,
-      serviceFactor,
-    ],
-    boolean: [],
-    enum: [],
-  },
-  motorcycle: {
-    numeric: [
+    []
+  ),
+
+  motor_scooter: createSettings([useFerry, useTracks, servicePenalty], []),
+
+  bicycle: createSettings(
+    [useFerry, useLivingStreets, turnPenaltyCost, ...serviceSettings],
+    []
+  ),
+
+  motorcycle: createSettings(
+    [
       turnPenaltyCost,
       useHighways,
       useTrails,
-      useTollways,
-      tollBoothCost,
-      tollBoothPenalty,
-      useFerry,
-      ferryCost,
+      ...tollSettings,
+      ...ferrySettings,
       useLivingStreets,
       useTracks,
     ],
-    boolean: [
-      ignoreClosures,
-      ignoreRestrictions,
-      ignoreAccess,
-      excludeCashOnlyTolls,
-    ],
-    enum: [],
-  },
+    [...ignoreFlags, excludeCashOnlyTolls]
+  ),
+
   all: {
     boolean: [useGeocoding],
     numeric: [alternates],

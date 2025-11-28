@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from 'throttle-debounce';
 import { Button } from '@/components/ui/button';
-import { profile_settings, settings_general } from './settings-options';
+import { profileSettings, generalSettings } from './settings-options';
 import {
   updateSettings,
   doShowSettings,
@@ -73,7 +73,7 @@ export const SettingsPanel = () => {
   }, [dispatch]);
 
   const hasProfileSettings =
-    profile_settings[profile as ProfileWithSettings].boolean.length > 0;
+    profileSettings[profile as ProfileWithSettings].boolean.length > 0;
 
   return (
     <Sheet open={showSettings} modal={false}>
@@ -105,7 +105,7 @@ export const SettingsPanel = () => {
                   </span>
                 </div>
                 <div className="space-y-1.25">
-                  {profile_settings[profile as ProfileWithSettings].numeric.map(
+                  {profileSettings[profile as ProfileWithSettings].numeric.map(
                     (option, key) => (
                       <SliderSetting
                         key={key}
@@ -138,7 +138,7 @@ export const SettingsPanel = () => {
                       />
                     )
                   )}
-                  {profile_settings[profile as ProfileWithSettings].boolean.map(
+                  {profileSettings[profile as ProfileWithSettings].boolean.map(
                     (option, key) => (
                       <CheckboxSetting
                         key={key}
@@ -155,7 +155,7 @@ export const SettingsPanel = () => {
                       />
                     )
                   )}
-                  {profile_settings[profile as ProfileWithSettings].enum.map(
+                  {profileSettings[profile as ProfileWithSettings].enum.map(
                     (option, key) => (
                       <SelectSetting
                         key={key}
@@ -187,7 +187,7 @@ export const SettingsPanel = () => {
                 </h3>
               </div>
               <div className="space-y-1.25">
-                {settings_general[profile as ProfileWithSettings].numeric.map(
+                {generalSettings[profile as ProfileWithSettings].numeric.map(
                   (option, key) => (
                     <SliderSetting
                       key={key}
@@ -220,7 +220,7 @@ export const SettingsPanel = () => {
                     />
                   )
                 )}
-                {settings_general[profile as ProfileWithSettings].boolean.map(
+                {generalSettings[profile as ProfileWithSettings].boolean.map(
                   (option, key) => (
                     <CheckboxSetting
                       key={key}
@@ -237,7 +237,7 @@ export const SettingsPanel = () => {
                     />
                   )
                 )}
-                {settings_general.all.boolean.map((option, key) => (
+                {generalSettings.all.boolean.map((option, key) => (
                   <CheckboxSetting
                     key={key}
                     id={option.param}
@@ -252,7 +252,7 @@ export const SettingsPanel = () => {
                     }}
                   />
                 ))}
-                {settings_general.all.numeric.map((option, key) => (
+                {generalSettings.all.numeric.map((option, key) => (
                   <SliderSetting
                     key={key}
                     id={option.param}

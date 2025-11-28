@@ -10,10 +10,7 @@ import {
   UPDATE_DATETIME,
 } from './types';
 
-import {
-  profile_settings,
-  settings_general,
-} from '../controls/settings-options';
+import { profileSettings, generalSettings } from '../controls/settings-options';
 import type { Profile } from '@/reducers/common';
 import type {
   PossibleSettings,
@@ -169,20 +166,20 @@ export const filterProfileSettings = (
 
   for (const setting in settings) {
     // Check if the profile exists in settings_general
-    if (profile in settings_general) {
-      for (const item of settings_general[profile].numeric) {
+    if (profile in generalSettings) {
+      for (const item of generalSettings[profile].numeric) {
         if (setting === item.param) {
           filteredSettings.costing[setting] =
             settings[setting as keyof PossibleSettings];
         }
       }
-      for (const item of settings_general[profile].boolean) {
+      for (const item of generalSettings[profile].boolean) {
         if (setting === item.param) {
           filteredSettings.costing[setting] =
             settings[setting as keyof PossibleSettings];
         }
       }
-      for (const item of settings_general[profile].enum) {
+      for (const item of generalSettings[profile].enum) {
         if (setting === (item as { param: string }).param) {
           filteredSettings.costing[setting] =
             settings[setting as keyof PossibleSettings];
@@ -191,21 +188,21 @@ export const filterProfileSettings = (
     }
 
     // Check if the profile exists in profile_settings
-    if (profile in profile_settings) {
-      for (const item of profile_settings[profile].numeric) {
+    if (profile in profileSettings) {
+      for (const item of profileSettings[profile].numeric) {
         if (setting === item.param) {
           filteredSettings.costing[setting] =
             settings[setting as keyof PossibleSettings];
         }
       }
 
-      for (const item of profile_settings[profile].boolean) {
+      for (const item of profileSettings[profile].boolean) {
         if (setting === item.param) {
           filteredSettings.costing[setting] =
             settings[setting as keyof PossibleSettings];
         }
       }
-      for (const item of profile_settings[profile].enum) {
+      for (const item of profileSettings[profile].enum) {
         if (setting === item.param) {
           filteredSettings.costing[setting] =
             settings[setting as keyof PossibleSettings];

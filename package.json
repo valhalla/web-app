@@ -1,6 +1,6 @@
 {
-  "name": "converter-demo-app",
-  "version": "0.0.1",
+  "name": "valhalla-web",
+  "version": "1.0.0",
   "private": false,
   "homepage": "https://valhalla.openstreetmap.de",
   "type": "module",
