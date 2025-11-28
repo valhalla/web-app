@@ -84,6 +84,7 @@ export const Waypoints = () => {
                       ref={provided_inner.innerRef}
                       {...provided_inner.draggableProps}
                       {...provided_inner.dragHandleProps}
+                      aria-label={`Re-order waypoint ${index + 1}`}
                       // @ts-expect-error todo: fix this
                       style={getItemStyle(
                         snapshot_inner.isDragging,

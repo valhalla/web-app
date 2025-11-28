@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from 'throttle-debounce';
 import { Button } from '@/components/ui/button';
@@ -45,17 +45,14 @@ export const SettingsPanel = () => {
           value,
         })
       );
+      if (activeTab === 'directions') {
+        dispatch(makeRequest());
+      } else {
+        dispatch(makeIsochronesRequest());
+      }
     }),
-    [dispatch]
+    [dispatch, activeTab]
   );
-
-  useEffect(() => {
-    if (activeTab === 'directions') {
-      dispatch(makeRequest());
-    } else {
-      dispatch(makeIsochronesRequest());
-    }
-  }, [settings, activeTab, dispatch]);
 
   const handleCopySettings = useCallback(async () => {
     const text = JSON.stringify(
@@ -70,7 +67,12 @@ export const SettingsPanel = () => {
 
   const resetConfigSettings = useCallback(() => {
     dispatch(resetSettings());
-  }, [dispatch]);
+    if (activeTab === 'directions') {
+      dispatch(makeRequest());
+    } else {
+      dispatch(makeIsochronesRequest());
+    }
+  }, [dispatch, activeTab]);
 
   const hasProfileSettings =
     profileSettings[profile as ProfileWithSettings].boolean.length > 0;
