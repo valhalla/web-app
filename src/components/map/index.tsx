@@ -85,16 +85,7 @@ export const MapComponent = () => {
   const [heightgraphData, setHeightgraphData] = useState<FeatureCollection[]>(
     []
   );
-  const [markers, setMarkers] = useState<MarkerData[]>([]);
-  const [routeGeoJSON, setRouteGeoJSON] = useState<FeatureCollection | null>(
-    null
-  );
-  const [isochroneGeoJSON, setIsochroneGeoJSON] =
-    useState<FeatureCollection | null>(null);
-  const [isoLocationsGeoJSON, setIsoLocationsGeoJSON] =
-    useState<FeatureCollection | null>(null);
-  const [highlightSegmentGeoJSON, setHighlightSegmentGeoJSON] =
-    useState<Feature<LineString> | null>(null);
+
   const [heightgraphHoverDistance, setHeightgraphHoverDistance] = useState<
     number | null
   >(null);
@@ -304,11 +295,12 @@ export const MapComponent = () => {
   }, [directions, heightPayload, dispatch]);
 
   // Update markers when waypoints or isochrone centers change
-  useEffect(() => {
+  const { waypoints } = directions;
+  const { geocodeResults } = isochrones;
+  const markers = useMemo(() => {
     const newMarkers: MarkerData[] = [];
 
     // Add waypoint markers
-    const { waypoints } = directions;
     waypoints.forEach((waypoint, index) => {
       waypoint.geocodeResults.forEach((address) => {
         if (address.selected) {
@@ -327,7 +319,6 @@ export const MapComponent = () => {
     });
 
     // Add isochrone center marker
-    const { geocodeResults } = isochrones;
     geocodeResults.forEach((address) => {
       if (address.selected) {
         newMarkers.push({
@@ -343,29 +334,23 @@ export const MapComponent = () => {
       }
     });
 
-    setMarkers(newMarkers);
-  }, [
-    directions.selectedAddresses,
-    isochrones.selectedAddress,
-    directions.waypoints,
-    isochrones.geocodeResults,
-  ]);
+    return newMarkers;
+  }, [waypoints, geocodeResults]);
 
   // Update route lines
-  useEffect(() => {
-    const { results } = directions;
-
+  const { results: directionResults, successful: directionsSuccessful } =
+    directions;
+  const routeGeoJSON = useMemo(() => {
     if (
-      !results[VALHALLA_OSM_URL!]?.data ||
-      Object.keys(results[VALHALLA_OSM_URL!]!.data).length === 0 ||
-      !directions.successful
+      !directionResults[VALHALLA_OSM_URL!]?.data ||
+      Object.keys(directionResults[VALHALLA_OSM_URL!]!.data).length === 0 ||
+      !directionsSuccessful
     ) {
-      setRouteGeoJSON(null);
-      return;
+      return null;
     }
 
-    const response = results[VALHALLA_OSM_URL!]!.data;
-    const showRoutes = results[VALHALLA_OSM_URL!]!.show || {};
+    const response = directionResults[VALHALLA_OSM_URL!]!.data;
+    const showRoutes = directionResults[VALHALLA_OSM_URL!]!.show || {};
     const features: Feature<LineString>[] = [];
 
     // Add alternates
@@ -410,20 +395,17 @@ export const MapComponent = () => {
       });
     }
 
-    setRouteGeoJSON({
+    return {
       type: 'FeatureCollection',
       features,
-    });
-  }, [directions.results, directions.successful]);
+    } as FeatureCollection;
+  }, [directionResults, directionsSuccessful]);
 
   // Update isochrones
-  useEffect(() => {
-    const { results } = isochrones;
-
-    if (!results || !isochrones.successful) {
-      setIsochroneGeoJSON(null);
-      setIsoLocationsGeoJSON(null);
-      return;
+  const { results: isoResults, successful: isoSuccessful } = isochrones;
+  const { isochroneGeoJSON, isoLocationsGeoJSON } = useMemo(() => {
+    if (!isoResults || !isoSuccessful) {
+      return { isochroneGeoJSON: null, isoLocationsGeoJSON: null };
     }
 
     const isoFeatures: Feature[] = [];
@@ -431,11 +413,11 @@ export const MapComponent = () => {
 
     for (const provider of [VALHALLA_OSM_URL]) {
       if (
-        results[provider!]?.data &&
-        Object.keys(results[provider!]!.data).length > 0 &&
-        results[provider!]!.show
+        isoResults[provider!]?.data &&
+        Object.keys(isoResults[provider!]!.data).length > 0 &&
+        isoResults[provider!]!.show
       ) {
-        for (const feature of results[provider!]!.data.features) {
+        for (const feature of isoResults[provider!]!.data.features) {
           if (['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
             isoFeatures.push({
               ...feature,
@@ -454,43 +436,41 @@ export const MapComponent = () => {
       }
     }
 
-    setIsochroneGeoJSON({
-      type: 'FeatureCollection',
-      features: isoFeatures,
-    });
-
-    setIsoLocationsGeoJSON({
-      type: 'FeatureCollection',
-      features: locationFeatures,
-    });
-  }, [isochrones.results, isochrones.successful]);
+    return {
+      isochroneGeoJSON: {
+        type: 'FeatureCollection',
+        features: isoFeatures,
+      } as FeatureCollection,
+      isoLocationsGeoJSON: {
+        type: 'FeatureCollection',
+        features: locationFeatures,
+      } as FeatureCollection,
+    };
+  }, [isoResults, isoSuccessful]);
 
   // Update highlight segment
-  useEffect(() => {
-    const { highlightSegment, results } = directions;
-
-    if (!highlightSegment || !results[VALHALLA_OSM_URL!]?.data) {
-      setHighlightSegmentGeoJSON(null);
-      return;
+  const { highlightSegment } = directions;
+  const highlightSegmentGeoJSON = useMemo(() => {
+    if (!highlightSegment || !directionResults[VALHALLA_OSM_URL!]?.data) {
+      return null;
     }
 
     const { startIndex, endIndex, alternate } = highlightSegment;
 
     let coords;
     if (alternate == -1) {
-      coords = results[VALHALLA_OSM_URL!]!.data.decodedGeometry;
+      coords = directionResults[VALHALLA_OSM_URL!]!.data.decodedGeometry;
     } else {
-      if (!results[VALHALLA_OSM_URL!]!.data.alternates?.[alternate]) {
-        setHighlightSegmentGeoJSON(null);
-        return;
+      if (!directionResults[VALHALLA_OSM_URL!]!.data.alternates?.[alternate]) {
+        return null;
       }
-      coords = (results[VALHALLA_OSM_URL!]!.data.alternates?.[
+      coords = (directionResults[VALHALLA_OSM_URL!]!.data.alternates?.[
         alternate
       ] as ParsedDirectionsGeometry)!.decodedGeometry;
     }
 
     if (startIndex > -1 && endIndex > -1 && coords) {
-      setHighlightSegmentGeoJSON({
+      return {
         type: 'Feature',
         geometry: {
           type: 'LineString',
@@ -499,11 +479,11 @@ export const MapComponent = () => {
             .map((c) => [c[1] ?? 0, c[0] ?? 0]),
         },
         properties: {},
-      });
+      } as Feature<LineString>;
     } else {
-      setHighlightSegmentGeoJSON(null);
+      return null;
     }
-  }, [directions.highlightSegment, directions.results]);
+  }, [highlightSegment, directionResults]);
 
   // Zoom to coordinates
   useEffect(() => {

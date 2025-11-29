@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 
 import { createPortal } from 'react-dom';
 
@@ -23,13 +23,14 @@ export const CustomControl = ({
     null
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const parentElement = document.querySelector(controlPositions[position]);
     const groupDiv = document.createElement('div');
 
     if (parentElement) {
       groupDiv.classList.add('maplibregl-ctrl', 'maplibregl-ctrl-group');
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setGroupContainer(groupDiv);
       parentElement.appendChild(groupDiv);
     }
@@ -39,7 +40,7 @@ export const CustomControl = ({
         parentElement.removeChild(groupDiv);
       }
     };
-  }, []);
+  }, [position]);
 
   if (!groupContainer) return null;
 

@@ -75,7 +75,7 @@ export default defineConfig(
     ...react.configs.flat['jsx-runtime'],
   },
   {
-    ...reactHooks.configs['recommended-latest'],
+    ...reactHooks.configs.flat['recommended-latest'],
   },
   ...eslintPluginTanstackQuery.configs['flat/recommended'],
   {

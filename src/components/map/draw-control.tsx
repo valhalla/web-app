@@ -9,7 +9,11 @@ interface DrawControlProps {
   controlRef?: React.MutableRefObject<MaplibreTerradrawControl | null>;
 }
 
-export function DrawControl(props: DrawControlProps) {
+export function DrawControl({
+  position = 'top-right',
+  onUpdate,
+  controlRef,
+}: DrawControlProps) {
   useControl<MaplibreTerradrawControl>(
     // onCreate
     () => {
@@ -19,34 +23,32 @@ export function DrawControl(props: DrawControlProps) {
       });
 
       // Store reference
-      if (props.controlRef) {
-        props.controlRef.current = control;
+      if (controlRef) {
+        controlRef.current = control;
       }
 
       return control;
     },
     // onAdd
     () => {
-      if (props.controlRef?.current && props.onUpdate) {
-        const terraDrawInstance =
-          props.controlRef.current.getTerraDrawInstance();
+      if (controlRef?.current && onUpdate) {
+        const terraDrawInstance = controlRef.current.getTerraDrawInstance();
         if (terraDrawInstance) {
-          terraDrawInstance.on('finish', props.onUpdate);
+          terraDrawInstance.on('finish', onUpdate);
         }
       }
     },
     // onRemove
     () => {
-      if (props.controlRef?.current && props.onUpdate) {
-        const terraDrawInstance =
-          props.controlRef.current.getTerraDrawInstance();
+      if (controlRef?.current && onUpdate) {
+        const terraDrawInstance = controlRef.current.getTerraDrawInstance();
         if (terraDrawInstance) {
-          terraDrawInstance.off('finish', props.onUpdate);
+          terraDrawInstance.off('finish', onUpdate);
         }
       }
     },
     {
-      position: props.position || 'top-right',
+      position: position,
     }
   );
 
