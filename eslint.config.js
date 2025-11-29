@@ -7,6 +7,7 @@ import jsxA11y from 'eslint-plugin-jsx-a11y';
 import tseslint from 'typescript-eslint';
 import checkFile from 'eslint-plugin-check-file';
 import eslintPluginTanstackQuery from '@tanstack/eslint-plugin-query';
+import pluginRouter from '@tanstack/eslint-plugin-router';
 
 export default defineConfig(
   {
@@ -78,6 +79,7 @@ export default defineConfig(
     ...reactHooks.configs.flat['recommended-latest'],
   },
   ...eslintPluginTanstackQuery.configs['flat/recommended'],
+  ...pluginRouter.configs['flat/recommended'],
   {
     linterOptions: {
       reportUnusedDisableDirectives: true,

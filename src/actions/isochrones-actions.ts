@@ -16,11 +16,7 @@ import {
 import { toast } from 'sonner';
 import { VALHALLA_OSM_URL, buildIsochronesRequest } from '@/utils/valhalla';
 
-import {
-  showLoading,
-  updatePermalink,
-  filterProfileSettings,
-} from './common-actions';
+import { showLoading, filterProfileSettings } from './common-actions';
 import { calcArea } from '@/utils/geom';
 import type {
   ActiveWaypoint,
@@ -28,6 +24,7 @@ import type {
   ThunkResult,
   ValhallaIsochroneResponse,
 } from '@/components/types';
+import { router } from '@/routes';
 
 const serverMapping = {
   [VALHALLA_OSM_URL!]: 'OSM',
@@ -37,7 +34,8 @@ export const makeIsochronesRequest =
   (): ThunkResult => (dispatch, getState) => {
     const { geocodeResults, maxRange, interval, denoise, generalize } =
       getState().isochrones;
-    const { profile } = getState().common;
+    const profile = router.state.location.search.profile;
+    // const { profile } = getState().common;
     let { settings } = getState().common;
 
     // @ts-expect-error todo: this is not correct. initial settings and filtered settings are not the same but we are changing in later.
@@ -57,7 +55,7 @@ export const makeIsochronesRequest =
 
     if (center !== undefined) {
       const valhallaRequest = buildIsochronesRequest({
-        profile,
+        profile: profile || 'bicycle',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         center: center as any, // Cast to avoid type mismatch between ActiveWaypoint and Center
         // @ts-expect-error todo: this is not correct. initial settings and filtered settings are not the same but we are changing in later.
@@ -260,7 +258,6 @@ const processGeocodeResponse =
           addressindex: 0,
         },
       });
-      dispatch(updatePermalink());
       dispatch(makeIsochronesRequest());
     }
   };

@@ -23,12 +23,7 @@ import {
   parseDirectionsGeometry,
 } from '@/utils/valhalla';
 
-import {
-  showLoading,
-  filterProfileSettings,
-  updatePermalink,
-  zoomTo,
-} from './common-actions';
+import { showLoading, filterProfileSettings, zoomTo } from './common-actions';
 
 import type {
   ActiveWaypoint,
@@ -38,6 +33,7 @@ import type {
   ValhallaRouteResponse,
 } from '@/components/types';
 import { toast } from 'sonner';
+import { router } from '@/routes';
 
 interface LatLng {
   lng: number;
@@ -92,9 +88,10 @@ const serverMapping: Record<string, string> = {
 };
 
 export const makeRequest = (): ThunkResult => (dispatch, getState) => {
-  dispatch(updatePermalink());
   const { waypoints } = getState().directions;
-  const { profile, dateTime } = getState().common;
+  const { dateTime } = getState().common;
+  const profile = router.state.location.search.profile;
+
   let { settings } = getState().common;
   // if 2 results are selected
   const activeWaypoints = getActiveWaypoints(waypoints);
@@ -103,7 +100,7 @@ export const makeRequest = (): ThunkResult => (dispatch, getState) => {
     // we should find a better way to do this.
     settings = filterProfileSettings(profile, settings);
     const valhallaRequest = buildDirectionsRequest({
-      profile,
+      profile: profile || 'bicycle',
       activeWaypoints,
       // @ts-expect-error todo: this is not correct. initial settings and filtered settings are not the same but we are changing in later.
       // we should find a better way to do this.
@@ -314,10 +311,8 @@ const processGeocodeResponse =
       );
       if (permaLast === undefined) {
         dispatch(makeRequest());
-        dispatch(updatePermalink());
       } else if (permaLast) {
         dispatch(makeRequest());
-        dispatch(updatePermalink());
       }
     }
   };
@@ -353,7 +348,6 @@ export const doRemoveWaypoint =
         dispatch(clearRoutes(VALHALLA_OSM_URL!));
       }
     }
-    dispatch(updatePermalink());
   };
 
 export const highlightManeuver =

@@ -25,13 +25,16 @@ import {
 } from '@/components/ui/sheet';
 import { X, Copy, RotateCcw } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useParams, useSearch } from '@tanstack/react-router';
 
 // Define the profile keys that have settings (excluding 'auto')
 type ProfileWithSettings = Exclude<Profile, 'auto'>;
 
 export const SettingsPanel = () => {
+  const { profile } = useSearch({ from: '/$activeTab' });
+  const { activeTab } = useParams({ from: '/$activeTab' });
   const dispatch = useDispatch<AppDispatch>();
-  const { profile, settings, activeTab, showSettings } = useSelector(
+  const { settings, showSettings } = useSelector(
     (state: RootState) => state.common
   );
   const [copied, setCopied] = useState(false);
@@ -66,13 +69,13 @@ export const SettingsPanel = () => {
   }, [profile, settings]);
 
   const resetConfigSettings = useCallback(() => {
-    dispatch(resetSettings());
+    dispatch(resetSettings(profile || 'bicycle'));
     if (activeTab === 'directions') {
       dispatch(makeRequest());
     } else {
       dispatch(makeIsochronesRequest());
     }
-  }, [dispatch, activeTab]);
+  }, [dispatch, activeTab, profile]);
 
   const hasProfileSettings =
     profileSettings[profile as ProfileWithSettings].boolean.length > 0;

@@ -25,6 +25,8 @@ import { RouteCard } from './route-card';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import { parseUrlParams } from '@/utils/parse-url-params';
 import { isValidCoordinates } from '@/utils/geom';
+import { useNavigate, useSearch } from '@tanstack/react-router';
+import type { Profile } from '@/reducers/common';
 
 export const DirectionsControl = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -32,47 +34,67 @@ export const DirectionsControl = () => {
   const { results } = useSelector((state: RootState) => state.directions);
   const initialUrlParams = useRef(parseUrlParams());
   const urlParamsProcessed = useRef(false);
+  const { profile } = useSearch({ from: '/$activeTab' });
+  const navigate = useNavigate({ from: '/$activeTab' });
 
-  const { profile, loading, dateTime } = useSelector(
-    (state: RootState) => state.common
-  );
+  const { loading, dateTime } = useSelector((state: RootState) => state.common);
 
   useEffect(() => {
+    if (urlParamsProcessed.current) return;
+
     const wpsParam = initialUrlParams.current.wps;
-    if (!wpsParam) return;
 
-    const requiredWaypointsAmount = 2;
+    if (wpsParam) {
+      const coordinates = wpsParam.split(',').map(Number);
 
-    if (
-      waypoints.length < requiredWaypointsAmount ||
-      urlParamsProcessed.current
-    ) {
-      return;
+      for (let i = 0; i < coordinates.length; i += 2) {
+        const lng = coordinates[i]!;
+        const lat = coordinates[i + 1]!;
+
+        if (!isValidCoordinates(lng, lat) || isNaN(lng) || isNaN(lat)) continue;
+
+        const index = i / 2;
+        const payload = { latLng: { lat, lng }, fromPerma: true, index };
+
+        dispatch(fetchReverseGeocodePerma(payload));
+      }
+      dispatch(makeRequest());
     }
 
     urlParamsProcessed.current = true;
-
-    const coordinates = wpsParam.split(',').map(Number);
-
-    for (let i = 0; i < coordinates.length; i += 2) {
-      const lng = coordinates[i]!;
-      const lat = coordinates[i + 1]!;
-
-      if (!isValidCoordinates(lng, lat) || isNaN(lng) || isNaN(lat)) continue;
-
-      const index = i / 2;
-      const payload = { latLng: { lat, lng }, fromPerma: true, index };
-
-      dispatch(fetchReverseGeocodePerma(payload));
-    }
-
-    dispatch(makeRequest());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleProfileChange = useCallback(() => {
-    dispatch(makeRequest());
-  }, [dispatch]);
+  useEffect(() => {
+    const wps: number[] = [];
+
+    for (const wp of waypoints) {
+      for (const result of wp.geocodeResults) {
+        if (result.selected && result.sourcelnglat) {
+          wps.push(result.sourcelnglat[0], result.sourcelnglat[1]);
+        }
+      }
+    }
+
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        wps: wps.length > 0 ? wps.join(',') : undefined,
+      }),
+      replace: true,
+    });
+  }, [waypoints, navigate]);
+
+  const handleProfileChange = useCallback(
+    (value: Profile) => {
+      navigate({
+        search: (prev) => ({ ...prev, profile: value }),
+        replace: true,
+      });
+      dispatch(makeRequest());
+    },
+    [dispatch, navigate]
+  );
 
   const handleDateTimeChange = useCallback(
     (field: 'type' | 'value', value: string) => {
@@ -108,7 +130,7 @@ export const DirectionsControl = () => {
               { value: 'motorcycle', label: 'Motorcycle' },
             ]}
             loading={loading}
-            activeProfile={profile}
+            activeProfile={profile || 'bicycle'}
             onProfileChange={handleProfileChange}
           />
           <SettingsButton />

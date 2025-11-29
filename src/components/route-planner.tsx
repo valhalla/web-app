@@ -1,18 +1,11 @@
-import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { DirectionsControl } from './directions';
 import { IsochronesControl } from './isochrones';
-import {
-  updateTab,
-  updateProfile,
-  updatePermalink,
-  toggleDirections,
-} from '@/actions/common-actions';
+import { toggleDirections } from '@/actions/common-actions';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import type { AppDispatch, RootState } from '@/store';
-import type { Profile } from '@/reducers/common';
 import {
   Sheet,
   SheetContent,
@@ -24,16 +17,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { PossibleTabValues } from '@/components/types';
-import { parseUrlParams } from '@/utils/parse-url-params';
-import { isValidProfile } from './utils';
+import { useParams, useNavigate } from '@tanstack/react-router';
 
 export const RoutePlanner = () => {
-  const { activeTab, showDirectionsPanel, profile } = useSelector(
+  const { activeTab } = useParams({ from: '/$activeTab' });
+  const navigate = useNavigate({ from: '/$activeTab' });
+  const { showDirectionsPanel } = useSelector(
     (state: RootState) => state.common
   );
   const dispatch = useDispatch<AppDispatch>();
-  const initialUrlParams = useRef(parseUrlParams());
 
   const {
     data: lastUpdate,
@@ -50,42 +42,8 @@ export const RoutePlanner = () => {
     refetchOnWindowFocus: false,
   });
 
-  useEffect(() => {
-    const profileParam = initialUrlParams.current.profile;
-
-    if (profileParam === profile) {
-      return;
-    }
-
-    if (profileParam && isValidProfile(profileParam)) {
-      dispatch(updateProfile({ profile: profileParam }));
-    } else {
-      const defaultProfile: Profile = 'bicycle';
-      dispatch(updateProfile({ profile: defaultProfile }));
-
-      const url = new URL(window.location.href);
-      url.searchParams.set('profile', defaultProfile);
-      window.history.replaceState({}, '', url.toString());
-    }
-  }, [dispatch, profile]);
-
-  useEffect(() => {
-    const pathname = window.location.pathname;
-
-    if (pathname.includes(activeTab)) {
-      return;
-    }
-
-    if (pathname === '/directions') {
-      dispatch(updateTab({ activeTab: 'directions' }));
-    } else if (pathname === '/isochrones') {
-      dispatch(updateTab({ activeTab: 'isochrones' }));
-    }
-  }, [dispatch, activeTab]);
-
-  const handleTabChange = (value: PossibleTabValues) => {
-    dispatch(updateTab({ activeTab: value }));
-    dispatch(updatePermalink());
+  const handleTabChange = (value: string) => {
+    navigate({ params: { activeTab: value } });
   };
 
   const handleDirectionsToggle = () => {
@@ -105,7 +63,7 @@ export const RoutePlanner = () => {
       <Tabs
         value={activeTab}
         className="w-[400px]"
-        onValueChange={(value) => handleTabChange(value as PossibleTabValues)}
+        onValueChange={handleTabChange}
       >
         <SheetContent
           side="left"

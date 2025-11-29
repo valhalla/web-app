@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Map, {
+import { useParams, useSearch } from '@tanstack/react-router';
+import {
+  Map,
   Marker,
   Popup,
   type MapRef,
@@ -63,8 +65,11 @@ interface MarkerData {
 
 export const MapComponent = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { profile, activeTab, coordinates, showDirectionsPanel, showSettings } =
-    useSelector((state: RootState) => state.common);
+  const { activeTab } = useParams({ from: '/$activeTab' });
+  const { coordinates, showDirectionsPanel, showSettings } = useSelector(
+    (state: RootState) => state.common
+  );
+  const { profile } = useSearch({ from: '/$activeTab' });
   const directions = useSelector((state: RootState) => state.directions);
   const isochrones = useSelector((state: RootState) => state.isochrones);
   const [showPopup, setShowPopup] = useState(false);
@@ -210,7 +215,7 @@ export const MapComponent = () => {
       axios
         .post(
           VALHALLA_OSM_URL + '/locate',
-          buildLocateRequest({ lng, lat }, profile),
+          buildLocateRequest({ lng, lat }, profile || 'bicycle'),
           {
             headers: {
               'Content-Type': 'application/json',

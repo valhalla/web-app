@@ -43,6 +43,8 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/vite": "^4.1.17",
     "@tanstack/react-query": "^5.90.11",
+    "@tanstack/react-router": "^1.139.10",
+    "@tanstack/zod-adapter": "^1.139.11",
     "@turf/turf": "^7.3.1",
     "@watergis/maplibre-gl-terradraw": "^1.9.6",
     "axios": "^1.13.2",
@@ -63,13 +65,17 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.17",
-    "throttle-debounce": "^5.0.2"
+    "throttle-debounce": "^5.0.2",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@tanstack/eslint-plugin-query": "^5.91.2",
+    "@tanstack/eslint-plugin-router": "^1.139.0",
+    "@tanstack/react-devtools": "^0.8.2",
     "@tanstack/react-query-devtools": "^5.91.1",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@tanstack/react-router-devtools": "^1.139.10",
+    "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.3.0",
     "@types/d3": "^7.4.3",
     "@types/eslint-plugin-jsx-a11y": "^6.10.1",

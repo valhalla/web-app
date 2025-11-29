@@ -2,8 +2,6 @@
 
 import {
   UPDATE_SETTINGS,
-  UPDATE_PROFILE,
-  UPDATE_TAB,
   LOADING,
   SHOW_SETTINGS,
   ZOOM_TO,
@@ -11,22 +9,26 @@ import {
   TOGGLE_DIRECTIONS,
   UPDATE_DATETIME,
 } from '@/actions/types';
-import type { PossibleSettings, PossibleTabValues } from '@/components/types';
+import type { PossibleSettings } from '@/components/types';
 import {
   settingsInit,
   settingsInitTruckOverride,
 } from '@/components/settings-panel/settings-options';
 import type { AnyAction } from 'redux';
+import { z } from 'zod';
 
-export type Profile =
-  | 'auto'
-  | 'bicycle'
-  | 'pedestrian'
-  | 'car'
-  | 'truck'
-  | 'bus'
-  | 'motor_scooter'
-  | 'motorcycle';
+export const profileEnum = z.enum([
+  'auto',
+  'bicycle',
+  'pedestrian',
+  'car',
+  'truck',
+  'bus',
+  'motor_scooter',
+  'motorcycle',
+]);
+
+export type Profile = z.infer<typeof profileEnum>;
 
 export interface Message {
   receivedAt: number;
@@ -37,12 +39,10 @@ export interface Message {
 }
 
 const initialState = {
-  activeTab: 'directions' as PossibleTabValues,
   showSettings: false,
   showDirectionsPanel: true,
   coordinates: [] as number[][],
   loading: false,
-  profile: 'bicycle' as Profile,
   settings: { ...settingsInit } as PossibleSettings,
   dateTime: {
     type: -1,
@@ -95,29 +95,12 @@ export const common = (
     }
 
     case RESET_SETTINGS: {
-      return {
-        ...state,
-        settings: {
-          ...(state.profile === 'truck'
-            ? settingsInitTruckOverride
-            : settingsInit),
-        },
-      };
-    }
-
-    case UPDATE_TAB: {
-      const { activeTab } = action.payload;
-      return {
-        ...state,
-        activeTab,
-      };
-    }
-
-    case UPDATE_PROFILE: {
       const { profile } = action.payload;
       return {
         ...state,
-        profile,
+        settings: {
+          ...(profile === 'truck' ? settingsInitTruckOverride : settingsInit),
+        },
       };
     }
 

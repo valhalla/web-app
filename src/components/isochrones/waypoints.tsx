@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { WaypointSearch } from '@/components/ui/waypoint-search';
@@ -13,8 +13,6 @@ import {
 import { RECEIVE_GEOCODE_RESULTS_ISO } from '@/actions/types';
 
 import { settingsInit } from '@/components/settings-panel/settings-options';
-
-import { updatePermalink, zoomTo } from '@/actions/common-actions';
 
 import { debounce } from 'throttle-debounce';
 import type { AppDispatch, RootState } from '@/store';
@@ -33,11 +31,13 @@ import {
 import { SliderSetting } from '@/components/ui/slider-setting';
 import { AccessibleIcon } from '@radix-ui/react-accessible-icon';
 import { parseUrlParams } from '@/utils/parse-url-params';
+import { useNavigate } from '@tanstack/react-router';
 
 export const Waypoints = () => {
   const params = parseUrlParams();
   const dispatch = useDispatch<AppDispatch>();
   const isochrones = useSelector((state: RootState) => state.isochrones);
+  const navigate = useNavigate({ from: '/$activeTab' });
 
   const handleIsoSliderUpdateSettings = useCallback(
     ({
@@ -63,8 +63,6 @@ export const Waypoints = () => {
           value: parseFloat(value.toString()),
         })
       );
-
-      dispatch(updatePermalink());
     },
     [dispatch]
   );
@@ -92,9 +90,10 @@ export const Waypoints = () => {
         addressindex: result.addressindex,
       })
     );
-    dispatch(zoomTo([[result.addresslnglat![1], result.addresslnglat![0]]]));
     makeIsochronesRequestDebounced();
   };
+
+  const urlParamsProcessed = useRef(false);
 
   useEffect(() => {
     if (params.range && params.interval) {
@@ -144,11 +143,26 @@ export const Waypoints = () => {
         );
       }
     }
+    urlParamsProcessed.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const { geocodeResults, userInput, maxRange, interval, denoise, generalize } =
     isochrones;
+
+  // Sync settings to URL
+  useEffect(() => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        range: maxRange,
+        interval: interval,
+        denoise: denoise,
+        generalize: generalize,
+      }),
+      replace: true,
+    });
+  }, [maxRange, interval, denoise, generalize, navigate]);
 
   return (
     <div className="flex flex-col gap-2">

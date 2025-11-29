@@ -1,7 +1,5 @@
 import {
-  UPDATE_PROFILE,
   UPDATE_SETTINGS,
-  UPDATE_TAB,
   LOADING,
   SHOW_SETTINGS,
   ZOOM_TO,
@@ -15,11 +13,7 @@ import {
   generalSettings,
 } from '../components/settings-panel/settings-options';
 import type { Profile } from '@/reducers/common';
-import type {
-  PossibleSettings,
-  PossibleTabValues,
-  ThunkResult,
-} from '@/components/types';
+import type { PossibleSettings } from '@/components/types';
 
 export const showLoading = (loading: boolean) => ({
   type: LOADING,
@@ -36,16 +30,6 @@ export const updateSettings = (object: SettingsObject) => ({
   payload: object,
 });
 
-export const updateProfile = (object: { profile: Profile }) => ({
-  type: UPDATE_PROFILE,
-  payload: object,
-});
-
-export const updateTab = (object: { activeTab: PossibleTabValues }) => ({
-  type: UPDATE_TAB,
-  payload: object,
-});
-
 export const doShowSettings = () => ({
   type: SHOW_SETTINGS,
 });
@@ -54,8 +38,9 @@ export const toggleDirections = () => ({
   type: TOGGLE_DIRECTIONS,
 });
 
-export const resetSettings = () => ({
+export const resetSettings = (profile: Profile) => ({
   type: RESET_SETTINGS,
+  payload: profile,
 });
 
 export const zoomTo = (coords: number[][]) => ({
@@ -67,47 +52,6 @@ export const doUpdateDateTime = (key: string, value: string) => ({
   type: UPDATE_DATETIME,
   payload: { key, value },
 });
-
-export const updatePermalink = (): ThunkResult => (_, getState) => {
-  const { waypoints } = getState().directions;
-  const { geocodeResults, maxRange, interval, generalize, denoise } =
-    getState().isochrones;
-  const { profile, activeTab } = getState().common;
-  const queryParams = new URLSearchParams();
-  queryParams.set('profile', profile);
-
-  let path = '/directions?';
-  if (activeTab === 'directions') {
-    const wps = [];
-    for (const wp of waypoints) {
-      for (const result of wp.geocodeResults) {
-        if (result.selected) {
-          wps.push(result.sourcelnglat);
-        }
-      }
-    }
-    if (wps.length > 0) {
-      queryParams.set('wps', wps.toString());
-    }
-  } else {
-    path = '/isochrones?';
-
-    let center;
-    for (const result of geocodeResults) {
-      if (result.selected && result.sourcelnglat) {
-        center = result.sourcelnglat.toString();
-      }
-    }
-    if (center) {
-      queryParams.set('wps', center.toString());
-    }
-    queryParams.set('range', maxRange.toString());
-    queryParams.set('interval', interval.toString());
-    queryParams.set('generalize', generalize.toString());
-    queryParams.set('denoise', denoise.toString());
-  }
-  window.history.replaceState(null, '', path + queryParams.toString());
-};
 
 export const downloadFile = ({
   data,

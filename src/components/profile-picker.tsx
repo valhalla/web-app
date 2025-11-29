@@ -16,11 +16,7 @@ import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '@/store';
-import {
-  resetSettings,
-  updatePermalink,
-  updateProfile,
-} from '@/actions/common-actions';
+import { resetSettings } from '@/actions/common-actions';
 import { Loader2 } from 'lucide-react';
 
 const iconMap = {
@@ -50,9 +46,7 @@ export const ProfilePicker = ({
 
   const handleUpdateProfile = useCallback(
     (value: Profile) => {
-      dispatch(updateProfile({ profile: value }));
-      dispatch(resetSettings());
-      dispatch(updatePermalink());
+      dispatch(resetSettings(value));
       onProfileChange(value);
     },
     [dispatch, onProfileChange]

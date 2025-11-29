@@ -1,11 +1,10 @@
 import { useState, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useMutation } from '@tanstack/react-query';
 import { isValidCoordinates } from '@/utils/geom';
 import { forward_geocode, parseGeocodeResponse } from '@/utils/nominatim';
 import type { ActiveWaypoint, NominationResponse } from '@/components/types';
-import type { AppDispatch, RootState } from '@/store';
-import { zoomTo } from '@/actions/common-actions';
+import type { RootState } from '@/store';
 import {
   Command,
   CommandEmpty,
@@ -21,6 +20,7 @@ import {
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ChevronsUpDownIcon, ExternalLink } from 'lucide-react';
+import { useMap } from 'react-map-gl/maplibre';
 
 interface WaypointSearchProps {
   index?: number;
@@ -49,7 +49,7 @@ export const WaypointSearch = ({
   leftContent,
   rightContent,
 }: WaypointSearchProps) => {
-  const dispatch = useDispatch<AppDispatch>();
+  const { mainMap } = useMap();
   const { use_geocoding } = useSelector(
     (state: RootState) => state.common.settings
   );
@@ -119,12 +119,16 @@ export const WaypointSearch = ({
       setOpen(false);
 
       if (result.addresslnglat) {
-        dispatch(zoomTo([[result.addresslnglat[1], result.addresslnglat[0]]]));
+        if (mainMap) {
+          mainMap.flyTo({
+            center: [result.addresslnglat[0], result.addresslnglat[1]],
+          });
+        }
       }
 
       onResultSelect(result);
     },
-    [dispatch, onResultSelect]
+    [mainMap, onResultSelect]
   );
 
   return (
