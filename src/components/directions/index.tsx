@@ -110,7 +110,7 @@ export const DirectionsControl = () => {
 
   const handleRemoveWaypoints = useCallback(() => {
     dispatch(doRemoveWaypoint());
-    dispatch(clearRoutes());
+    dispatch(clearRoutes(VALHALLA_OSM_URL!));
   }, [dispatch]);
 
   const routeResult = results[VALHALLA_OSM_URL!];

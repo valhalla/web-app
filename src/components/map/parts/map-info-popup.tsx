@@ -43,7 +43,7 @@ export function MapInfoPopup({
   );
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 p-2">
       <Button
         variant="ghost"
         size="icon-xs"

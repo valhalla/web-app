@@ -72,11 +72,11 @@ export const MapComponent = () => {
   const { profile } = useSearch({ from: '/$activeTab' });
   const directions = useSelector((state: RootState) => state.directions);
   const isochrones = useSelector((state: RootState) => state.isochrones);
-  const [showPopup, setShowPopup] = useState(false);
+  const [showInfoPopup, setShowInfoPopup] = useState(false);
+  const [showContextPopup, setShowContextPopup] = useState(false);
   const [isLocateLoading, setIsLocateLoading] = useState(false);
   const [isHeightLoading, setIsHeightLoading] = useState(false);
   const [locate, setLocate] = useState([]);
-  const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [popupLngLat, setPopupLngLat] = useState<{
     lng: number;
     lat: number;
@@ -238,7 +238,7 @@ export const MapComponent = () => {
   const handleAddWaypoint = useCallback(
     (index: number) => {
       if (!popupLngLat) return;
-      setShowPopup(false);
+      setShowContextPopup(false);
       updateWaypointPosition({
         latLng: { lat: popupLngLat.lat, lng: popupLngLat.lng },
         index: index,
@@ -249,7 +249,7 @@ export const MapComponent = () => {
 
   const handleAddIsoWaypoint = useCallback(() => {
     if (!popupLngLat) return;
-    setShowPopup(false);
+    setShowContextPopup(false);
     updateIsoPosition(popupLngLat.lng, popupLngLat.lat);
   }, [popupLngLat, updateIsoPosition]);
 
@@ -543,9 +543,13 @@ export const MapComponent = () => {
         return;
       }
 
-      // If context menu is open, just close it
-      if (showPopup && !showInfoPopup) {
-        setShowPopup(false);
+      if (showContextPopup) {
+        setShowContextPopup(false);
+        return;
+      }
+
+      if (showInfoPopup) {
+        setShowInfoPopup(false);
         return;
       }
 
@@ -566,20 +570,17 @@ export const MapComponent = () => {
 
       const { lngLat } = event;
       setPopupLngLat(lngLat);
-      setShowPopup(true);
       setShowInfoPopup(true);
       getHeight(lngLat.lng, lngLat.lat);
     },
-    [getHeight, showPopup, showInfoPopup]
+    [getHeight, showInfoPopup, showContextPopup]
   );
 
-  // Handle map context menu
   const handleMapContextMenu = useCallback(
     (event: { lngLat: { lng: number; lat: number } }) => {
       const { lngLat } = event;
       setPopupLngLat(lngLat);
-      setShowPopup(true);
-      setShowInfoPopup(false);
+      setShowContextPopup(true);
     },
     []
   );
@@ -672,7 +673,7 @@ export const MapComponent = () => {
 
   const handleMouseMove = useCallback(
     (event: maplibregl.MapLayerMouseEvent) => {
-      if (!mapRef.current || showPopup) return; // Don't show if click popup is visible
+      if (!mapRef.current || showInfoPopup) return; // Don't show if click popup is visible
 
       const features = event.features;
       // Check if we're hovering over the routes-line layer
@@ -694,7 +695,7 @@ export const MapComponent = () => {
         }
       }
     },
-    [showPopup, routeHoverPopup, onRouteLineHover]
+    [showInfoPopup, routeHoverPopup, onRouteLineHover]
   );
 
   const handleMouseLeave = useCallback(() => {
@@ -743,7 +744,6 @@ export const MapComponent = () => {
           key={marker.id}
           longitude={marker.lng}
           latitude={marker.lat}
-          anchor="bottom"
           draggable={true}
           onDragEnd={(e) => {
             if (marker.type === 'waypoint') {
@@ -766,40 +766,42 @@ export const MapComponent = () => {
         heightgraphData={heightgraphData}
       />
 
-      {/* Popup */}
-      {showPopup && popupLngLat && (
+      {showContextPopup && popupLngLat && (
         <Popup
           longitude={popupLngLat.lng}
           latitude={popupLngLat.lat}
-          anchor="bottom"
-          onClose={() => {
-            setShowPopup(false);
-            setLocate([]);
-          }}
           closeButton={false}
           closeOnClick={false}
           maxWidth="none"
         >
-          {showInfoPopup ? (
-            <MapInfoPopup
-              popupLngLat={popupLngLat}
-              elevation={elevation}
-              isHeightLoading={isHeightLoading}
-              isLocateLoading={isLocateLoading}
-              locate={locate}
-              onLocate={getLocate}
-              onClose={() => {
-                setShowPopup(false);
-                setLocate([]);
-              }}
-            />
-          ) : (
-            <MapContextMenu
-              activeTab={activeTab}
-              onAddWaypoint={handleAddWaypoint}
-              onAddIsoWaypoint={handleAddIsoWaypoint}
-            />
-          )}
+          <MapContextMenu
+            activeTab={activeTab}
+            onAddWaypoint={handleAddWaypoint}
+            onAddIsoWaypoint={handleAddIsoWaypoint}
+          />
+        </Popup>
+      )}
+
+      {showInfoPopup && popupLngLat && (
+        <Popup
+          longitude={popupLngLat.lng}
+          latitude={popupLngLat.lat}
+          closeButton={false}
+          closeOnClick={false}
+          maxWidth="none"
+        >
+          <MapInfoPopup
+            popupLngLat={popupLngLat}
+            elevation={elevation}
+            isHeightLoading={isHeightLoading}
+            isLocateLoading={isLocateLoading}
+            locate={locate}
+            onLocate={getLocate}
+            onClose={() => {
+              setShowInfoPopup(false);
+              setLocate([]);
+            }}
+          />
         </Popup>
       )}
 
