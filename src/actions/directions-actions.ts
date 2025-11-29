@@ -406,15 +406,16 @@ export const doAddWaypoint =
     );
     maxIndex = isFinite(maxIndex) === false ? 0 : maxIndex + 1;
 
-    const emptyWp: Waypoint = {
+    const emptyWaypoint: Waypoint = {
       id: maxIndex.toString(),
       geocodeResults: [],
       userInput: '',
     };
+
     if (doInsert) {
-      dispatch(insertWaypoint(emptyWp));
+      dispatch(insertWaypoint(emptyWaypoint));
     } else {
-      dispatch(addWaypoint(emptyWp));
+      dispatch(addWaypoint(emptyWaypoint));
     }
   };
 

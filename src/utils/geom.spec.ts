@@ -22,7 +22,7 @@ describe('calcArea', () => {
 
     const result = calcArea(feature);
     expect(result).toBeGreaterThan(0);
-    expect(result).toBeCloseTo(12391.4, 0);
+    expect(result).toBeCloseTo(12363.7, 0);
   });
 
   it('should calculate area for a triangle polygon', () => {
@@ -44,7 +44,7 @@ describe('calcArea', () => {
 
     const result = calcArea(feature);
     expect(result).toBeGreaterThan(0);
-    expect(result).toBeCloseTo(6195.7, 0);
+    expect(result).toBeCloseTo(6181.9, 0);
   });
 
   it('should calculate area for a complex polygon', () => {

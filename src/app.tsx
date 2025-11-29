@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MapProvider } from 'react-map-gl/maplibre';
 
 const queryClient = new QueryClient();
 
@@ -17,11 +18,13 @@ export const App = () => {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <MapComponent />
-      <RoutePlanner />
-      <SettingsPanel />
-      <Toaster position="bottom-center" duration={5000} richColors />
-    </QueryClientProvider>
+    <MapProvider>
+      <QueryClientProvider client={queryClient}>
+        <MapComponent />
+        <RoutePlanner />
+        <SettingsPanel />
+        <Toaster position="bottom-center" duration={5000} richColors />
+      </QueryClientProvider>
+    </MapProvider>
   );
 };

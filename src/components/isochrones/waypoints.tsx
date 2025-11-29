@@ -98,37 +98,51 @@ export const Waypoints = () => {
 
   useEffect(() => {
     if (params.range && params.interval) {
-      dispatch(
-        updateIsoSettings({
-          maxRangeName: 'maxRange',
-          intervalName: 'interval',
-          value: parseInt(params.range, 10),
-        })
-      );
-      dispatch(
-        updateIsoSettings({
-          intervalName: 'interval',
-          value: parseInt(params.interval, 10),
-        })
-      );
+      const rangeVal = parseInt(params.range, 10);
+      const intervalVal = parseInt(params.interval, 10);
+
+      if (rangeVal !== isochrones.maxRange) {
+        dispatch(
+          updateIsoSettings({
+            maxRangeName: 'maxRange',
+            intervalName: 'interval',
+            value: rangeVal,
+          })
+        );
+      }
+
+      if (intervalVal !== isochrones.interval) {
+        dispatch(
+          updateIsoSettings({
+            intervalName: 'interval',
+            value: intervalVal,
+          })
+        );
+      }
     }
 
     if (params.denoise) {
-      dispatch(
-        updateIsoSettings({
-          denoiseName: 'denoise',
-          value: parseFloat(params.denoise),
-        })
-      );
+      const denoiseVal = parseFloat(params.denoise);
+      if (denoiseVal !== isochrones.denoise) {
+        dispatch(
+          updateIsoSettings({
+            denoiseName: 'denoise',
+            value: denoiseVal,
+          })
+        );
+      }
     }
 
     if (params.generalize) {
-      dispatch(
-        updateIsoSettings({
-          generalizeName: 'generalize',
-          value: parseInt(params.generalize, 10),
-        })
-      );
+      const generalizeVal = parseInt(params.generalize, 10);
+      if (generalizeVal !== isochrones.generalize) {
+        dispatch(
+          updateIsoSettings({
+            generalizeName: 'generalize',
+            value: generalizeVal,
+          })
+        );
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

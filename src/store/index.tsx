@@ -10,7 +10,7 @@ const middleware = [thunk];
 
 export const store = legacy_createStore(
   reducer,
-  composeWithDevTools(applyMiddleware(...middleware))
+  composeWithDevTools({ trace: true })(applyMiddleware(...middleware))
 );
 
 export type RootState = ReturnType<typeof reducer>;

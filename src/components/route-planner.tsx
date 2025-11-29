@@ -8,15 +8,8 @@ import {
   updateTab,
   updateProfile,
   updatePermalink,
-  zoomTo,
-  resetSettings,
   toggleDirections,
 } from '@/actions/common-actions';
-import {
-  fetchReverseGeocodePerma,
-  makeRequest,
-} from '@/actions/directions-actions';
-import { fetchReverseGeocodeIso } from '@/actions/isochrones-actions';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import type { AppDispatch, RootState } from '@/store';
 import type { Profile } from '@/reducers/common';
@@ -32,17 +25,14 @@ import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { PossibleTabValues } from '@/components/types';
-import { pairwise } from '@/utils/pairwise';
 import { parseUrlParams } from '@/utils/parse-url-params';
-import { isValidProfile, parseWaypoints } from './utils';
+import { isValidProfile } from './utils';
 
 export const RoutePlanner = () => {
-  const { activeTab, showDirectionsPanel } = useSelector(
+  const { activeTab, showDirectionsPanel, profile } = useSelector(
     (state: RootState) => state.common
   );
-  const { waypoints } = useSelector((state: RootState) => state.directions);
   const dispatch = useDispatch<AppDispatch>();
-  const urlParamsProcessed = useRef(false);
   const initialUrlParams = useRef(parseUrlParams());
 
   const {
@@ -63,6 +53,10 @@ export const RoutePlanner = () => {
   useEffect(() => {
     const profileParam = initialUrlParams.current.profile;
 
+    if (profileParam === profile) {
+      return;
+    }
+
     if (profileParam && isValidProfile(profileParam)) {
       dispatch(updateProfile({ profile: profileParam }));
     } else {
@@ -73,57 +67,21 @@ export const RoutePlanner = () => {
       url.searchParams.set('profile', defaultProfile);
       window.history.replaceState({}, '', url.toString());
     }
-  }, [dispatch]);
+  }, [dispatch, profile]);
 
   useEffect(() => {
     const pathname = window.location.pathname;
+
+    if (pathname.includes(activeTab)) {
+      return;
+    }
 
     if (pathname === '/directions') {
       dispatch(updateTab({ activeTab: 'directions' }));
     } else if (pathname === '/isochrones') {
       dispatch(updateTab({ activeTab: 'isochrones' }));
     }
-  }, [dispatch]);
-
-  useEffect(() => {
-    const wpsParam = initialUrlParams.current.wps;
-
-    if (!wpsParam || wpsParam.length === 0) {
-      return;
-    }
-
-    const requiredWaypoints = activeTab === 'directions' ? 2 : 1;
-
-    if (waypoints.length < requiredWaypoints) {
-      return;
-    }
-
-    if (urlParamsProcessed.current) {
-      return;
-    }
-    urlParamsProcessed.current = true;
-
-    const parsedWaypoints = parseWaypoints(wpsParam);
-    const coordinates = wpsParam.split(',').map(Number);
-
-    pairwise(coordinates, (lng, lat, index) => {
-      const latLng = { lat, lng };
-      const payload = { latLng, fromPerma: true, index };
-
-      if (activeTab === 'directions') {
-        dispatch(fetchReverseGeocodePerma(payload));
-      } else {
-        dispatch(fetchReverseGeocodeIso(lng, lat));
-      }
-    });
-
-    if (activeTab === 'directions') {
-      dispatch(makeRequest());
-    }
-
-    dispatch(zoomTo(parsedWaypoints));
-    dispatch(resetSettings());
-  }, [activeTab, dispatch, waypoints.length]);
+  }, [dispatch, activeTab]);
 
   const handleTabChange = (value: PossibleTabValues) => {
     dispatch(updateTab({ activeTab: value }));

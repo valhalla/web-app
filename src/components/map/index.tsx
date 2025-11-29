@@ -722,6 +722,7 @@ export const MapComponent = () => {
       minZoom={2}
       maxZoom={18}
       data-testid="map"
+      id="mainMap"
     >
       <NavigationControl />
       <DrawControl onUpdate={updateExcludePolygons} controlRef={drawRef} />

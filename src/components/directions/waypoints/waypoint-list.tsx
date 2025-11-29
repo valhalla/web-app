@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import {
   DragDropContext,
   Droppable,
@@ -8,11 +8,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 
 import { Waypoint } from './waypoint-item';
-import {
-  doAddWaypoint,
-  setWaypoints,
-  makeRequest,
-} from '@/actions/directions-actions';
+import { setWaypoints, makeRequest } from '@/actions/directions-actions';
 import type { AppDispatch, RootState } from '@/store';
 import type { Waypoint as WaypointType } from '@/reducers/directions';
 
@@ -40,14 +36,6 @@ const getItemStyle = (
 export const Waypoints = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { waypoints } = useSelector((state: RootState) => state.directions);
-
-  useEffect(() => {
-    if (waypoints.length === 0) {
-      Array(2)
-        .fill(null)
-        .map(() => dispatch(doAddWaypoint()));
-    }
-  }, [dispatch, waypoints.length]);
 
   const onDragEnd = useCallback(
     (result: DropResult) => {

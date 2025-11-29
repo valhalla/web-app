@@ -67,7 +67,10 @@ const initialState: DirectionsState = {
     // -1 is main route, other values are indices into the alternate array
     alternate: -1,
   },
-  waypoints: [],
+  waypoints: [
+    { id: '0', geocodeResults: [], userInput: '' },
+    { id: '1', geocodeResults: [], userInput: '' },
+  ],
   zoomObj: {
     index: -1,
     timeNow: -1,

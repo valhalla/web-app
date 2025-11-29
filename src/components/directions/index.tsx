@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { Waypoints } from './waypoints/waypoint-list';
@@ -13,6 +13,7 @@ import {
   clearRoutes,
   doAddWaypoint,
   doRemoveWaypoint,
+  fetchReverseGeocodePerma,
   makeRequest,
 } from '@/actions/directions-actions';
 import { doUpdateDateTime } from '@/actions/common-actions';
@@ -22,14 +23,52 @@ import { Button } from '@/components/ui/button';
 import { MapPinPlus, MapPinXInside } from 'lucide-react';
 import { RouteCard } from './route-card';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
+import { parseUrlParams } from '@/utils/parse-url-params';
+import { isValidCoordinates } from '@/utils/geom';
 
 export const DirectionsControl = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const { waypoints } = useSelector((state: RootState) => state.directions);
   const { results } = useSelector((state: RootState) => state.directions);
+  const initialUrlParams = useRef(parseUrlParams());
+  const urlParamsProcessed = useRef(false);
 
   const { profile, loading, dateTime } = useSelector(
     (state: RootState) => state.common
   );
+
+  useEffect(() => {
+    const wpsParam = initialUrlParams.current.wps;
+    if (!wpsParam) return;
+
+    const requiredWaypointsAmount = 2;
+
+    if (
+      waypoints.length < requiredWaypointsAmount ||
+      urlParamsProcessed.current
+    ) {
+      return;
+    }
+
+    urlParamsProcessed.current = true;
+
+    const coordinates = wpsParam.split(',').map(Number);
+
+    for (let i = 0; i < coordinates.length; i += 2) {
+      const lng = coordinates[i]!;
+      const lat = coordinates[i + 1]!;
+
+      if (!isValidCoordinates(lng, lat) || isNaN(lng) || isNaN(lat)) continue;
+
+      const index = i / 2;
+      const payload = { latLng: { lat, lng }, fromPerma: true, index };
+
+      dispatch(fetchReverseGeocodePerma(payload));
+    }
+
+    dispatch(makeRequest());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleProfileChange = useCallback(() => {
     dispatch(makeRequest());
