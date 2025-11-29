@@ -20,7 +20,8 @@
     "check": "yarn prettier:check && yarn lint",
     "typecheck": "tsc --noEmit",
     "deploy": "gh-pages -d build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "check:deps": "npx taze@latest -Ilwr"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
