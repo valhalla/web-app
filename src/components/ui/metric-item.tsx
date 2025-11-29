@@ -13,7 +13,8 @@ import type { VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 interface MetricItemProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     Pick<VariantProps<typeof circleIconVariants>, 'variant' | 'size'> {
   icon: LucideIcon;
   label: string;

@@ -5,7 +5,8 @@ import { cn } from '@/lib/utils';
 import type { VariantProps } from 'class-variance-authority';
 
 interface CopyButtonProps
-  extends Omit<React.ComponentProps<'button'>, 'children'>,
+  extends
+    Omit<React.ComponentProps<'button'>, 'children'>,
     VariantProps<typeof buttonVariants> {
   /** The text to copy to clipboard */
   value: string;

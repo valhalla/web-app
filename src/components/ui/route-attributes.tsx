@@ -12,7 +12,8 @@ interface RouteAttribute {
 }
 
 interface RouteAttributesProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     Pick<VariantProps<typeof circleIconVariants>, 'variant' | 'size'> {
   attributes: RouteAttribute[];
 }
