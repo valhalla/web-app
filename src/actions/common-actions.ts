@@ -1,8 +1,5 @@
 import {
-  MESSAGE_HANDLER,
-  UPDATE_PROFILE,
   UPDATE_SETTINGS,
-  UPDATE_TAB,
   LOADING,
   SHOW_SETTINGS,
   ZOOM_TO,
@@ -12,30 +9,15 @@ import {
 } from './types';
 
 import {
-  profile_settings,
-  settings_general,
-} from '../controls/settings-options';
+  profileSettings,
+  generalSettings,
+} from '../components/settings-panel/settings-options';
 import type { Profile } from '@/reducers/common';
-import type { PossibleSettings, ThunkResult } from '@/common/types';
+import type { PossibleSettings } from '@/components/types';
 
 export const showLoading = (loading: boolean) => ({
   type: LOADING,
   payload: loading,
-});
-
-interface MessageObject {
-  type: 'info' | 'warning' | 'error' | 'success'; // this might be not correct, but currently only warning is used
-  icon: 'info' | 'warning' | 'error' | 'success'; // this might be not correct, but currently only warning is used
-  description: string;
-  title: string;
-}
-
-export const sendMessage = (message_object: MessageObject) => ({
-  type: MESSAGE_HANDLER,
-  payload: {
-    receivedAt: Date.now(),
-    ...message_object,
-  },
 });
 
 interface SettingsObject {
@@ -48,16 +30,6 @@ export const updateSettings = (object: SettingsObject) => ({
   payload: object,
 });
 
-export const updateProfile = (object: { profile: Profile }) => ({
-  type: UPDATE_PROFILE,
-  payload: object,
-});
-
-export const updateTab = (object: { activeTab: number }) => ({
-  type: UPDATE_TAB,
-  payload: object,
-});
-
 export const doShowSettings = () => ({
   type: SHOW_SETTINGS,
 });
@@ -66,8 +38,9 @@ export const toggleDirections = () => ({
   type: TOGGLE_DIRECTIONS,
 });
 
-export const resetSettings = () => ({
+export const resetSettings = (profile: Profile) => ({
   type: RESET_SETTINGS,
+  payload: profile,
 });
 
 export const zoomTo = (coords: number[][]) => ({
@@ -79,47 +52,6 @@ export const doUpdateDateTime = (key: string, value: string) => ({
   type: UPDATE_DATETIME,
   payload: { key, value },
 });
-
-export const updatePermalink = (): ThunkResult => (_, getState) => {
-  const { waypoints } = getState().directions;
-  const { geocodeResults, maxRange, interval, generalize, denoise } =
-    getState().isochrones;
-  const { profile, activeTab } = getState().common;
-  const queryParams = new URLSearchParams();
-  queryParams.set('profile', profile);
-
-  let path = '/directions?';
-  if (activeTab === 0) {
-    const wps = [];
-    for (const wp of waypoints) {
-      for (const result of wp.geocodeResults) {
-        if (result.selected) {
-          wps.push(result.sourcelnglat);
-        }
-      }
-    }
-    if (wps.length > 0) {
-      queryParams.set('wps', wps.toString());
-    }
-  } else {
-    path = '/isochrones?';
-
-    let center;
-    for (const result of geocodeResults) {
-      if (result.selected && result.sourcelnglat) {
-        center = result.sourcelnglat.toString();
-      }
-    }
-    if (center) {
-      queryParams.set('wps', center.toString());
-    }
-    queryParams.set('range', maxRange.toString());
-    queryParams.set('interval', interval.toString());
-    queryParams.set('generalize', generalize.toString());
-    queryParams.set('denoise', denoise.toString());
-  }
-  window.history.replaceState(null, '', path + queryParams.toString());
-};
 
 export const downloadFile = ({
   data,
@@ -181,20 +113,20 @@ export const filterProfileSettings = (
 
   for (const setting in settings) {
     // Check if the profile exists in settings_general
-    if (profile in settings_general) {
-      for (const item of settings_general[profile].numeric) {
+    if (profile in generalSettings) {
+      for (const item of generalSettings[profile].numeric) {
         if (setting === item.param) {
           filteredSettings.costing[setting] =
             settings[setting as keyof PossibleSettings];
         }
       }
-      for (const item of settings_general[profile].boolean) {
+      for (const item of generalSettings[profile].boolean) {
         if (setting === item.param) {
           filteredSettings.costing[setting] =
             settings[setting as keyof PossibleSettings];
         }
       }
-      for (const item of settings_general[profile].enum) {
+      for (const item of generalSettings[profile].enum) {
         if (setting === (item as { param: string }).param) {
           filteredSettings.costing[setting] =
             settings[setting as keyof PossibleSettings];
@@ -203,21 +135,21 @@ export const filterProfileSettings = (
     }
 
     // Check if the profile exists in profile_settings
-    if (profile in profile_settings) {
-      for (const item of profile_settings[profile].numeric) {
+    if (profile in profileSettings) {
+      for (const item of profileSettings[profile].numeric) {
         if (setting === item.param) {
           filteredSettings.costing[setting] =
             settings[setting as keyof PossibleSettings];
         }
       }
 
-      for (const item of profile_settings[profile].boolean) {
+      for (const item of profileSettings[profile].boolean) {
         if (setting === item.param) {
           filteredSettings.costing[setting] =
             settings[setting as keyof PossibleSettings];
         }
       }
-      for (const item of profile_settings[profile].enum) {
+      for (const item of profileSettings[profile].enum) {
         if (setting === item.param) {
           filteredSettings.costing[setting] =
             settings[setting as keyof PossibleSettings];

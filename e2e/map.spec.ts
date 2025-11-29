@@ -137,10 +137,8 @@ test.describe('Map interactions with right context menu', () => {
     await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     await expect(
-      page
-        .getByTestId('waypoint-input-0')
-        .getByRole('textbox', { name: 'Hit enter for search...' })
-    ).toHaveValue('Unter den Linden, Mitte, Berlin, Germany');
+      page.getByTestId('waypoint-input-0').getByText('Unter den Linden, Mitte,')
+    ).toBeVisible();
   });
 
   test('should make Nominatim request when clicking "Directions to here"', async ({
@@ -201,10 +199,8 @@ test.describe('Map interactions with right context menu', () => {
     await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     await expect(
-      page
-        .getByTestId('waypoint-input-1')
-        .getByRole('textbox', { name: 'Hit enter for search...' })
-    ).toHaveValue('Unter den Linden, Mitte, Berlin, Germany');
+      page.getByTestId('waypoint-input-1').getByText('Unter den Linden, Mitte,')
+    ).toBeVisible();
   });
 
   test('should make Nominatim request when clicking "Add as via point"', async ({
@@ -241,10 +237,8 @@ test.describe('Map interactions with right context menu', () => {
     await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     await expect(
-      page
-        .getByTestId('waypoint-input-1')
-        .getByRole('textbox', { name: 'Hit enter for search...' })
-    ).toHaveValue('Unter den Linden, Mitte, Berlin, Germany');
+      page.getByTestId('waypoint-input-1').getByText('Unter den Linden, Mitte,')
+    ).toBeVisible();
   });
 
   test('should add multiple via points', async ({ page }) => {
@@ -272,16 +266,12 @@ test.describe('Map interactions with right context menu', () => {
     ).toBeVisible();
 
     await expect(
-      page
-        .getByTestId('waypoint-input-1')
-        .getByRole('textbox', { name: 'Hit enter for search...' })
-    ).toHaveValue('Unter den Linden, Mitte, Berlin, Germany');
+      page.getByTestId('waypoint-input-1').getByText('Unter den Linden, Mitte,')
+    ).toBeVisible();
 
     await expect(
-      page
-        .getByTestId('waypoint-input-2')
-        .getByRole('textbox', { name: 'Hit enter for search...' })
-    ).toHaveValue('Unter den Linden, Mitte, Berlin, Germany');
+      page.getByTestId('waypoint-input-2').getByText('Unter den Linden, Mitte,')
+    ).toBeVisible();
   });
 
   test('should handle at least 9 waypoints', async ({ page }) => {
@@ -398,7 +388,7 @@ test.describe('Map interactions with right context menu', () => {
     ).toBeVisible();
 
     await expect(
-      page.locator('div').filter({ hasText: /^Directions$/ })
+      page.getByRole('heading', { level: 3, name: 'Directions' })
     ).toBeVisible();
 
     await expect(
@@ -566,8 +556,6 @@ test.describe('Map interactions with left context menu', () => {
 
     await page.getByTestId('dd-copy-button').click();
 
-    await expect(page.getByText('copied')).toBeVisible();
-
     const clipboardContent = await page.evaluate(() =>
       navigator.clipboard.readText()
     );
@@ -638,7 +626,7 @@ https: test.describe('Left drawer', () => {
 
     await page.getByTestId('add-waypoint-button').click();
 
-    await expect(page.getByRole('button', { name: '3' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '3' }).first()).toBeVisible();
 
     // Remove waypoint
     await page.getByTestId('reset-waypoints-button').click();
@@ -652,11 +640,8 @@ https: test.describe('Left drawer', () => {
     await setupNominatimMock(page);
     const searchRequests = await setupSearchMock(page);
 
-    const searchBox = page
-      .getByTestId('waypoint-input-0')
-      .getByRole('textbox', { name: 'Hit enter for search...' });
-
-    await searchBox.click();
+    await page.getByTestId('waypoint-input-0').click();
+    const searchBox = page.getByPlaceholder('Hit enter for search');
     await searchBox.fill('Unter den Linden');
     await searchBox.press('Enter');
 
@@ -679,14 +664,10 @@ https: test.describe('Left drawer', () => {
     const searchRequests = await setupSearchMock(page);
     const routeRequests = await setupRouteMock(page);
 
-    // Add "from" waypoint
-    const firstSearchBox = page
-      .getByTestId('waypoint-input-0')
-      .getByRole('textbox', { name: 'Hit enter for search...' });
-
-    await firstSearchBox.click();
-    await firstSearchBox.fill('Unter den Linden');
-    await firstSearchBox.press('Enter');
+    await page.getByTestId('waypoint-input-0').click();
+    const searchBox = page.getByPlaceholder('Hit enter for search');
+    await searchBox.fill('Unter den Linden');
+    await searchBox.press('Enter');
 
     const firstSearchResult = page.getByTestId('search-result');
 
@@ -698,15 +679,14 @@ https: test.describe('Left drawer', () => {
     ).toBeVisible();
 
     // Add "to" waypoint
-    const secondSearchBox = page
-      .getByTestId('waypoint-input-1')
-      .getByRole('textbox', { name: 'Hit enter for search...' });
-
-    await secondSearchBox.click();
+    await page.getByTestId('waypoint-input-1').click();
+    const secondSearchBox = page.getByPlaceholder('Hit enter for search');
     await secondSearchBox.fill('Unter den Linden');
     await secondSearchBox.press('Enter');
 
-    const secondSearchResult = page.getByTestId('search-result').nth(1);
+    const secondSearchResult = page
+      .getByTestId('search-result')
+      .getByText('Unter den Linden, Mitte,');
 
     await expect(secondSearchResult).toBeVisible();
     await secondSearchResult.click();
@@ -745,49 +725,27 @@ https: test.describe('Left drawer', () => {
     ).toBeVisible();
 
     await expect(
-      page
-        .getByTestId('waypoint-input-1')
-        .getByRole('textbox', { name: 'Hit enter for search...' })
+      page.getByTestId('waypoint-input-1').getByText('Unter den Linden, Mitte,')
+      // .getByRole('textbox', { name: 'Hit enter for search...' })
     ).toBeVisible();
     await expect(
-      page
-        .getByTestId('waypoint-input-2')
-        .getByRole('textbox', { name: 'Hit enter for search...' })
+      page.getByTestId('waypoint-input-2').getByText('Unter den Linden, Mitte,')
     ).toBeVisible();
 
-    await expect(
-      page
-        .getByTestId('waypoint-input-1')
-        .getByRole('textbox', { name: 'Hit enter for search...' })
-    ).toHaveValue('Unter den Linden, Mitte, Berlin, Germany');
-
-    await expect(
-      page
-        .getByTestId('waypoint-input-2')
-        .getByRole('textbox', { name: 'Hit enter for search...' })
-    ).toHaveValue('Unter den Linden, Mitte, Berlin, Germany');
-
-    // Remove waypoint 3
     await page.getByTestId('remove-waypoint-button').nth(2).click();
     await expect(
-      page
-        .getByTestId('waypoint-input-2')
-        .getByRole('textbox', { name: 'Hit enter for search...' })
+      page.getByTestId('waypoint-input-2').getByText('Unter den Linden, Mitte,')
     ).not.toBeVisible();
 
     // Remove waypoint (should just clear text without removing actual element)
-
     await page.getByTestId('remove-waypoint-button').nth(1).click();
     await expect(
-      page
-        .getByTestId('waypoint-input-1')
-        .getByRole('textbox', { name: 'Hit enter for search...' })
+      page.getByTestId('waypoint-input-1').getByText('Select a waypoint...')
     ).toBeVisible();
+
     await expect(
-      page
-        .getByTestId('waypoint-input-1')
-        .getByRole('textbox', { name: 'Hit enter for search...' })
-    ).toHaveValue('');
+      page.getByTestId('waypoint-input-0').getByText('Select a waypoint...')
+    ).toBeVisible();
   });
 
   test('should send the route request again when user changed profile', async ({

@@ -3,7 +3,6 @@ import {
   ADD_WAYPOINT,
   CLEAR_WAYPOINTS,
   RECEIVE_GEOCODE_RESULTS,
-  REQUEST_GEOCODE_RESULTS,
   SET_WAYPOINT,
   UPDATE_TEXTINPUT,
   EMPTY_WAYPOINT,
@@ -16,11 +15,7 @@ import {
   UPDATE_INCLINE_DECLINE,
 } from './types';
 
-import {
-  reverse_geocode,
-  forward_geocode,
-  parseGeocodeResponse,
-} from '@/utils/nominatim';
+import { reverse_geocode, parseGeocodeResponse } from '@/utils/nominatim';
 
 import {
   VALHALLA_OSM_URL,
@@ -28,13 +23,7 @@ import {
   parseDirectionsGeometry,
 } from '@/utils/valhalla';
 
-import {
-  sendMessage,
-  showLoading,
-  filterProfileSettings,
-  updatePermalink,
-  zoomTo,
-} from './common-actions';
+import { showLoading, filterProfileSettings, zoomTo } from './common-actions';
 
 import type {
   ActiveWaypoint,
@@ -42,7 +31,9 @@ import type {
   ParsedDirectionsGeometry,
   ThunkResult,
   ValhallaRouteResponse,
-} from '@/common/types';
+} from '@/components/types';
+import { toast } from 'sonner';
+import { router } from '@/routes';
 
 interface LatLng {
   lng: number;
@@ -51,7 +42,6 @@ interface LatLng {
 
 interface FetchReverseGeocodePermaObject {
   index: number;
-  permaLast?: boolean;
   latLng: LatLng;
 }
 
@@ -59,12 +49,6 @@ interface FetchReverseGeocodeObject {
   index: number;
   fromDrag?: boolean;
   latLng: LatLng;
-}
-
-interface FetchGeocodeObject {
-  inputValue?: string;
-  lngLat?: [number, number];
-  index: number;
 }
 
 interface UpdateTextInputObject {
@@ -78,15 +62,9 @@ interface ReceiveGeocodeResultsObject {
   index: number;
 }
 
-interface RequestGeocodeResultsObject {
-  index: number;
-  reverse?: boolean;
-}
-
 interface Waypoint {
   id: string;
   geocodeResults: ActiveWaypoint[];
-  isFetching: boolean;
   userInput: string;
 }
 
@@ -110,9 +88,10 @@ const serverMapping: Record<string, string> = {
 };
 
 export const makeRequest = (): ThunkResult => (dispatch, getState) => {
-  dispatch(updatePermalink());
   const { waypoints } = getState().directions;
-  const { profile, dateTime } = getState().common;
+  const { dateTime } = getState().common;
+  const profile = router.state.location.search.profile;
+
   let { settings } = getState().common;
   // if 2 results are selected
   const activeWaypoints = getActiveWaypoints(waypoints);
@@ -121,7 +100,7 @@ export const makeRequest = (): ThunkResult => (dispatch, getState) => {
     // we should find a better way to do this.
     settings = filterProfileSettings(profile, settings);
     const valhallaRequest = buildDirectionsRequest({
-      profile,
+      profile: profile || 'bicycle',
       activeWaypoints,
       // @ts-expect-error todo: this is not correct. initial settings and filtered settings are not the same but we are changing in later.
       // we should find a better way to do this.
@@ -188,14 +167,12 @@ const fetchValhallaDirections =
           error_msg += ` for ${valhallaRequest.json.costing}.`;
         }
         dispatch(clearRoutes(VALHALLA_OSM_URL!));
-        dispatch(
-          sendMessage({
-            type: 'warning',
-            icon: 'warning',
-            description: `${serverMapping[VALHALLA_OSM_URL!]}: ${error_msg}`,
-            title: `${response.data.status}`,
-          })
-        );
+        toast.warning(`${response.data.status}`, {
+          description: `${serverMapping[VALHALLA_OSM_URL!]}: ${error_msg}`,
+          position: 'bottom-center',
+          duration: 5000,
+          closeButton: true,
+        });
       })
       .finally(() => {
         setTimeout(() => {
@@ -229,6 +206,7 @@ const placeholderAddress =
       {
         title: '',
         displaylnglat: [lng, lat],
+        sourcelnglat: [lng, lat],
         key: index,
         addressindex: index,
       },
@@ -246,34 +224,24 @@ const placeholderAddress =
 export const fetchReverseGeocodePerma =
   (object: FetchReverseGeocodePermaObject): ThunkResult =>
   (dispatch) => {
-    dispatch(requestGeocodeResults({ index: object.index, reverse: true }));
-
     const { index } = object;
-    const { permaLast } = object;
     const { lng, lat } = object.latLng;
 
     if (index > 1) {
-      dispatch(doAddWaypoint(true));
+      dispatch(doAddWaypoint(false));
     }
+
+    dispatch(placeholderAddress(index, lng, lat));
 
     reverse_geocode(lng, lat)
       .then((response) => {
         dispatch(
-          processGeocodeResponse(
-            response.data,
-            index,
-            true,
-            [lng, lat],
-            permaLast
-          )
+          processGeocodeResponse(response.data, index, true, [lng, lat], false)
         );
       })
       .catch((error) => {
         console.log(error);
       });
-    // .finally(() => {
-    //   // always executed
-    // })
   };
 
 export const fetchReverseGeocode =
@@ -297,8 +265,6 @@ export const fetchReverseGeocode =
 
     dispatch(placeholderAddress(index, lng, lat));
 
-    dispatch(requestGeocodeResults({ index, reverse: true }));
-
     reverse_geocode(lng, lat)
       .then((response) => {
         dispatch(
@@ -313,37 +279,6 @@ export const fetchReverseGeocode =
     // })
   };
 
-export const fetchGeocode =
-  (object: FetchGeocodeObject): ThunkResult =>
-  (dispatch) => {
-    if (object.lngLat) {
-      const addresses: ActiveWaypoint[] = [
-        {
-          title: object.lngLat.toString(),
-          description: '',
-          selected: false,
-          addresslnglat: object.lngLat,
-          sourcelnglat: object.lngLat,
-          displaylnglat: object.lngLat,
-          key: object.index,
-          addressindex: 0,
-        },
-      ];
-      dispatch(receiveGeocodeResults({ addresses, index: object.index }));
-    } else {
-      dispatch(requestGeocodeResults({ index: object.index }));
-
-      forward_geocode(object.inputValue!)
-        .then((response) => {
-          dispatch(processGeocodeResponse(response.data, object.index));
-        })
-        .catch((error) => {
-          console.log(error);
-        })
-        .finally(() => {});
-    }
-  };
-
 const processGeocodeResponse =
   (
     data: NominationResponse,
@@ -354,16 +289,13 @@ const processGeocodeResponse =
   ): ThunkResult =>
   (dispatch) => {
     const addresses = parseGeocodeResponse(data, lngLat!);
-    // if no address can be found
     if (addresses.length === 0) {
-      dispatch(
-        sendMessage({
-          type: 'warning',
-          icon: 'warning',
-          description: 'Sorry, no addresses can be found.',
-          title: 'No addresses',
-        })
-      );
+      toast.warning(`No addresses`, {
+        description: 'Sorry, no addresses can be found.',
+        position: 'bottom-center',
+        duration: 5000,
+        closeButton: true,
+      });
     }
     dispatch(
       receiveGeocodeResults({ addresses: addresses as ActiveWaypoint[], index })
@@ -379,21 +311,14 @@ const processGeocodeResponse =
       );
       if (permaLast === undefined) {
         dispatch(makeRequest());
-        dispatch(updatePermalink());
       } else if (permaLast) {
         dispatch(makeRequest());
-        dispatch(updatePermalink());
       }
     }
   };
 
 export const receiveGeocodeResults = (object: ReceiveGeocodeResultsObject) => ({
   type: RECEIVE_GEOCODE_RESULTS,
-  payload: object,
-});
-
-export const requestGeocodeResults = (object: RequestGeocodeResultsObject) => ({
-  type: REQUEST_GEOCODE_RESULTS,
   payload: object,
 });
 
@@ -422,19 +347,6 @@ export const doRemoveWaypoint =
       if (getActiveWaypoints(waypoints).length < 2) {
         dispatch(clearRoutes(VALHALLA_OSM_URL!));
       }
-    }
-    dispatch(updatePermalink());
-  };
-
-export const isWaypoint =
-  (index: number): ThunkResult =>
-  (dispatch, getState) => {
-    const waypoints = getState().directions.waypoints;
-    if (
-      waypoints[index]?.geocodeResults.length &&
-      waypoints[index]?.geocodeResults.length > 0
-    ) {
-      dispatch(clearRoutes(VALHALLA_OSM_URL!));
     }
   };
 
@@ -488,16 +400,16 @@ export const doAddWaypoint =
     );
     maxIndex = isFinite(maxIndex) === false ? 0 : maxIndex + 1;
 
-    const emptyWp: Waypoint = {
+    const emptyWaypoint: Waypoint = {
       id: maxIndex.toString(),
       geocodeResults: [],
-      isFetching: false,
       userInput: '',
     };
+
     if (doInsert) {
-      dispatch(insertWaypoint(emptyWp));
+      dispatch(insertWaypoint(emptyWaypoint));
     } else {
-      dispatch(addWaypoint(emptyWp));
+      dispatch(addWaypoint(emptyWaypoint));
     }
   };
 

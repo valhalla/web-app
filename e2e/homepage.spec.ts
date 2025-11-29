@@ -30,13 +30,12 @@ test('has default elements in the page', async ({ page }) => {
 
   await expect(page.getByTestId('show-hide-settings-btn')).toBeVisible();
 
-  await expect(page.getByRole('button', { name: '1' })).toBeVisible();
-  await expect(page.getByRole('button', { name: '2' })).toBeVisible();
+  expect(await page.getByText('Select a waypoint...').count()).toBe(2);
 
   await expect(page.getByTestId('add-waypoint-button')).toBeVisible();
   await expect(page.getByTestId('reset-waypoints-button')).toBeVisible();
 
-  await expect(page.getByText('Nonspecific timeNonspecific')).toBeVisible();
+  await expect(page.getByText('Non-specific time')).toBeVisible();
   await expect(page.getByTestId('date-time-picker')).toBeVisible();
 
   await expect(
@@ -45,19 +44,16 @@ test('has default elements in the page', async ({ page }) => {
 
   await page.getByTestId('isochrones-tab-button').click();
 
-  await expect(
-    page.getByRole('textbox', { name: 'Hit enter for search...' })
-  ).toBeVisible();
-  await page.getByTestId('reset-center-button').click();
+  await page.getByTestId('remove-waypoint-button').click();
 
-  await expect(page.getByText(/^Settings$/)).toBeVisible();
+  await expect(page.getByText(/^Isochrones Settings$/)).toBeVisible();
 
-  await expect(page.getByText('Maximum Rangemins10')).toBeVisible();
-  await expect(page.getByText('Interval Stepmins10')).toBeVisible();
-  await expect(page.getByText('Denoise0.1')).toBeVisible();
-  await expect(page.getByText('Generalizemeters0')).toBeVisible();
+  await page.getByText(/^Isochrones Settings$/).click();
 
-  // await expect(page.getByRole('button', { name: 'Layers' })).toBeVisible();
+  await expect(page.getByText('Maximum Range', { exact: true })).toBeVisible();
+  await expect(page.getByText('Interval Step', { exact: true })).toBeVisible();
+  await expect(page.getByText('Denoise', { exact: true })).toBeVisible();
+  await expect(page.getByText('Generalize', { exact: true })).toBeVisible();
 
   await expect(page.getByRole('button', { name: 'Zoom in' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Zoom out' })).toBeVisible();

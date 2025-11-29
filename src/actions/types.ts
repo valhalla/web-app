@@ -1,5 +1,4 @@
 export const UPDATE_SETTINGS = 'UPDATE_SETTINGS' as const;
-export const UPDATE_PROFILE = 'UPDATE_PROFILE' as const;
 export const ADD_WAYPOINT = 'ADD_WAYPOINT' as const;
 export const SET_WAYPOINT = 'SET_WAYPOINT' as const;
 export const CLEAR_WAYPOINTS = 'CLEAR_WAYPOINTS' as const;
@@ -7,7 +6,6 @@ export const UPDATE_TEXTINPUT = 'UPDATE_TEXTINPUT' as const;
 export const REQUEST_GEOCODE_RESULTS = 'REQUEST_GEOCODE_RESULTS' as const;
 export const RECEIVE_GEOCODE_RESULTS = 'RECEIVE_GEOCODE_RESULTS' as const;
 export const FETCH_GEOCODE = 'FETCH_GEOCODE' as const;
-export const MESSAGE_HANDLER = 'RESULT_HANDLER' as const;
 export const UPDATE_TEXTINPUT_ISO = 'UPDATE_TEXTINPUT_ISO' as const;
 export const REQUEST_GEOCODE_RESULTS_ISO =
   'REQUEST_GEOCODE_RESULTS_ISO' as const;
@@ -16,7 +14,6 @@ export const RECEIVE_GEOCODE_RESULTS_ISO =
 export const UPDATE_SETTINGS_ISO = 'UPDATE_SETTINGS_ISO' as const;
 export const EMPTY_WAYPOINT = 'EMPTY_WAYPOINT' as const;
 export const CONSTRUCT_REQUEST = 'CONSTRUCT_REQUEST' as const;
-export const UPDATE_TAB = 'UPDATE_TAB' as const;
 export const LOADING = 'LOADING' as const;
 export const INSERT_WAYPOINT = 'INSERT_WAYPOINT' as const;
 export const RECEIVE_ROUTE_RESULTS = 'RECEIVE_ROUTE_RESULTS' as const;

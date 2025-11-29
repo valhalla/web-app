@@ -1,27 +1,32 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig, mergeConfig } from 'vitest/config';
+import viteConfig from './vite.config';
 
-export default defineConfig({
-  test: {
-    exclude: [
-      'node_modules',
-      'build',
-      'dist',
-      'coverage',
-      'e2e',
-      'playwright-report',
-      'test-results',
-    ],
-    globals: true,
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+export default mergeConfig(
+  viteConfig,
+  defineConfig({
+    test: {
       exclude: [
-        'node_modules/',
-        'playwright-report/',
-        'src/test-utils.ts',
-        '**/*.d.ts',
-        '**/*.config.*',
+        'node_modules',
+        'build',
+        'dist',
+        'coverage',
+        'e2e',
+        'playwright-report',
+        'test-results',
       ],
+      globals: true,
+      environment: 'jsdom',
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        exclude: [
+          'node_modules/',
+          'playwright-report/',
+          'src/test-utils.ts',
+          '**/*.d.ts',
+          '**/*.config.*',
+        ],
+      },
     },
-  },
-});
+  })
+);
