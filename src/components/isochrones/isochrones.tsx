@@ -8,7 +8,7 @@ import { SettingsFooter } from '@/components/settings-footer';
 import { fetchReverseGeocodeIso } from '@/actions/isochrones-actions';
 import type { AppDispatch, RootState } from '@/store';
 import { Separator } from '@/components/ui/separator';
-import { IsochronesOutputControl } from './isochrone-card';
+import { IsochroneCard } from './isochrone-card';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import { parseUrlParams } from '@/utils/parse-url-params';
 import { isValidCoordinates } from '@/utils/geom';
@@ -77,7 +77,7 @@ export const IsochronesControl = () => {
       {results[VALHALLA_OSM_URL!]!.data && (
         <div>
           <h3 className="font-bold mb-2">Isochrones</h3>
-          <IsochronesOutputControl
+          <IsochroneCard
             data={results[VALHALLA_OSM_URL!]!.data}
             showOnMap={results[VALHALLA_OSM_URL!]!.show}
           />

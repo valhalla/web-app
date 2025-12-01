@@ -18,7 +18,6 @@ import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useParams, useNavigate } from '@tanstack/react-router';
-import { useCallback } from 'react';
 import { ProfilePicker } from './profile-picker';
 import { SettingsButton } from './settings-button';
 import type { Profile } from '@/reducers/common';
@@ -57,18 +56,24 @@ export const RoutePlanner = () => {
     dispatch(toggleDirections());
   };
 
-  const handleProfileChange = useCallback(
-    (value: Profile) => {
-      navigate({
-        search: (prev) => ({ ...prev, profile: value }),
-        replace: true,
-      });
+  const handleProfileChange = (value: Profile) => {
+    navigate({
+      search: (prev) => ({ ...prev, profile: value }),
+      replace: true,
+    });
 
+    if (activeTab === 'isochrones') {
       dispatch(makeIsochronesRequest());
+      setTimeout(() => {
+        dispatch(makeRequest());
+      }, 1000);
+    } else {
       dispatch(makeRequest());
-    },
-    [dispatch, navigate]
-  );
+      setTimeout(() => {
+        dispatch(makeIsochronesRequest());
+      }, 1000);
+    }
+  };
 
   return (
     <Sheet open={showDirectionsPanel} modal={false}>

@@ -18,15 +18,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { MetricItem } from '@/components/ui/metric-item';
 
-interface IsochronesOutputControlProps {
+interface IsochronesCardProps {
   data: ValhallaIsochroneResponse;
   showOnMap: boolean;
 }
 
-export const IsochronesOutputControl = ({
-  data,
-  showOnMap,
-}: IsochronesOutputControlProps) => {
+export const IsochroneCard = ({ data, showOnMap }: IsochronesCardProps) => {
   const dispatch = useDispatch<AppDispatch>();
 
   const handleChange = (checked: boolean) => {
@@ -40,7 +37,7 @@ export const IsochronesOutputControl = ({
         'focus-within:bg-muted/50 hover:bg-muted/50'
       )}
     >
-      {data.features.length > 0 ? (
+      {data.features?.length > 0 ? (
         <>
           <div className="flex items-center justify-between">
             <span className="font-bold">Main Isochrone</span>

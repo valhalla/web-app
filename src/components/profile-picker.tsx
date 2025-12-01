@@ -18,7 +18,7 @@ import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '@/store';
 import { resetSettings } from '@/actions/common-actions';
 import { Loader2 } from 'lucide-react';
-import { useParams, useSearch } from '@tanstack/react-router';
+import { useSearch } from '@tanstack/react-router';
 
 const iconMap = {
   truck: <TruckSvg />,
@@ -39,7 +39,6 @@ export const ProfilePicker = ({
   loading,
   onProfileChange,
 }: ProfilePickerProps) => {
-  const { activeTab } = useParams({ from: '/$activeTab' });
   const { profile: activeProfile } = useSearch({ from: '/$activeTab' });
   const dispatch = useDispatch<AppDispatch>();
 
@@ -58,9 +57,7 @@ export const ProfilePicker = ({
     { value: 'truck', label: 'Truck' },
     { value: 'bus', label: 'Bus' },
     { value: 'motor_scooter', label: 'Motor Scooter' },
-    ...(activeTab === 'directions'
-      ? [{ value: 'motorcycle', label: 'Motorcycle' }]
-      : []),
+    { value: 'motorcycle', label: 'Motorcycle' },
   ];
 
   return (
