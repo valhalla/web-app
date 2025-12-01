@@ -1,8 +1,8 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { DirectionsControl } from './directions';
-import { IsochronesControl } from './isochrones';
+import { DirectionsControl } from './directions/directions';
+import { IsochronesControl } from './isochrones/isochrones';
 import { toggleDirections } from '@/actions/common-actions';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import type { AppDispatch, RootState } from '@/store';
@@ -18,6 +18,12 @@ import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useParams, useNavigate } from '@tanstack/react-router';
+import { useCallback } from 'react';
+import { ProfilePicker } from './profile-picker';
+import { SettingsButton } from './settings-button';
+import type { Profile } from '@/reducers/common';
+import { makeIsochronesRequest } from '@/actions/isochrones-actions';
+import { makeRequest } from '@/actions/directions-actions';
 
 export const RoutePlanner = () => {
   const { activeTab } = useParams({ from: '/$activeTab' });
@@ -25,6 +31,7 @@ export const RoutePlanner = () => {
   const { showDirectionsPanel } = useSelector(
     (state: RootState) => state.common
   );
+  const { loading } = useSelector((state: RootState) => state.common);
   const dispatch = useDispatch<AppDispatch>();
 
   const {
@@ -49,6 +56,19 @@ export const RoutePlanner = () => {
   const handleDirectionsToggle = () => {
     dispatch(toggleDirections());
   };
+
+  const handleProfileChange = useCallback(
+    (value: Profile) => {
+      navigate({
+        search: (prev) => ({ ...prev, profile: value }),
+        replace: true,
+      });
+
+      dispatch(makeIsochronesRequest());
+      dispatch(makeRequest());
+    },
+    [dispatch, navigate]
+  );
 
   return (
     <Sheet open={showDirectionsPanel} modal={false}>
@@ -101,6 +121,14 @@ export const RoutePlanner = () => {
                 : 'Calculate reachable areas from a location'}
             </SheetDescription>
           </SheetHeader>
+
+          <div className="flex justify-between px-2 mb-1">
+            <ProfilePicker
+              loading={loading}
+              onProfileChange={handleProfileChange}
+            />
+            <SettingsButton />
+          </div>
 
           <TabsContent value="directions" className="flex flex-col gap-3 px-2">
             <DirectionsControl />

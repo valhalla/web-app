@@ -18,6 +18,7 @@ import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '@/store';
 import { resetSettings } from '@/actions/common-actions';
 import { Loader2 } from 'lucide-react';
+import { useParams, useSearch } from '@tanstack/react-router';
 
 const iconMap = {
   truck: <TruckSvg />,
@@ -31,17 +32,15 @@ const iconMap = {
 
 interface ProfilePickerProps {
   loading: boolean;
-  profiles: { value: Profile; label: string }[];
-  activeProfile: Profile;
   onProfileChange: (value: Profile) => void;
 }
 
 export const ProfilePicker = ({
   loading,
-  profiles,
-  activeProfile,
   onProfileChange,
 }: ProfilePickerProps) => {
+  const { activeTab } = useParams({ from: '/$activeTab' });
+  const { profile: activeProfile } = useSearch({ from: '/$activeTab' });
   const dispatch = useDispatch<AppDispatch>();
 
   const handleUpdateProfile = useCallback(
@@ -51,6 +50,18 @@ export const ProfilePicker = ({
     },
     [dispatch, onProfileChange]
   );
+
+  const profiles = [
+    { value: 'bicycle', label: 'Bicycle' },
+    { value: 'pedestrian', label: 'Pedestrian' },
+    { value: 'car', label: 'Car' },
+    { value: 'truck', label: 'Truck' },
+    { value: 'bus', label: 'Bus' },
+    { value: 'motor_scooter', label: 'Motor Scooter' },
+    ...(activeTab === 'directions'
+      ? [{ value: 'motorcycle', label: 'Motorcycle' }]
+      : []),
+  ];
 
   return (
     <div className="flex flex-col gap-2">

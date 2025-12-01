@@ -3,8 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { Waypoints } from './waypoints/waypoint-list';
 
-import { ProfilePicker } from '@/components/profile-picker';
-import { SettingsButton } from '@/components/settings-button';
 import { SettingsFooter } from '@/components/settings-footer';
 import { DateTimePicker } from '@/components/date-time-picker';
 import { Separator } from '@/components/ui/separator';
@@ -25,8 +23,7 @@ import { RouteCard } from './route-card';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import { parseUrlParams } from '@/utils/parse-url-params';
 import { isValidCoordinates } from '@/utils/geom';
-import { useNavigate, useSearch } from '@tanstack/react-router';
-import type { Profile } from '@/reducers/common';
+import { useNavigate } from '@tanstack/react-router';
 
 export const DirectionsControl = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -34,10 +31,9 @@ export const DirectionsControl = () => {
   const { results } = useSelector((state: RootState) => state.directions);
   const initialUrlParams = useRef(parseUrlParams());
   const urlParamsProcessed = useRef(false);
-  const { profile } = useSearch({ from: '/$activeTab' });
   const navigate = useNavigate({ from: '/$activeTab' });
 
-  const { loading, dateTime } = useSelector((state: RootState) => state.common);
+  const { dateTime } = useSelector((state: RootState) => state.common);
 
   useEffect(() => {
     if (urlParamsProcessed.current) return;
@@ -85,17 +81,6 @@ export const DirectionsControl = () => {
     });
   }, [waypoints, navigate]);
 
-  const handleProfileChange = useCallback(
-    (value: Profile) => {
-      navigate({
-        search: (prev) => ({ ...prev, profile: value }),
-        replace: true,
-      });
-      dispatch(makeRequest());
-    },
-    [dispatch, navigate]
-  );
-
   const handleDateTimeChange = useCallback(
     (field: 'type' | 'value', value: string) => {
       dispatch(doUpdateDateTime(field, value));
@@ -118,23 +103,6 @@ export const DirectionsControl = () => {
   return (
     <>
       <div className="flex flex-col gap-3 border rounded-md p-2">
-        <div className="flex justify-between">
-          <ProfilePicker
-            profiles={[
-              { value: 'bicycle', label: 'Bicycle' },
-              { value: 'pedestrian', label: 'Pedestrian' },
-              { value: 'car', label: 'Car' },
-              { value: 'truck', label: 'Truck' },
-              { value: 'bus', label: 'Bus' },
-              { value: 'motor_scooter', label: 'Motor Scooter' },
-              { value: 'motorcycle', label: 'Motorcycle' },
-            ]}
-            loading={loading}
-            activeProfile={profile || 'bicycle'}
-            onProfileChange={handleProfileChange}
-          />
-          <SettingsButton />
-        </div>
         <Waypoints />
         <div className="flex justify-between gap-4">
           <Button
