@@ -50,12 +50,12 @@ export const IsochroneCard = ({ data, showOnMap }: IsochronesCardProps) => {
               <Label htmlFor="show-on-map">Show on map</Label>
             </div>
           </div>
-          <div className="flex justify-between gap-2">
+          <div className="flex flex-col justify-between gap-2">
             {data.features
               .filter((feature) => !feature.properties?.type)
               .map((feature, key) => {
                 return (
-                  <div className="flex flex-wrap gap-2" key={key}>
+                  <div className="flex gap-3 border rounded-md p-2" key={key}>
                     <MetricItem
                       variant="outline"
                       icon={ClockIcon}
