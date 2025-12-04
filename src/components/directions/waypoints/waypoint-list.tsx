@@ -1,95 +1,113 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  type DropResult,
-} from '@hello-pangea/dnd';
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { Waypoint } from './waypoint-item';
 import { setWaypoints, makeRequest } from '@/actions/directions-actions';
 import type { AppDispatch, RootState } from '@/store';
-import type { Waypoint as WaypointType } from '@/reducers/directions';
-
-const reorder = (
-  list: WaypointType[],
-  startIndex: number,
-  endIndex: number
-) => {
-  const result = Array.from(list);
-  const [removed] = result.splice(startIndex, 1);
-  result.splice(endIndex, 0, removed!);
-
-  return result;
-};
-
-const getItemStyle = (
-  isDragging: boolean,
-  draggableStyle: React.CSSProperties
-) => ({
-  userSelect: 'none',
-  // styles we need to apply on draggables
-  ...draggableStyle,
-});
 
 export const Waypoints = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { waypoints } = useSelector((state: RootState) => state.directions);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const onDragEnd = useCallback(
-    (result: DropResult) => {
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+
       // dropped outside the list
-      if (!result.destination) {
+      if (!over || active.id === over.id) {
         return;
       }
 
-      const items = reorder(
-        waypoints,
-        result.source.index,
-        result.destination.index
-      );
-      dispatch(setWaypoints(items));
-      dispatch(makeRequest());
+      const oldIndex = waypoints.findIndex((wp) => wp.id === active.id);
+      const newIndex = waypoints.findIndex((wp) => wp.id === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const items = arrayMove(waypoints, oldIndex, newIndex);
+        dispatch(setWaypoints(items));
+        dispatch(makeRequest());
+      }
     },
     [dispatch, waypoints]
   );
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="droppable">
-        {(provided) => (
-          <React.Fragment>
-            <div
-              className="flex flex-col gap-2"
-              {...provided.droppableProps}
-              ref={provided.innerRef}
-            >
-              {waypoints.map((wp, index) => (
-                <Draggable key={wp.id} draggableId={wp.id} index={index}>
-                  {(provided_inner, snapshot_inner) => (
-                    <div
-                      ref={provided_inner.innerRef}
-                      {...provided_inner.draggableProps}
-                      {...provided_inner.dragHandleProps}
-                      aria-label={`Re-order waypoint ${index + 1}`}
-                      // @ts-expect-error todo: fix this
-                      style={getItemStyle(
-                        snapshot_inner.isDragging,
-                        provided_inner.draggableProps
-                          .style as React.CSSProperties
-                      )}
-                    >
-                      <Waypoint index={index} />
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </div>
-          </React.Fragment>
-        )}
-      </Droppable>
-    </DragDropContext>
+    <DndContext
+      sensors={sensors}
+      onDragEnd={onDragEnd}
+      accessibility={{
+        announcements: {
+          onDragStart({ active }) {
+            const waypointIndex =
+              waypoints.findIndex((wp) => wp.id === active.id) + 1;
+            return `Picked up waypoint ${waypointIndex}. Use arrow keys to move, space bar to drop, escape to cancel.`;
+          },
+          onDragOver({ active, over }) {
+            if (!over) return '';
+            const activeIndex =
+              waypoints.findIndex((wp) => wp.id === active.id) + 1;
+            const overIndex =
+              waypoints.findIndex((wp) => wp.id === over.id) + 1;
+            if (activeIndex !== overIndex) {
+              return `Moving waypoint ${activeIndex} to position ${overIndex}.`;
+            }
+            return '';
+          },
+          onDragEnd({ active, over }) {
+            if (!over || active.id === over.id) {
+              return 'Drag cancelled. Waypoint returned to original position.';
+            }
+            const activeIndex =
+              waypoints.findIndex((wp) => wp.id === active.id) + 1;
+            const newIndex = waypoints.findIndex((wp) => wp.id === over.id) + 1;
+            return `Waypoint ${activeIndex} moved to position ${newIndex}.`;
+          },
+          onDragCancel({ active }) {
+            const waypointIndex =
+              waypoints.findIndex((wp) => wp.id === active.id) + 1;
+            return `Drag cancelled. Waypoint ${waypointIndex} returned to original position.`;
+          },
+        },
+      }}
+    >
+      <SortableContext
+        items={waypoints.map((wp) => wp.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div
+          role="list"
+          aria-label="Waypoints list"
+          className="flex flex-col gap-2"
+        >
+          {waypoints.map((wp, index) => (
+            <Waypoint key={wp.id} id={wp.id} index={index} />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 };
