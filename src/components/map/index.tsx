@@ -16,9 +16,13 @@ import axios from 'axios';
 import { throttle } from 'throttle-debounce';
 import {
   fetchReverseGeocode,
+  makeRequest,
   updateInclineDeclineTotal,
 } from '@/actions/directions-actions';
-import { fetchReverseGeocodeIso } from '@/actions/isochrones-actions';
+import {
+  fetchReverseGeocodeIso,
+  makeIsochronesRequest,
+} from '@/actions/isochrones-actions';
 import { updateSettings } from '@/actions/common-actions';
 import {
   VALHALLA_OSM_URL,
@@ -160,7 +164,13 @@ export const MapComponent = () => {
         value: excludePolygons as unknown as string,
       })
     );
-  }, [dispatch]);
+
+    if (activeTab === 'directions') {
+      dispatch(makeRequest());
+    } else {
+      dispatch(makeIsochronesRequest());
+    }
+  }, [dispatch, activeTab]);
 
   const updateWaypointPosition = useCallback(
     (object: {

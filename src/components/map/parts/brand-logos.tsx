@@ -1,6 +1,6 @@
 export function BrandLogos() {
   return (
-    <div className="absolute bottom-4 left-3 z-10 flex items-center gap-2">
+    <div className="absolute bottom-4 left-3 z-10 items-center gap-2 hidden lg:flex">
       <a
         href="https://fossgis.de/news/2021-11-12_funding_valhalla/"
         target="_blank"
