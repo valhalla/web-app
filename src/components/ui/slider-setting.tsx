@@ -60,8 +60,12 @@ export const SliderSetting = ({
     let parsed = parseValue(inputValue);
     if (isNaN(parsed)) parsed = min;
     parsed = Math.max(min, Math.min(parsed, max));
-    onInputChange([parsed]);
-    setInputValue(String(parsed));
+
+    if (parsed !== value) {
+      onInputChange([parsed]);
+      setInputValue(String(parsed));
+    }
+
     setIsEditing(false);
   };
 

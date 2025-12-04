@@ -29,7 +29,7 @@ export const DateTimePicker = ({
           value={type.toString()}
           onValueChange={(value) => onChange('type', value)}
         >
-          <SelectTrigger id="date-time-picker-type" className="w-full">
+          <SelectTrigger id="date-time-picker-type">
             <SelectValue placeholder="When to travel?" />
           </SelectTrigger>
           <SelectContent>
