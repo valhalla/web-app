@@ -59,6 +59,11 @@ export interface DirectionsState {
   inclineDeclineTotal?: InclineDeclineTotal;
 }
 
+export const defaultWaypoints: Waypoint[] = [
+  { id: '0', geocodeResults: [], userInput: '' },
+  { id: '1', geocodeResults: [], userInput: '' },
+];
+
 const initialState: DirectionsState = {
   successful: false,
   highlightSegment: {
@@ -67,10 +72,7 @@ const initialState: DirectionsState = {
     // -1 is main route, other values are indices into the alternate array
     alternate: -1,
   },
-  waypoints: [
-    { id: '0', geocodeResults: [], userInput: '' },
-    { id: '1', geocodeResults: [], userInput: '' },
-  ],
+  waypoints: defaultWaypoints,
   zoomObj: {
     index: -1,
     timeNow: -1,
@@ -122,7 +124,7 @@ export const directions = (
           ...state.results,
           [action.payload]: {
             ...state.results[action.payload],
-            data: {},
+            data: null,
           },
         },
       };

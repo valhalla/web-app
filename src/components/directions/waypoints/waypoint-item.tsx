@@ -19,6 +19,7 @@ import {
 import { WaypointSearch } from '@/components/ui/waypoint-search';
 import type { AppDispatch, RootState } from '@/store';
 import { GripVertical, Trash } from 'lucide-react';
+import { defaultWaypoints } from '@/reducers/directions';
 
 interface WaypointProps {
   id: string;
@@ -113,6 +114,9 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
                 size="icon-sm"
                 onClick={() => dispatch(doRemoveWaypoint(index))}
                 data-testid="remove-waypoint-button"
+                disabled={
+                  JSON.stringify(waypoints) === JSON.stringify(defaultWaypoints)
+                }
               >
                 <Trash className="size-3" />
               </Button>

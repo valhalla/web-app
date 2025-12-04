@@ -590,6 +590,7 @@ export const MapComponent = () => {
     (event: { lngLat: { lng: number; lat: number } }) => {
       const { lngLat } = event;
       setPopupLngLat(lngLat);
+      setShowInfoPopup(false);
       setShowContextPopup(true);
     },
     []

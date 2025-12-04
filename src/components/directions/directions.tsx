@@ -24,6 +24,7 @@ import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import { parseUrlParams } from '@/utils/parse-url-params';
 import { isValidCoordinates } from '@/utils/geom';
 import { useNavigate } from '@tanstack/react-router';
+import { defaultWaypoints } from '@/reducers/directions';
 
 export const DirectionsControl = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -119,6 +120,9 @@ export const DirectionsControl = () => {
             onClick={handleRemoveWaypoints}
             data-testid="reset-waypoints-button"
             className="w-full shrink"
+            disabled={
+              JSON.stringify(waypoints) === JSON.stringify(defaultWaypoints)
+            }
           >
             <MapPinXInside className="size-5" />
             Reset Waypoints
