@@ -9,7 +9,7 @@ import checkFile from 'eslint-plugin-check-file';
 import eslintPluginTanstackQuery from '@tanstack/eslint-plugin-query';
 import pluginRouter from '@tanstack/eslint-plugin-router';
 
-export default defineConfig(
+export default defineConfig([
   {
     ignores: [
       'node_modules',
@@ -123,4 +123,4 @@ export default defineConfig(
       'check-file/filename-naming-convention': 'off',
     },
   }
-);
+]);

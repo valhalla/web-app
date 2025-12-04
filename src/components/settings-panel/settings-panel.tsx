@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { debounce } from 'throttle-debounce';
 import { Button } from '@/components/ui/button';
 import { profileSettings, generalSettings } from './settings-options';
 import {
@@ -39,21 +38,30 @@ export const SettingsPanel = () => {
   );
   const [copied, setCopied] = useState(false);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleMakeRequest = useCallback(() => {
+    if (activeTab === 'directions') {
+      dispatch(makeRequest());
+    } else {
+      dispatch(makeIsochronesRequest());
+    }
+  }, [dispatch, activeTab]);
+
   const handleUpdateSettings = useCallback(
-    debounce(0, ({ name, value }) => {
-      dispatch(
-        updateSettings({
-          name,
-          value,
-        })
-      );
+    ({
+      name,
+      value,
+    }: {
+      name: string;
+      value: string | number | boolean | string[];
+    }) => {
+      dispatch(updateSettings({ name, value }));
+
       if (activeTab === 'directions') {
         dispatch(makeRequest());
       } else {
         dispatch(makeIsochronesRequest());
       }
-    }),
+    },
     [dispatch, activeTab]
   );
 
@@ -98,7 +106,7 @@ export const SettingsPanel = () => {
           </Button>
         </SheetHeader>
         <div className="px-3">
-          <div className="flex flex-col gap-3 border rounded-md p-2 px-3">
+          <div className="flex flex-col gap-3 border rounded-md p-2 px-3 mb-3">
             {hasProfileSettings && (
               <section>
                 <div className="flex items-baseline justify-between">
@@ -123,11 +131,14 @@ export const SettingsPanel = () => {
                         value={(settings[option.param] as number) ?? 0}
                         unit={option.unit}
                         onValueChange={(values) => {
-                          handleUpdateSettings({
-                            name: option.param,
-                            value: values[0],
-                          });
+                          dispatch(
+                            updateSettings({
+                              name: option.param,
+                              value: values[0] ?? 0,
+                            })
+                          );
                         }}
+                        onValueCommit={handleMakeRequest}
                         onInputChange={(values) => {
                           let value = values[0] ?? 0;
                           if (isNaN(value)) value = option.settings.min;
@@ -205,11 +216,14 @@ export const SettingsPanel = () => {
                       value={(settings[option.param] as number) ?? 0}
                       unit={option.unit}
                       onValueChange={(values) => {
-                        handleUpdateSettings({
-                          name: option.param,
-                          value: values[0],
-                        });
+                        dispatch(
+                          updateSettings({
+                            name: option.param,
+                            value: values[0] ?? 0,
+                          })
+                        );
                       }}
+                      onValueCommit={handleMakeRequest}
                       onInputChange={(values) => {
                         let value = values[0] ?? 0;
                         if (isNaN(value)) value = option.settings.min;
@@ -269,11 +283,14 @@ export const SettingsPanel = () => {
                     value={(settings[option.param] as number) ?? 0}
                     unit={option.unit}
                     onValueChange={(values) => {
-                      handleUpdateSettings({
-                        name: option.param,
-                        value: values[0],
-                      });
+                      dispatch(
+                        updateSettings({
+                          name: option.param,
+                          value: values[0] ?? 0,
+                        })
+                      );
                     }}
+                    onValueCommit={handleMakeRequest}
                     onInputChange={(values) => {
                       let value = values[0] ?? 0;
                       if (isNaN(value)) value = option.settings.min;
