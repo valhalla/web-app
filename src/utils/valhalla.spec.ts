@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Profile } from '@/reducers/common';
+import type { Profile } from '@/stores/common-store';
 import type {
   ActiveWaypoints,
   IsochronesRequestParams,

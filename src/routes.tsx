@@ -9,7 +9,7 @@ import { fallback, zodValidator } from '@tanstack/zod-adapter';
 import { App } from './app';
 import { z } from 'zod';
 import { RootComponent } from './components/root-component';
-import { profileEnum } from './reducers/common';
+import { profileEnum } from './stores/common-store';
 import * as TanStackQueryProvider from './lib/tanstack-query/root-provider';
 
 // Zod schema for search params validation

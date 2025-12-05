@@ -1,11 +1,9 @@
-import { useDispatch, useSelector } from 'react-redux';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { DirectionsControl } from './directions/directions';
 import { IsochronesControl } from './isochrones/isochrones';
-import { toggleDirections } from '@/actions/common-actions';
+import { useCommonStore } from '@/stores/common-store';
 import { VALHALLA_OSM_URL } from '@/utils/valhalla';
-import type { AppDispatch, RootState } from '@/store';
 import {
   Sheet,
   SheetContent,
@@ -20,18 +18,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useParams, useNavigate } from '@tanstack/react-router';
 import { ProfilePicker } from './profile-picker';
 import { SettingsButton } from './settings-button';
-import type { Profile } from '@/reducers/common';
-import { makeIsochronesRequest } from '@/actions/isochrones-actions';
-import { makeRequest } from '@/actions/directions-actions';
+import type { Profile } from '@/stores/common-store';
+import { useDirectionsStore } from '@/stores/directions-store';
+import { useIsochronesStore } from '@/stores/isochrones-store';
 
 export const RoutePlanner = () => {
   const { activeTab } = useParams({ from: '/$activeTab' });
   const navigate = useNavigate({ from: '/$activeTab' });
-  const { showDirectionsPanel } = useSelector(
-    (state: RootState) => state.common
+  const directionsPanelOpen = useCommonStore(
+    (state) => state.directionsPanelOpen
   );
-  const { loading } = useSelector((state: RootState) => state.common);
-  const dispatch = useDispatch<AppDispatch>();
+  const makeRequest = useDirectionsStore((state) => state.makeRequest);
+  const makeIsochronesRequest = useIsochronesStore(
+    (state) => state.makeIsochronesRequest
+  );
+  const loading = useCommonStore((state) => state.loading);
+  const toggleDirections = useCommonStore((state) => state.toggleDirections);
 
   const {
     data: lastUpdate,
@@ -52,10 +54,6 @@ export const RoutePlanner = () => {
     navigate({ params: { activeTab: value } });
   };
 
-  const handleDirectionsToggle = () => {
-    dispatch(toggleDirections());
-  };
-
   const handleProfileChange = (value: Profile) => {
     navigate({
       search: (prev) => ({ ...prev, profile: value }),
@@ -63,25 +61,22 @@ export const RoutePlanner = () => {
     });
 
     if (activeTab === 'isochrones') {
-      dispatch(makeIsochronesRequest());
+      makeIsochronesRequest();
       setTimeout(() => {
-        dispatch(makeRequest());
+        makeRequest();
       }, 1000);
     } else {
-      dispatch(makeRequest());
+      makeRequest();
       setTimeout(() => {
-        dispatch(makeIsochronesRequest());
+        makeIsochronesRequest();
       }, 1000);
     }
   };
 
   return (
-    <Sheet open={showDirectionsPanel} modal={false}>
+    <Sheet open={directionsPanelOpen} modal={false}>
       <SheetTrigger className="absolute top-4 left-4 z-10" asChild>
-        <Button
-          onClick={handleDirectionsToggle}
-          data-testid="open-directions-button"
-        >
+        <Button onClick={toggleDirections} data-testid="open-directions-button">
           {activeTab === 'directions' ? 'Directions' : 'Isochrones'}
         </Button>
       </SheetTrigger>
@@ -112,7 +107,7 @@ export const RoutePlanner = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleDirectionsToggle}
+              onClick={toggleDirections}
               data-testid="close-directions-button"
             >
               <X className="size-4" />

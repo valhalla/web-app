@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 
 import { Waypoints } from './waypoints/waypoint-list';
 
@@ -7,34 +6,36 @@ import { SettingsFooter } from '@/components/settings-footer';
 import { DateTimePicker } from '@/components/date-time-picker';
 import { Separator } from '@/components/ui/separator';
 
-import {
-  clearRoutes,
-  doAddWaypoint,
-  doRemoveWaypoint,
-  fetchReverseGeocodePerma,
-  makeRequest,
-} from '@/actions/directions-actions';
-import { doUpdateDateTime } from '@/actions/common-actions';
-import type { AppDispatch, RootState } from '@/store';
+import { useCommonStore } from '@/stores/common-store';
 import type { ParsedDirectionsGeometry } from '@/components/types';
 import { Button } from '@/components/ui/button';
 import { MapPinPlus, MapPinXInside } from 'lucide-react';
 import { RouteCard } from './route-card';
-import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import { parseUrlParams } from '@/utils/parse-url-params';
 import { isValidCoordinates } from '@/utils/geom';
 import { useNavigate } from '@tanstack/react-router';
-import { defaultWaypoints } from '@/reducers/directions';
+import {
+  defaultWaypoints,
+  useDirectionsStore,
+} from '@/stores/directions-store';
 
 export const DirectionsControl = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { waypoints } = useSelector((state: RootState) => state.directions);
-  const { results } = useSelector((state: RootState) => state.directions);
+  const waypoints = useDirectionsStore((state) => state.waypoints);
+  const results = useDirectionsStore((state) => state.results);
+  const fetchReverseGeocodePerma = useDirectionsStore(
+    (state) => state.fetchReverseGeocodePerma
+  );
+  const makeRequest = useDirectionsStore((state) => state.makeRequest);
+  const addEmptyWaypointToEnd = useDirectionsStore(
+    (state) => state.addEmptyWaypointToEnd
+  );
+  const clearWaypoints = useDirectionsStore((state) => state.clearWaypoints);
+  const clearRoutes = useDirectionsStore((state) => state.clearRoutes);
   const initialUrlParams = useRef(parseUrlParams());
   const urlParamsProcessed = useRef(false);
   const navigate = useNavigate({ from: '/$activeTab' });
-
-  const { dateTime } = useSelector((state: RootState) => state.common);
+  const updateDateTime = useCommonStore((state) => state.updateDateTime);
+  const dateTime = useCommonStore((state) => state.dateTime);
 
   useEffect(() => {
     if (urlParamsProcessed.current) return;
@@ -53,9 +54,9 @@ export const DirectionsControl = () => {
         const index = i / 2;
         const payload = { latLng: { lat, lng }, fromPerma: true, index };
 
-        dispatch(fetchReverseGeocodePerma(payload));
+        fetchReverseGeocodePerma(payload);
       }
-      dispatch(makeRequest());
+      makeRequest();
     }
 
     urlParamsProcessed.current = true;
@@ -84,22 +85,20 @@ export const DirectionsControl = () => {
 
   const handleDateTimeChange = useCallback(
     (field: 'type' | 'value', value: string) => {
-      dispatch(doUpdateDateTime(field, value));
-      dispatch(makeRequest());
+      updateDateTime(field, value);
+      makeRequest();
     },
-    [dispatch]
+    [updateDateTime, makeRequest]
   );
 
   const handleAddWaypoint = useCallback(() => {
-    dispatch(doAddWaypoint());
-  }, [dispatch]);
+    addEmptyWaypointToEnd();
+  }, [addEmptyWaypointToEnd]);
 
   const handleRemoveWaypoints = useCallback(() => {
-    dispatch(doRemoveWaypoint());
-    dispatch(clearRoutes(VALHALLA_OSM_URL!));
-  }, [dispatch]);
-
-  const routeResult = results[VALHALLA_OSM_URL!];
+    clearWaypoints();
+    clearRoutes();
+  }, [clearWaypoints, clearRoutes]);
 
   return (
     <>
@@ -136,12 +135,12 @@ export const DirectionsControl = () => {
         <Separator />
         <SettingsFooter />
       </div>
-      {routeResult?.data && (
+      {results.data && (
         <div>
           <h3 className="font-bold mb-2">Directions</h3>
           <div className="flex flex-col gap-3">
-            <RouteCard data={routeResult.data} index={-1} />
-            {routeResult.data.alternates?.map((alternate, index) => (
+            <RouteCard data={results.data} index={-1} />
+            {results.data.alternates?.map((alternate, index) => (
               <RouteCard
                 data={alternate as ParsedDirectionsGeometry}
                 key={alternate.id}

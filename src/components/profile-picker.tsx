@@ -5,7 +5,7 @@ import { ReactComponent as TruckSvg } from '@/images/truck.svg';
 import { ReactComponent as BikeSvg } from '@/images/bike.svg';
 import { ReactComponent as PedestrianSvg } from '@/images/pedestrian.svg';
 import { ReactComponent as MotorbikeSvg } from '@/images/motorbike.svg';
-import type { Profile } from '@/reducers/common';
+import type { Profile } from '@/stores/common-store';
 import {
   Tooltip,
   TooltipContent,
@@ -14,9 +14,7 @@ import {
 } from './ui/tooltip';
 import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
 import { useCallback } from 'react';
-import { useDispatch } from 'react-redux';
-import type { AppDispatch } from '@/store';
-import { resetSettings } from '@/actions/common-actions';
+import { useCommonStore } from '@/stores/common-store';
 import { Loader2 } from 'lucide-react';
 import { useSearch } from '@tanstack/react-router';
 
@@ -39,15 +37,15 @@ export const ProfilePicker = ({
   loading,
   onProfileChange,
 }: ProfilePickerProps) => {
+  const resetSettings = useCommonStore((state) => state.resetSettings);
   const { profile: activeProfile } = useSearch({ from: '/$activeTab' });
-  const dispatch = useDispatch<AppDispatch>();
 
   const handleUpdateProfile = useCallback(
     (value: Profile) => {
-      dispatch(resetSettings(value));
+      resetSettings(value);
       onProfileChange(value);
     },
-    [dispatch, onProfileChange]
+    [resetSettings, onProfileChange]
   );
 
   const profiles = [
