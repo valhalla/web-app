@@ -1,4 +1,4 @@
-import React from 'react';
+import { useRef, useMemo } from 'react';
 import { useControl } from 'react-map-gl/maplibre';
 import { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
 import '@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css';
@@ -14,37 +14,77 @@ export function DrawControl({
   onUpdate,
   controlRef,
 }: DrawControlProps) {
+  const finishHandlerRef = useRef<((id: string | number) => void) | null>(null);
+  const changeHandlerRef = useRef<
+    ((ids: (string | number)[], type: string) => void) | null
+  >(null);
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const debouncedOnUpdate = useMemo(() => {
+    if (!onUpdate) return undefined;
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      debounceTimeoutRef.current = setTimeout(() => {
+        onUpdate();
+        debounceTimeoutRef.current = null;
+      }, 50);
+    };
+  }, [onUpdate]);
+
   useControl<MaplibreTerradrawControl>(
-    // onCreate
     () => {
       const control = new MaplibreTerradrawControl({
         modes: ['polygon', 'select', 'delete-selection'],
         open: true,
       });
 
-      // Store reference
       if (controlRef) {
         controlRef.current = control;
       }
 
       return control;
     },
-    // onAdd
     () => {
-      if (controlRef?.current && onUpdate) {
+      if (controlRef?.current && debouncedOnUpdate) {
         const terraDrawInstance = controlRef.current.getTerraDrawInstance();
         if (terraDrawInstance) {
-          terraDrawInstance.on('finish', onUpdate);
+          finishHandlerRef.current = (id: string | number) => {
+            const feature = terraDrawInstance.getSnapshotFeature(id);
+            if (feature?.properties?.mode === 'polygon') {
+              debouncedOnUpdate();
+            }
+          };
+          terraDrawInstance.on('finish', finishHandlerRef.current);
+
+          changeHandlerRef.current = (
+            _ids: (string | number)[],
+            type: string
+          ) => {
+            if (type === 'delete') {
+              debouncedOnUpdate();
+            }
+          };
+          terraDrawInstance.on('change', changeHandlerRef.current);
         }
       }
     },
-    // onRemove
     () => {
-      if (controlRef?.current && onUpdate) {
+      if (controlRef?.current) {
         const terraDrawInstance = controlRef.current.getTerraDrawInstance();
         if (terraDrawInstance) {
-          terraDrawInstance.off('finish', onUpdate);
+          if (finishHandlerRef.current) {
+            terraDrawInstance.off('finish', finishHandlerRef.current);
+          }
+          if (changeHandlerRef.current) {
+            terraDrawInstance.off('change', changeHandlerRef.current);
+          }
         }
+      }
+
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
       }
     },
     {

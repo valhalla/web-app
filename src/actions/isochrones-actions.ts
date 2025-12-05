@@ -16,7 +16,7 @@ import {
 import { toast } from 'sonner';
 import { VALHALLA_OSM_URL, buildIsochronesRequest } from '@/utils/valhalla';
 
-import { showLoading, filterProfileSettings } from './common-actions';
+import { showLoading, filterProfileSettings, zoomTo } from './common-actions';
 import { calcArea } from '@/utils/geom';
 import type {
   ActiveWaypoint,
@@ -176,6 +176,7 @@ export const fetchReverseGeocodeIso =
   (lng: number, lat: number): ThunkResult =>
   (dispatch) => {
     dispatch(placeholderAddress(0, lng, lat));
+    dispatch(zoomTo([[lat, lng]]));
 
     dispatch({
       type: REQUEST_GEOCODE_RESULTS_ISO,
