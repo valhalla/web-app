@@ -1,27 +1,16 @@
-import Map from './map';
-import MainControl from './controls';
-import SettingsPanel from './controls/settings-panel';
-import { ToastContainer } from 'react-toastify';
+import { MapProvider } from 'react-map-gl/maplibre';
+import { MapComponent } from './components/map';
+import { RoutePlanner } from './components/route-planner';
+import { SettingsPanel } from './components/settings-panel/settings-panel';
+import { Toaster } from '@/components/ui/sonner';
 
 export const App = () => {
   return (
-    <div>
-      <Map />
-      <MainControl />
+    <MapProvider>
+      <MapComponent />
+      <RoutePlanner />
       <SettingsPanel />
-      <ToastContainer
-        position="bottom-center"
-        autoClose={5000}
-        limit={1}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
-    </div>
+      <Toaster position="bottom-center" duration={5000} richColors />
+    </MapProvider>
   );
 };

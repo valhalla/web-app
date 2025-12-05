@@ -6,8 +6,10 @@ import importPlugin from 'eslint-plugin-import';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import tseslint from 'typescript-eslint';
 import checkFile from 'eslint-plugin-check-file';
+import eslintPluginTanstackQuery from '@tanstack/eslint-plugin-query';
+import pluginRouter from '@tanstack/eslint-plugin-router';
 
-export default defineConfig(
+export default defineConfig([
   {
     ignores: [
       'node_modules',
@@ -46,7 +48,6 @@ export default defineConfig(
       'import/no-anonymous-default-export': 'warn',
       'react/no-unknown-property': 'off',
       'react/react-in-jsx-scope': 'off',
-      'react/prop-types': 'off',
       'jsx-a11y/alt-text': [
         'warn',
         {
@@ -75,8 +76,10 @@ export default defineConfig(
     ...react.configs.flat['jsx-runtime'],
   },
   {
-    ...reactHooks.configs['recommended-latest'],
+    ...reactHooks.configs.flat['recommended-latest'],
   },
+  ...eslintPluginTanstackQuery.configs['flat/recommended'],
+  ...pluginRouter.configs['flat/recommended'],
   {
     linterOptions: {
       reportUnusedDisableDirectives: true,
@@ -120,4 +123,4 @@ export default defineConfig(
       'check-file/filename-naming-convention': 'off',
     },
   }
-);
+]);

@@ -35,3 +35,12 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 tsconfig.tsbuildinfo
+
+# tanstack router
+dist
+dist-ssr
+*.local
+count.txt
+.nitro
+.tanstack
+.wrangler

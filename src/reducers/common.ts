@@ -2,32 +2,33 @@
 
 import {
   UPDATE_SETTINGS,
-  UPDATE_PROFILE,
-  UPDATE_TAB,
   LOADING,
-  MESSAGE_HANDLER,
   SHOW_SETTINGS,
   ZOOM_TO,
   RESET_SETTINGS,
   TOGGLE_DIRECTIONS,
   UPDATE_DATETIME,
 } from '@/actions/types';
-import type { PossibleSettings } from '@/common/types';
+import type { PossibleSettings } from '@/components/types';
 import {
   settingsInit,
   settingsInitTruckOverride,
-} from '@/controls/settings-options';
+} from '@/components/settings-panel/settings-options';
 import type { AnyAction } from 'redux';
+import { z } from 'zod';
 
-export type Profile =
-  | 'auto'
-  | 'bicycle'
-  | 'pedestrian'
-  | 'car'
-  | 'truck'
-  | 'bus'
-  | 'motor_scooter'
-  | 'motorcycle';
+export const profileEnum = z.enum([
+  'auto',
+  'bicycle',
+  'pedestrian',
+  'car',
+  'truck',
+  'bus',
+  'motor_scooter',
+  'motorcycle',
+]);
+
+export type Profile = z.infer<typeof profileEnum>;
 
 export interface Message {
   receivedAt: number;
@@ -38,19 +39,10 @@ export interface Message {
 }
 
 const initialState = {
-  activeTab: 0,
   showSettings: false,
   showDirectionsPanel: true,
   coordinates: [] as number[][],
   loading: false,
-  message: {
-    receivedAt: 0,
-    type: null,
-    icon: null,
-    topic: null,
-    description: null,
-  },
-  profile: 'bicycle' as Profile,
   settings: { ...settingsInit } as PossibleSettings,
   dateTime: {
     type: -1,
@@ -63,12 +55,6 @@ export const common = (
   action: AnyAction
 ): typeof initialState => {
   switch (action.type) {
-    case MESSAGE_HANDLER: {
-      return {
-        ...state,
-        message: action.payload,
-      };
-    }
     case LOADING: {
       return {
         ...state,
@@ -109,29 +95,12 @@ export const common = (
     }
 
     case RESET_SETTINGS: {
-      return {
-        ...state,
-        settings: {
-          ...(state.profile === 'truck'
-            ? settingsInitTruckOverride
-            : settingsInit),
-        },
-      };
-    }
-
-    case UPDATE_TAB: {
-      const { activeTab } = action.payload;
-      return {
-        ...state,
-        activeTab,
-      };
-    }
-
-    case UPDATE_PROFILE: {
       const { profile } = action.payload;
       return {
         ...state,
-        profile,
+        settings: {
+          ...(profile === 'truck' ? settingsInitTruckOverride : settingsInit),
+        },
       };
     }
 

@@ -1,5 +1,3 @@
-import { Button, Popup, type ButtonProps } from 'semantic-ui-react';
-
 import { ReactComponent as BusSvg } from '@/images/bus.svg';
 import { ReactComponent as ScooterSvg } from '@/images/scooter.svg';
 import { ReactComponent as CarSvg } from '@/images/car.svg';
@@ -8,6 +6,19 @@ import { ReactComponent as BikeSvg } from '@/images/bike.svg';
 import { ReactComponent as PedestrianSvg } from '@/images/pedestrian.svg';
 import { ReactComponent as MotorbikeSvg } from '@/images/motorbike.svg';
 import type { Profile } from '@/reducers/common';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './ui/tooltip';
+import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
+import { useCallback } from 'react';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '@/store';
+import { resetSettings } from '@/actions/common-actions';
+import { Loader2 } from 'lucide-react';
+import { useSearch } from '@tanstack/react-router';
 
 const iconMap = {
   truck: <TruckSvg />,
@@ -20,45 +31,69 @@ const iconMap = {
 };
 
 interface ProfilePickerProps {
-  group: string;
   loading: boolean;
-  popupContent: string[];
-  profiles: Profile[];
-  activeProfile: Profile;
-  handleUpdateProfile: (
-    event: React.MouseEvent<HTMLButtonElement>,
-    data: ButtonProps
-  ) => void;
+  onProfileChange: (value: Profile) => void;
 }
 
 export const ProfilePicker = ({
-  group,
   loading,
-  popupContent,
-  profiles,
-  activeProfile,
-  handleUpdateProfile,
-}: ProfilePickerProps) => (
-  <Button.Group basic size="small" style={{ height: '40px' }}>
-    {profiles.map((profile, i) => (
-      <Popup
-        key={i}
-        content={popupContent[i]}
-        size="small"
-        trigger={
-          <Button
-            active={profile === activeProfile}
-            loading={profile === activeProfile ? loading : false}
-            content={iconMap[profile as keyof typeof iconMap]}
-            name="profile"
-            valhalla_profile={profile}
-            group={group}
-            style={{ padding: '.5em' }}
-            onClick={handleUpdateProfile}
-            data-testid={`profile-button-` + profile}
-          />
-        }
-      />
-    ))}
-  </Button.Group>
-);
+  onProfileChange,
+}: ProfilePickerProps) => {
+  const { profile: activeProfile } = useSearch({ from: '/$activeTab' });
+  const dispatch = useDispatch<AppDispatch>();
+
+  const handleUpdateProfile = useCallback(
+    (value: Profile) => {
+      dispatch(resetSettings(value));
+      onProfileChange(value);
+    },
+    [dispatch, onProfileChange]
+  );
+
+  const profiles = [
+    { value: 'bicycle', label: 'Bicycle' },
+    { value: 'pedestrian', label: 'Pedestrian' },
+    { value: 'car', label: 'Car' },
+    { value: 'truck', label: 'Truck' },
+    { value: 'bus', label: 'Bus' },
+    { value: 'motor_scooter', label: 'Motor Scooter' },
+    { value: 'motorcycle', label: 'Motorcycle' },
+  ];
+
+  return (
+    <div className="flex flex-col gap-2">
+      <TooltipProvider>
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          value={activeProfile}
+          onValueChange={(value: Profile) => {
+            if (value && value !== activeProfile) {
+              handleUpdateProfile(value);
+            }
+          }}
+        >
+          {profiles.map((profile, i) => (
+            <Tooltip key={i}>
+              <TooltipTrigger asChild>
+                <ToggleGroupItem
+                  value={profile.value}
+                  aria-label={`Select ${profile.label} profile`}
+                  data-testid={`profile-button-` + profile.value}
+                  data-state={profile.value === activeProfile ? 'on' : 'off'}
+                >
+                  {profile.value === activeProfile && loading ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    iconMap[profile.value as keyof typeof iconMap]
+                  )}
+                </ToggleGroupItem>
+              </TooltipTrigger>
+              <TooltipContent>{profile.label}</TooltipContent>
+            </Tooltip>
+          ))}
+        </ToggleGroup>
+      </TooltipProvider>
+    </div>
+  );
+};

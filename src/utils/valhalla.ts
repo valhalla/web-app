@@ -6,9 +6,9 @@ import type {
   IsochronesRequestParams,
   Settings,
   ValhallaRouteResponse,
-} from '@/common/types';
+} from '@/components/types';
 
-export const VALHALLA_OSM_URL = process.env.REACT_APP_VALHALLA_URL;
+export const VALHALLA_OSM_URL = import.meta.env.VITE_VALHALLA_URL;
 
 export const buildLocateRequest = (
   latLng: { lat: number; lng: number },

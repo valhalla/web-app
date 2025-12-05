@@ -241,9 +241,11 @@ const HeightGraph: React.FC<HeightGraphProps> = ({
     };
   }, [data, dimensions, onHighlight]);
 
-  useEffect(() => {
+  const [prevProps, setPrevProps] = useState({ width, height });
+  if (prevProps.width !== width || prevProps.height !== height) {
+    setPrevProps({ width, height });
     setDimensions({ width, height });
-  }, [width, height]);
+  }
 
   useEffect(() => {
     if (containerRef.current && isExpanded) {
@@ -291,7 +293,7 @@ const HeightGraph: React.FC<HeightGraphProps> = ({
         title="Height Graph"
         style={{
           position: 'absolute',
-          bottom: '60px',
+          bottom: '84px',
           right: '10px',
           width: '36px',
           height: '36px',

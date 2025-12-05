@@ -12,7 +12,10 @@ import {
 
 import { VALHALLA_OSM_URL } from '../utils/valhalla';
 import type { AnyAction } from 'redux';
-import type { ActiveWaypoint, ValhallaIsochroneResponse } from '@/common/types';
+import type {
+  ActiveWaypoint,
+  ValhallaIsochroneResponse,
+} from '@/components/types';
 
 interface IsochroneResult {
   data: ValhallaIsochroneResponse;
@@ -44,7 +47,7 @@ const initialState: IsochroneState = {
   generalize: 0,
   results: {
     [VALHALLA_OSM_URL!]: {
-      data: {},
+      data: null,
       show: true,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any,

@@ -7,7 +7,6 @@ import {
   CLEAR_WAYPOINTS,
   EMPTY_WAYPOINT,
   UPDATE_TEXTINPUT,
-  REQUEST_GEOCODE_RESULTS,
   RECEIVE_GEOCODE_RESULTS,
   RECEIVE_ROUTE_RESULTS,
   CLEAR_ROUTES,
@@ -19,12 +18,14 @@ import {
 
 import { VALHALLA_OSM_URL } from '../utils/valhalla';
 import type { AnyAction } from 'redux';
-import type { ActiveWaypoint, ParsedDirectionsGeometry } from '@/common/types';
+import type {
+  ActiveWaypoint,
+  ParsedDirectionsGeometry,
+} from '@/components/types';
 
 export interface Waypoint {
   id: string;
   geocodeResults: ActiveWaypoint[];
-  isFetching: boolean;
   userInput: string;
 }
 
@@ -58,6 +59,11 @@ export interface DirectionsState {
   inclineDeclineTotal?: InclineDeclineTotal;
 }
 
+export const defaultWaypoints: Waypoint[] = [
+  { id: '0', geocodeResults: [], userInput: '' },
+  { id: '1', geocodeResults: [], userInput: '' },
+];
+
 const initialState: DirectionsState = {
   successful: false,
   highlightSegment: {
@@ -66,7 +72,7 @@ const initialState: DirectionsState = {
     // -1 is main route, other values are indices into the alternate array
     alternate: -1,
   },
-  waypoints: [],
+  waypoints: defaultWaypoints,
   zoomObj: {
     index: -1,
     timeNow: -1,
@@ -74,7 +80,7 @@ const initialState: DirectionsState = {
   selectedAddresses: '',
   results: {
     [VALHALLA_OSM_URL!]: {
-      data: {},
+      data: null,
       show: {
         '-1': true,
       },
@@ -118,7 +124,7 @@ export const directions = (
           ...state.results,
           [action.payload]: {
             ...state.results[action.payload],
-            data: {},
+            data: null,
           },
         },
       };
@@ -158,19 +164,8 @@ export const directions = (
           i === action.payload.index
             ? {
                 ...waypoint,
-                isFetching: false,
                 geocodeResults: action.payload.addresses,
               }
-            : waypoint
-        ),
-      };
-
-    case REQUEST_GEOCODE_RESULTS:
-      return {
-        ...state,
-        waypoints: state.waypoints.map((waypoint, i) =>
-          i === action.payload.index
-            ? { ...waypoint, isFetching: true }
             : waypoint
         ),
       };
