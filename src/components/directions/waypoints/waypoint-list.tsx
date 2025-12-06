@@ -16,9 +16,10 @@ import {
 
 import { Waypoint } from './waypoint-item';
 import { useDirectionsStore } from '@/stores/directions-store';
+import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 
 export const Waypoints = () => {
-  const makeRequest = useDirectionsStore((state) => state.makeRequest);
+  const { refetch: refetchDirections } = useDirectionsQuery();
   const waypoints = useDirectionsStore((state) => state.waypoints);
   const setWaypoint = useDirectionsStore((state) => state.setWaypoint);
 
@@ -48,10 +49,10 @@ export const Waypoints = () => {
       if (oldIndex !== -1 && newIndex !== -1) {
         const items = arrayMove(waypoints, oldIndex, newIndex);
         setWaypoint(items);
-        makeRequest();
+        refetchDirections();
       }
     },
-    [setWaypoint, makeRequest, waypoints]
+    [setWaypoint, refetchDirections, waypoints]
   );
 
   return (

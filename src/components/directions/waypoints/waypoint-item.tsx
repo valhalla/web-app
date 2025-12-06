@@ -15,6 +15,7 @@ import {
   defaultWaypoints,
   useDirectionsStore,
 } from '@/stores/directions-store';
+import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 
 interface WaypointProps {
   id: string;
@@ -35,7 +36,7 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
     (state) => state.receiveGeocodeResults
   );
   const updateTextInput = useDirectionsStore((state) => state.updateTextInput);
-  const makeRequest = useDirectionsStore((state) => state.makeRequest);
+  const { refetch: refetchDirections } = useDirectionsQuery();
   const doRemoveWaypoint = useDirectionsStore(
     (state) => state.doRemoveWaypoint
   );
@@ -57,9 +58,9 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
         addressindex: result.addressindex,
       });
 
-      makeRequest();
+      refetchDirections();
     },
-    [updateTextInput, index, makeRequest]
+    [updateTextInput, index, refetchDirections]
   );
 
   const style = {
@@ -112,7 +113,7 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
                 size="icon-sm"
                 onClick={() => {
                   doRemoveWaypoint({ index });
-                  makeRequest();
+                  refetchDirections();
                 }}
                 data-testid="remove-waypoint-button"
                 disabled={

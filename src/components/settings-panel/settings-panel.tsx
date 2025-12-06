@@ -17,8 +17,8 @@ import {
 import { X, Copy, RotateCcw } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useParams, useSearch } from '@tanstack/react-router';
-import { useDirectionsStore } from '@/stores/directions-store';
-import { useIsochronesStore } from '@/stores/isochrones-store';
+import { useDirectionsQuery } from '@/hooks/use-directions-queries';
+import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
 
 // Define the profile keys that have settings (excluding 'auto')
 type ProfileWithSettings = Exclude<Profile, 'auto'>;
@@ -32,18 +32,16 @@ export const SettingsPanel = () => {
   const resetSettings = useCommonStore((state) => state.resetSettings);
   const toggleSettings = useCommonStore((state) => state.toggleSettings);
   const [copied, setCopied] = useState(false);
-  const makeRequest = useDirectionsStore((state) => state.makeRequest);
-  const makeIsochronesRequest = useIsochronesStore(
-    (state) => state.makeIsochronesRequest
-  );
+  const { refetch: refetchDirections } = useDirectionsQuery();
+  const { refetch: refetchIsochrones } = useIsochronesQuery();
 
   const handleMakeRequest = useCallback(() => {
     if (activeTab === 'directions') {
-      makeRequest();
+      refetchDirections();
     } else {
-      makeIsochronesRequest();
+      refetchIsochrones();
     }
-  }, [activeTab, makeRequest, makeIsochronesRequest]);
+  }, [activeTab, refetchDirections, refetchIsochrones]);
 
   const handleUpdateSettings = useCallback(
     ({
@@ -56,12 +54,12 @@ export const SettingsPanel = () => {
       updateSettings(name, value);
 
       if (activeTab === 'directions') {
-        makeRequest();
+        refetchDirections();
       } else {
-        makeIsochronesRequest();
+        refetchIsochrones();
       }
     },
-    [activeTab, updateSettings, makeRequest, makeIsochronesRequest]
+    [activeTab, updateSettings, refetchDirections, refetchIsochrones]
   );
 
   const handleCopySettings = useCallback(async () => {
@@ -78,11 +76,11 @@ export const SettingsPanel = () => {
   const resetConfigSettings = useCallback(() => {
     resetSettings(profile || 'bicycle');
     if (activeTab === 'directions') {
-      makeRequest();
+      refetchDirections();
     } else {
-      makeIsochronesRequest();
+      refetchIsochrones();
     }
-  }, [activeTab, profile, resetSettings, makeRequest, makeIsochronesRequest]);
+  }, [activeTab, profile, resetSettings, refetchDirections, refetchIsochrones]);
 
   const hasProfileSettings =
     profileSettings[profile as ProfileWithSettings].boolean.length > 0;

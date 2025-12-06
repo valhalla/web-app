@@ -43,6 +43,14 @@ import { getInitialMapPosition, LAST_CENTER_KEY } from './utils';
 import { useCommonStore } from '@/stores/common-store';
 import { useDirectionsStore } from '@/stores/directions-store';
 import { useIsochronesStore } from '@/stores/isochrones-store';
+import {
+  useDirectionsQuery,
+  useReverseGeocodeDirections,
+} from '@/hooks/use-directions-queries';
+import {
+  useIsochronesQuery,
+  useReverseGeocodeIsochrones,
+} from '@/hooks/use-isochrones-queries';
 
 const { center, zoom: zoom_initial } = getInitialMapPosition();
 
@@ -91,22 +99,15 @@ export const MapComponent = () => {
   const updateInclineDecline = useDirectionsStore(
     (state) => state.updateInclineDecline
   );
-  const updatePlaceholderAddressAtIndex = useDirectionsStore(
-    (state) => state.updatePlaceholderAddressAtIndex
-  );
-  const fetchReverseGeocode = useDirectionsStore(
-    (state) => state.fetchReverseGeocode
-  );
   const highlightSegment = useDirectionsStore(
     (state) => state.highlightSegment
   );
-  const makeRequest = useDirectionsStore((state) => state.makeRequest);
-  const makeIsochronesRequest = useIsochronesStore(
-    (state) => state.makeIsochronesRequest
-  );
-  const fetchReverseGeocodeIso = useIsochronesStore(
-    (state) => state.fetchReverseGeocodeIso
-  );
+  const { refetch: refetchDirections } = useDirectionsQuery();
+  const { refetch: refetchIsochrones } = useIsochronesQuery();
+  const { reverseGeocode: reverseGeocodeDirections } =
+    useReverseGeocodeDirections();
+  const { reverseGeocode: reverseGeocodeIsochrones } =
+    useReverseGeocodeIsochrones();
   const [heightgraphHoverDistance, setHeightgraphHoverDistance] = useState<
     number | null
   >(null);
@@ -173,11 +174,11 @@ export const MapComponent = () => {
     updateSettings('exclude_polygons', excludePolygons as unknown as string);
 
     if (activeTab === 'directions') {
-      makeRequest();
+      refetchDirections();
     } else {
-      makeIsochronesRequest();
+      refetchIsochrones();
     }
-  }, [activeTab, makeRequest, updateSettings, makeIsochronesRequest]);
+  }, [activeTab, refetchDirections, updateSettings, refetchIsochrones]);
 
   const updateWaypointPosition = useCallback(
     (object: {
@@ -185,21 +186,24 @@ export const MapComponent = () => {
       index: number;
       fromDrag?: boolean;
     }) => {
-      updatePlaceholderAddressAtIndex(
-        object.index,
+      reverseGeocodeDirections(
         object.latLng.lng,
-        object.latLng.lat
-      );
-      fetchReverseGeocode(object);
+        object.latLng.lat,
+        object.index
+      ).then(() => {
+        refetchDirections();
+      });
     },
-    [updatePlaceholderAddressAtIndex, fetchReverseGeocode]
+    [reverseGeocodeDirections, refetchDirections]
   );
 
   const updateIsoPosition = useCallback(
     (lng: number, lat: number) => {
-      fetchReverseGeocodeIso(lng, lat);
+      reverseGeocodeIsochrones(lng, lat).then(() => {
+        refetchIsochrones();
+      });
     },
-    [fetchReverseGeocodeIso]
+    [reverseGeocodeIsochrones, refetchIsochrones]
   );
 
   const handleOpenOSM = useCallback(() => {

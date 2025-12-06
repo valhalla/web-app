@@ -8,17 +8,20 @@ import { parseUrlParams } from '@/utils/parse-url-params';
 import { isValidCoordinates } from '@/utils/geom';
 import { useNavigate } from '@tanstack/react-router';
 import { useMap } from 'react-map-gl/maplibre';
+import {
+  useIsochronesQuery,
+  useReverseGeocodeIsochrones,
+} from '@/hooks/use-isochrones-queries';
 
 export const IsochronesControl = () => {
   const { mainMap } = useMap();
   const results = useIsochronesStore((state) => state.results);
   const geocodeResults = useIsochronesStore((state) => state.geocodeResults);
-  const fetchReverseGeocodeIso = useIsochronesStore(
-    (state) => state.fetchReverseGeocodeIso
-  );
   const initialUrlParams = useRef(parseUrlParams());
   const urlParamsProcessed = useRef(false);
   const navigate = useNavigate({ from: '/$activeTab' });
+  const { refetch: refetchIsochrones } = useIsochronesQuery();
+  const { reverseGeocode } = useReverseGeocodeIsochrones();
 
   useEffect(() => {
     if (urlParamsProcessed.current || !mainMap) return;
@@ -34,7 +37,9 @@ export const IsochronesControl = () => {
 
         if (!isValidCoordinates(lng, lat) || isNaN(lng) || isNaN(lat)) continue;
 
-        fetchReverseGeocodeIso(lng, lat);
+        reverseGeocode(lng, lat).then(() => {
+          refetchIsochrones();
+        });
       }
 
       mainMap.flyTo({
@@ -44,7 +49,7 @@ export const IsochronesControl = () => {
     }
 
     urlParamsProcessed.current = true;
-  }, [mainMap, fetchReverseGeocodeIso]);
+  }, [mainMap, reverseGeocode, refetchIsochrones]);
 
   // Sync isochrone center to URL
   useEffect(() => {

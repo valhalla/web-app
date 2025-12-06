@@ -18,14 +18,14 @@ import {
   defaultWaypoints,
   useDirectionsStore,
 } from '@/stores/directions-store';
+import {
+  useDirectionsQuery,
+  useReverseGeocodeDirections,
+} from '@/hooks/use-directions-queries';
 
 export const DirectionsControl = () => {
   const waypoints = useDirectionsStore((state) => state.waypoints);
   const results = useDirectionsStore((state) => state.results);
-  const fetchReverseGeocodePerma = useDirectionsStore(
-    (state) => state.fetchReverseGeocodePerma
-  );
-  const makeRequest = useDirectionsStore((state) => state.makeRequest);
   const addEmptyWaypointToEnd = useDirectionsStore(
     (state) => state.addEmptyWaypointToEnd
   );
@@ -36,6 +36,8 @@ export const DirectionsControl = () => {
   const navigate = useNavigate({ from: '/$activeTab' });
   const updateDateTime = useCommonStore((state) => state.updateDateTime);
   const dateTime = useCommonStore((state) => state.dateTime);
+  const { refetch: refetchDirections } = useDirectionsQuery();
+  const { reverseGeocode } = useReverseGeocodeDirections();
 
   useEffect(() => {
     if (urlParamsProcessed.current) return;
@@ -52,11 +54,9 @@ export const DirectionsControl = () => {
         if (!isValidCoordinates(lng, lat) || isNaN(lng) || isNaN(lat)) continue;
 
         const index = i / 2;
-        const payload = { latLng: { lat, lng }, fromPerma: true, index };
-
-        fetchReverseGeocodePerma(payload);
+        reverseGeocode(lng, lat, index, { isPermalink: true });
       }
-      makeRequest();
+      refetchDirections();
     }
 
     urlParamsProcessed.current = true;
@@ -86,9 +86,9 @@ export const DirectionsControl = () => {
   const handleDateTimeChange = useCallback(
     (field: 'type' | 'value', value: string) => {
       updateDateTime(field, value);
-      makeRequest();
+      refetchDirections();
     },
-    [updateDateTime, makeRequest]
+    [updateDateTime, refetchDirections]
   );
 
   const handleAddWaypoint = useCallback(() => {

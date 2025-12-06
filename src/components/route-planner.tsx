@@ -19,8 +19,8 @@ import { useParams, useNavigate } from '@tanstack/react-router';
 import { ProfilePicker } from './profile-picker';
 import { SettingsButton } from './settings-button';
 import type { Profile } from '@/stores/common-store';
-import { useDirectionsStore } from '@/stores/directions-store';
-import { useIsochronesStore } from '@/stores/isochrones-store';
+import { useDirectionsQuery } from '@/hooks/use-directions-queries';
+import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
 
 export const RoutePlanner = () => {
   const { activeTab } = useParams({ from: '/$activeTab' });
@@ -28,10 +28,8 @@ export const RoutePlanner = () => {
   const directionsPanelOpen = useCommonStore(
     (state) => state.directionsPanelOpen
   );
-  const makeRequest = useDirectionsStore((state) => state.makeRequest);
-  const makeIsochronesRequest = useIsochronesStore(
-    (state) => state.makeIsochronesRequest
-  );
+  const { refetch: refetchDirections } = useDirectionsQuery();
+  const { refetch: refetchIsochrones } = useIsochronesQuery();
   const loading = useCommonStore((state) => state.loading);
   const toggleDirections = useCommonStore((state) => state.toggleDirections);
 
@@ -61,14 +59,14 @@ export const RoutePlanner = () => {
     });
 
     if (activeTab === 'isochrones') {
-      makeIsochronesRequest();
+      refetchIsochrones();
       setTimeout(() => {
-        makeRequest();
+        refetchDirections();
       }, 1000);
     } else {
-      makeRequest();
+      refetchDirections();
       setTimeout(() => {
-        makeIsochronesRequest();
+        refetchIsochrones();
       }, 1000);
     }
   };

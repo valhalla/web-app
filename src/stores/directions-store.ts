@@ -1,23 +1,10 @@
 import type {
   ActiveWaypoint,
   ParsedDirectionsGeometry,
-  ValhallaRouteResponse,
 } from '@/components/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import axios from 'axios';
-import { toast } from 'sonner';
-
-import { reverse_geocode, parseGeocodeResponse } from '@/utils/nominatim';
-import {
-  VALHALLA_OSM_URL,
-  buildDirectionsRequest,
-  parseDirectionsGeometry,
-} from '@/utils/valhalla';
-import { filterProfileSettings } from '@/utils/filter-profile-settings';
-import { useCommonStore } from '@/stores/common-store';
-import { router } from '@/routes';
 
 export interface Waypoint {
   id: string;
@@ -72,13 +59,6 @@ const hasActiveRoute = (waypoints: Waypoint[]): boolean =>
       wp.geocodeResults.length > 0 && wp.geocodeResults.some((r) => r.selected)
   ).length >= 2;
 
-const getActiveWaypoints = (waypoints: Waypoint[]): ActiveWaypoint[] =>
-  waypoints.flatMap((wp) => wp.geocodeResults.filter((r) => r.selected));
-
-const serverMapping: Record<string, string> = {
-  [VALHALLA_OSM_URL!]: 'OSM',
-};
-
 export interface DirectionsState {
   successful: boolean;
   highlightSegment: HighlightSegment;
@@ -116,21 +96,13 @@ interface DirectionsActions {
     lng: number,
     lat: number
   ) => void;
-
-  makeRequest: () => void;
-  fetchReverseGeocodePerma: (params: { index: number; latLng: LatLng }) => void;
-  fetchReverseGeocode: (params: {
-    index: number;
-    latLng: LatLng;
-    fromDrag?: boolean;
-  }) => void;
 }
 
 type DirectionsStore = DirectionsState & DirectionsActions;
 
 export const useDirectionsStore = create<DirectionsStore>()(
   devtools(
-    immer((set, get) => ({
+    immer((set) => ({
       successful: false,
       highlightSegment: { startIndex: -1, endIndex: -1, alternate: -1 },
       waypoints: defaultWaypoints,
@@ -346,145 +318,6 @@ export const useDirectionsStore = create<DirectionsStore>()(
           undefined,
           'updatePlaceholderAddressAtIndex'
         ),
-
-      // Async actions
-      makeRequest: () => {
-        const { waypoints } = get();
-        const profile = router.state.location.search.profile;
-        const {
-          dateTime,
-          settings: rawSettings,
-          showLoading,
-          zoomTo,
-        } = useCommonStore.getState();
-
-        const activeWaypoints = getActiveWaypoints(waypoints);
-        if (activeWaypoints.length < 2) return;
-
-        const settings = filterProfileSettings(
-          profile || 'bicycle',
-          rawSettings
-        );
-        const valhallaRequest = buildDirectionsRequest({
-          profile: profile || 'bicycle',
-          activeWaypoints,
-          // @ts-expect-error todo: initial settings and filtered settings types mismatch
-          settings,
-          dateTime,
-        });
-
-        showLoading(true);
-
-        axios
-          .get<ValhallaRouteResponse>(VALHALLA_OSM_URL + '/route', {
-            params: { json: JSON.stringify(valhallaRequest.json) },
-            headers: { 'Content-Type': 'application/json' },
-          })
-          .then(({ data }) => {
-            (data as ParsedDirectionsGeometry).decodedGeometry =
-              parseDirectionsGeometry(data);
-
-            data.alternates?.forEach((alternate, i) => {
-              if (alternate) {
-                (
-                  data.alternates![i] as ParsedDirectionsGeometry
-                ).decodedGeometry = parseDirectionsGeometry(alternate);
-              }
-            });
-
-            get().receiveRouteResults({
-              data: data as ParsedDirectionsGeometry,
-            });
-            zoomTo((data as ParsedDirectionsGeometry).decodedGeometry);
-          })
-          .catch(({ response }) => {
-            let error_msg = response.data.error;
-            if (response.data.error_code === 154) {
-              error_msg += ` for ${valhallaRequest.json.costing}.`;
-            }
-            get().clearRoutes();
-
-            toast.warning(`${response.data.status}`, {
-              description: `${serverMapping[VALHALLA_OSM_URL!]}: ${error_msg}`,
-              position: 'bottom-center',
-              duration: 5000,
-              closeButton: true,
-            });
-          })
-          .finally(() => {
-            setTimeout(() => showLoading(false), 500);
-          });
-      },
-
-      fetchReverseGeocodePerma: ({ index, latLng }) => {
-        const { lng, lat } = latLng;
-        const {
-          addEmptyWaypointToEnd,
-          updatePlaceholderAddressAtIndex,
-          receiveGeocodeResults,
-          updateTextInput,
-        } = get();
-
-        if (index > 1) {
-          addEmptyWaypointToEnd();
-        }
-
-        updatePlaceholderAddressAtIndex(index, lng, lat);
-
-        reverse_geocode(lng, lat)
-          .then((response) => {
-            const addresses = parseGeocodeResponse(response.data, [lng, lat]);
-            if (addresses.length === 0) {
-              toast.warning('No addresses', {
-                description: 'Sorry, no addresses can be found.',
-                position: 'bottom-center',
-                duration: 5000,
-                closeButton: true,
-              });
-            }
-
-            receiveGeocodeResults({
-              addresses: addresses as ActiveWaypoint[],
-              index,
-            });
-            updateTextInput({
-              inputValue: addresses[0]?.title || '',
-              index,
-              addressindex: 0,
-            });
-          })
-          .catch(console.error);
-      },
-
-      fetchReverseGeocode: ({ index, latLng }) => {
-        const { lng, lat } = latLng;
-        const { receiveGeocodeResults, updateTextInput, makeRequest } = get();
-
-        reverse_geocode(lng, lat)
-          .then((response) => {
-            const addresses = parseGeocodeResponse(response.data, [lng, lat]);
-            if (addresses.length === 0) {
-              toast.warning('No addresses', {
-                description: 'Sorry, no addresses can be found.',
-                position: 'bottom-center',
-                duration: 5000,
-                closeButton: true,
-              });
-            }
-
-            receiveGeocodeResults({
-              addresses: addresses as ActiveWaypoint[],
-              index,
-            });
-            updateTextInput({
-              inputValue: addresses[0]?.title || '',
-              index,
-              addressindex: 0,
-            });
-            makeRequest();
-          })
-          .catch(console.error);
-      },
     })),
     { name: 'directions-store' }
   )

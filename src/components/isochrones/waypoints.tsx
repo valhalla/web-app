@@ -24,13 +24,12 @@ import { SliderSetting } from '@/components/ui/slider-setting';
 import { AccessibleIcon } from '@radix-ui/react-accessible-icon';
 import { parseUrlParams } from '@/utils/parse-url-params';
 import { useNavigate } from '@tanstack/react-router';
+import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
 
 export const Waypoints = () => {
   const params = parseUrlParams();
   const updateSettings = useIsochronesStore((state) => state.updateSettings);
-  const makeIsochronesRequest = useIsochronesStore(
-    (state) => state.makeIsochronesRequest
-  );
+  const { refetch: refetchIsochrones } = useIsochronesQuery();
   const clearIsos = useIsochronesStore((state) => state.clearIsos);
   const updateTextInput = useIsochronesStore((state) => state.updateTextInput);
   const maxRange = useIsochronesStore((state) => state.maxRange);
@@ -45,8 +44,8 @@ export const Waypoints = () => {
   );
 
   const makeIsochronesRequestDebounced = useMemo(
-    () => debounce(100, () => makeIsochronesRequest()),
-    [makeIsochronesRequest]
+    () => debounce(100, () => refetchIsochrones()),
+    [refetchIsochrones]
   );
 
   const handleRemoveIsos = () => {
