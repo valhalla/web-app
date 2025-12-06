@@ -1,11 +1,4 @@
-import {
-  doRemoveWaypoint,
-  receiveGeocodeResults,
-  makeRequest,
-  updateTextInput,
-} from '@/actions/directions-actions';
 import { useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -17,9 +10,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { WaypointSearch } from '@/components/ui/waypoint-search';
-import type { AppDispatch, RootState } from '@/store';
 import { GripVertical, Trash } from 'lucide-react';
-import { defaultWaypoints } from '@/reducers/directions';
+import {
+  defaultWaypoints,
+  useDirectionsStore,
+} from '@/stores/directions-store';
+import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 
 interface WaypointProps {
   id: string;
@@ -35,33 +31,36 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
     transition,
     isDragging,
   } = useSortable({ id });
-  const dispatch = useDispatch<AppDispatch>();
-  const waypoints = useSelector(
-    (state: RootState) => state.directions.waypoints
+  const waypoints = useDirectionsStore((state) => state.waypoints);
+  const receiveGeocodeResults = useDirectionsStore(
+    (state) => state.receiveGeocodeResults
+  );
+  const updateTextInput = useDirectionsStore((state) => state.updateTextInput);
+  const { refetch: refetchDirections } = useDirectionsQuery();
+  const doRemoveWaypoint = useDirectionsStore(
+    (state) => state.doRemoveWaypoint
   );
   const waypoint = waypoints[index];
   const { userInput, geocodeResults } = waypoint!;
 
   const handleGeocodeResults = useCallback(
     (addresses: ActiveWaypoint[]) => {
-      dispatch(receiveGeocodeResults({ addresses, index }));
+      receiveGeocodeResults({ addresses, index });
     },
-    [dispatch, index]
+    [receiveGeocodeResults, index]
   );
 
   const handleResultSelect = useCallback(
     (result: ActiveWaypoint) => {
-      dispatch(
-        updateTextInput({
-          inputValue: result.title,
-          index: index,
-          addressindex: result.addressindex,
-        })
-      );
+      updateTextInput({
+        inputValue: result.title,
+        index: index,
+        addressindex: result.addressindex,
+      });
 
-      dispatch(makeRequest());
+      refetchDirections();
     },
-    [dispatch, index]
+    [updateTextInput, index, refetchDirections]
   );
 
   const style = {
@@ -112,7 +111,10 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
               <Button
                 variant="ghost"
                 size="icon-sm"
-                onClick={() => dispatch(doRemoveWaypoint(index))}
+                onClick={() => {
+                  doRemoveWaypoint({ index });
+                  refetchDirections();
+                }}
                 data-testid="remove-waypoint-button"
                 disabled={
                   JSON.stringify(waypoints) === JSON.stringify(defaultWaypoints)

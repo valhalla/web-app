@@ -1,29 +1,27 @@
 import { useEffect, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { Waypoints } from './waypoints';
-
 import { SettingsFooter } from '@/components/settings-footer';
-
-import { fetchReverseGeocodeIso } from '@/actions/isochrones-actions';
-import type { AppDispatch, RootState } from '@/store';
+import { useIsochronesStore } from '@/stores/isochrones-store';
 import { Separator } from '@/components/ui/separator';
 import { IsochroneCard } from './isochrone-card';
-import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import { parseUrlParams } from '@/utils/parse-url-params';
 import { isValidCoordinates } from '@/utils/geom';
 import { useNavigate } from '@tanstack/react-router';
 import { useMap } from 'react-map-gl/maplibre';
+import {
+  useIsochronesQuery,
+  useReverseGeocodeIsochrones,
+} from '@/hooks/use-isochrones-queries';
 
 export const IsochronesControl = () => {
   const { mainMap } = useMap();
-  const { results, geocodeResults } = useSelector(
-    (state: RootState) => state.isochrones
-  );
-  const dispatch = useDispatch<AppDispatch>();
+  const results = useIsochronesStore((state) => state.results);
+  const geocodeResults = useIsochronesStore((state) => state.geocodeResults);
   const initialUrlParams = useRef(parseUrlParams());
   const urlParamsProcessed = useRef(false);
   const navigate = useNavigate({ from: '/$activeTab' });
+  const { refetch: refetchIsochrones } = useIsochronesQuery();
+  const { reverseGeocode } = useReverseGeocodeIsochrones();
 
   useEffect(() => {
     if (urlParamsProcessed.current || !mainMap) return;
@@ -39,7 +37,9 @@ export const IsochronesControl = () => {
 
         if (!isValidCoordinates(lng, lat) || isNaN(lng) || isNaN(lat)) continue;
 
-        dispatch(fetchReverseGeocodeIso(lng, lat));
+        reverseGeocode(lng, lat).then(() => {
+          refetchIsochrones();
+        });
       }
 
       mainMap.flyTo({
@@ -49,7 +49,7 @@ export const IsochronesControl = () => {
     }
 
     urlParamsProcessed.current = true;
-  }, [mainMap, dispatch]);
+  }, [mainMap, reverseGeocode, refetchIsochrones]);
 
   // Sync isochrone center to URL
   useEffect(() => {
@@ -74,13 +74,10 @@ export const IsochronesControl = () => {
         <Separator />
         <SettingsFooter />
       </div>
-      {results[VALHALLA_OSM_URL!]!.data && (
+      {results.data && (
         <div>
           <h3 className="font-bold mb-2">Isochrones</h3>
-          <IsochroneCard
-            data={results[VALHALLA_OSM_URL!]!.data}
-            showOnMap={results[VALHALLA_OSM_URL!]!.show}
-          />
+          <IsochroneCard data={results.data} showOnMap={results.show} />
         </div>
       )}
     </>

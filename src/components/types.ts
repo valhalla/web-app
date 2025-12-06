@@ -1,7 +1,3 @@
-import type { RootState } from '@/store';
-import type { AnyAction } from 'redux';
-import type { ThunkAction } from 'redux-thunk';
-
 export interface ActiveWaypoint {
   title: string;
   description?: string;
@@ -236,13 +232,6 @@ export interface ValhallaRouteResponse {
 export interface ValhallaIsochroneResponse extends GeoJSON.FeatureCollection {
   id: string;
 }
-
-export type ThunkResult<T = void> = ThunkAction<
-  T,
-  RootState,
-  unknown,
-  AnyAction
->;
 
 export interface FetchGeocodeObject {
   inputValue: string;

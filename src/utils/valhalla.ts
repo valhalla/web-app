@@ -1,4 +1,4 @@
-import type { Profile } from '@/reducers/common';
+import type { Profile } from '@/stores/common-store';
 import { decode } from './polyline';
 import type {
   ActiveWaypoint,

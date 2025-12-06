@@ -1,21 +1,13 @@
 import { useState, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { profileSettings, generalSettings } from './settings-options';
-import {
-  updateSettings,
-  doShowSettings,
-  filterProfileSettings,
-  resetSettings,
-} from '@/actions/common-actions';
+import { filterProfileSettings } from '@/utils/filter-profile-settings';
+import type { PossibleSettings } from '@/components/types';
 
 import { SliderSetting } from '@/components/ui/slider-setting';
 import { CheckboxSetting } from '@/components/ui/checkbox-setting';
 import { SelectSetting } from '@/components/ui/select-setting';
-import { makeRequest } from '@/actions/directions-actions';
-import { makeIsochronesRequest } from '@/actions/isochrones-actions';
-import type { AppDispatch, RootState } from '@/store';
-import type { Profile } from '@/reducers/common';
+import { useCommonStore, type Profile } from '@/stores/common-store';
 import {
   Sheet,
   SheetContent,
@@ -25,6 +17,8 @@ import {
 import { X, Copy, RotateCcw } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useParams, useSearch } from '@tanstack/react-router';
+import { useDirectionsQuery } from '@/hooks/use-directions-queries';
+import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
 
 // Define the profile keys that have settings (excluding 'auto')
 type ProfileWithSettings = Exclude<Profile, 'auto'>;
@@ -32,37 +26,40 @@ type ProfileWithSettings = Exclude<Profile, 'auto'>;
 export const SettingsPanel = () => {
   const { profile } = useSearch({ from: '/$activeTab' });
   const { activeTab } = useParams({ from: '/$activeTab' });
-  const dispatch = useDispatch<AppDispatch>();
-  const { settings, showSettings } = useSelector(
-    (state: RootState) => state.common
-  );
+  const settings = useCommonStore((state) => state.settings);
+  const settingsPanelOpen = useCommonStore((state) => state.settingsPanelOpen);
+  const updateSettings = useCommonStore((state) => state.updateSettings);
+  const resetSettings = useCommonStore((state) => state.resetSettings);
+  const toggleSettings = useCommonStore((state) => state.toggleSettings);
   const [copied, setCopied] = useState(false);
+  const { refetch: refetchDirections } = useDirectionsQuery();
+  const { refetch: refetchIsochrones } = useIsochronesQuery();
 
   const handleMakeRequest = useCallback(() => {
     if (activeTab === 'directions') {
-      dispatch(makeRequest());
+      refetchDirections();
     } else {
-      dispatch(makeIsochronesRequest());
+      refetchIsochrones();
     }
-  }, [dispatch, activeTab]);
+  }, [activeTab, refetchDirections, refetchIsochrones]);
 
   const handleUpdateSettings = useCallback(
     ({
       name,
       value,
     }: {
-      name: string;
-      value: string | number | boolean | string[];
+      name: keyof PossibleSettings;
+      value: PossibleSettings[keyof PossibleSettings];
     }) => {
-      dispatch(updateSettings({ name, value }));
+      updateSettings(name, value);
 
       if (activeTab === 'directions') {
-        dispatch(makeRequest());
+        refetchDirections();
       } else {
-        dispatch(makeIsochronesRequest());
+        refetchIsochrones();
       }
     },
-    [dispatch, activeTab]
+    [activeTab, updateSettings, refetchDirections, refetchIsochrones]
   );
 
   const handleCopySettings = useCallback(async () => {
@@ -77,19 +74,19 @@ export const SettingsPanel = () => {
   }, [profile, settings]);
 
   const resetConfigSettings = useCallback(() => {
-    dispatch(resetSettings(profile || 'bicycle'));
+    resetSettings(profile || 'bicycle');
     if (activeTab === 'directions') {
-      dispatch(makeRequest());
+      refetchDirections();
     } else {
-      dispatch(makeIsochronesRequest());
+      refetchIsochrones();
     }
-  }, [dispatch, activeTab, profile]);
+  }, [activeTab, profile, resetSettings, refetchDirections, refetchIsochrones]);
 
   const hasProfileSettings =
     profileSettings[profile as ProfileWithSettings].boolean.length > 0;
 
   return (
-    <Sheet open={showSettings} modal={false}>
+    <Sheet open={settingsPanelOpen} modal={false}>
       <SheetContent
         side="right"
         className="w-[350px] sm:max-w-[unset] max-h-screen overflow-y-auto gap-1"
@@ -99,7 +96,7 @@ export const SettingsPanel = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => dispatch(doShowSettings())}
+            onClick={toggleSettings}
             data-testid="close-settings-button"
           >
             <X className="size-4" />
@@ -131,12 +128,7 @@ export const SettingsPanel = () => {
                         value={(settings[option.param] as number) ?? 0}
                         unit={option.unit}
                         onValueChange={(values) => {
-                          dispatch(
-                            updateSettings({
-                              name: option.param,
-                              value: values[0] ?? 0,
-                            })
-                          );
+                          updateSettings(option.param, values[0] ?? 0);
                         }}
                         onValueCommit={handleMakeRequest}
                         onInputChange={(values) => {
@@ -216,12 +208,7 @@ export const SettingsPanel = () => {
                       value={(settings[option.param] as number) ?? 0}
                       unit={option.unit}
                       onValueChange={(values) => {
-                        dispatch(
-                          updateSettings({
-                            name: option.param,
-                            value: values[0] ?? 0,
-                          })
-                        );
+                        updateSettings(option.param, values[0] ?? 0);
                       }}
                       onValueCommit={handleMakeRequest}
                       onInputChange={(values) => {
@@ -283,12 +270,7 @@ export const SettingsPanel = () => {
                     value={(settings[option.param] as number) ?? 0}
                     unit={option.unit}
                     onValueChange={(values) => {
-                      dispatch(
-                        updateSettings({
-                          name: option.param,
-                          value: values[0] ?? 0,
-                        })
-                      );
+                      updateSettings(option.param, values[0] ?? 0);
                     }}
                     onValueCommit={handleMakeRequest}
                     onInputChange={(values) => {

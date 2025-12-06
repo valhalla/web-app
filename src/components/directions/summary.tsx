@@ -1,11 +1,6 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
-import { showProvider } from '../../actions/directions-actions';
 
 import { formatDuration } from '@/utils/date-time';
-import { VALHALLA_OSM_URL } from '@/utils/valhalla';
-import type { AppDispatch, RootState } from '@/store';
 import type { Summary as SummaryType } from '@/components/types';
 import {
   ArrowUp,
@@ -20,6 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { MetricItem } from '@/components/ui/metric-item';
 import { RouteAttributes } from '@/components/ui/route-attributes';
+import { useDirectionsStore } from '@/stores/directions-store';
 
 export const Summary = ({
   summary,
@@ -30,12 +26,14 @@ export const Summary = ({
   title: string;
   index: number;
 }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { results, inclineDeclineTotal } = useSelector(
-    (state: RootState) => state.directions
+  const results = useDirectionsStore((state) => state.results);
+  const inclineDeclineTotal = useDirectionsStore(
+    (state) => state.inclineDeclineTotal
   );
+  const toggleShowOnMap = useDirectionsStore((state) => state.toggleShowOnMap);
+
   const handleChange = (checked: boolean) => {
-    dispatch(showProvider(VALHALLA_OSM_URL!, checked, index));
+    toggleShowOnMap({ show: checked, idx: index });
   };
 
   if (!summary) {
@@ -102,7 +100,7 @@ export const Summary = ({
         <div className="col-span-2 flex items-center justify-end space-x-2">
           <Switch
             id="show-on-map"
-            checked={results[VALHALLA_OSM_URL!]!.show[index]}
+            checked={results.show[index]}
             onCheckedChange={handleChange}
           />
           <Label htmlFor="show-on-map">Show on map</Label>

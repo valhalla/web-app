@@ -1,11 +1,9 @@
-import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import { cn } from '@/lib/utils';
 import type { ValhallaIsochroneResponse } from '@/components/types';
 import { ClockIcon, MoveIcon } from 'lucide-react';
 import { exportDataAsJson } from '@/utils/export';
-import { useDispatch } from 'react-redux';
-import type { AppDispatch } from '@/store';
-import { showProvider } from '@/actions/isochrones-actions';
+
+import { useIsochronesStore } from '@/stores/isochrones-store';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Download } from 'lucide-react';
@@ -24,10 +22,10 @@ interface IsochronesCardProps {
 }
 
 export const IsochroneCard = ({ data, showOnMap }: IsochronesCardProps) => {
-  const dispatch = useDispatch<AppDispatch>();
+  const toggleShowOnMap = useIsochronesStore((state) => state.toggleShowOnMap);
 
   const handleChange = (checked: boolean) => {
-    dispatch(showProvider(VALHALLA_OSM_URL!, checked));
+    toggleShowOnMap(checked);
   };
 
   return (

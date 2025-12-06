@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useSearch } from '@tanstack/react-router';
 import {
   Map,
@@ -15,16 +14,6 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import axios from 'axios';
 import { throttle } from 'throttle-debounce';
 import {
-  fetchReverseGeocode,
-  makeRequest,
-  updateInclineDeclineTotal,
-} from '@/actions/directions-actions';
-import {
-  fetchReverseGeocodeIso,
-  makeIsochronesRequest,
-} from '@/actions/isochrones-actions';
-import { updateSettings } from '@/actions/common-actions';
-import {
   VALHALLA_OSM_URL,
   buildHeightRequest,
   buildLocateRequest,
@@ -32,7 +21,6 @@ import {
 import { buildHeightgraphData } from '@/utils/heightgraph';
 import HeightGraph from '@/components/heightgraph';
 import { DrawControl } from './draw-control';
-import type { AppDispatch, RootState } from '@/store';
 import type { ParsedDirectionsGeometry, Summary } from '@/components/types';
 import type { Feature, FeatureCollection, LineString } from 'geojson';
 import { Button } from '@/components/ui/button';
@@ -52,6 +40,17 @@ import { RouteHoverPopup } from './parts/route-hover-popup';
 import { MarkerIcon, type MarkerColor } from './parts/marker-icon';
 import { maxBounds, routeObjects } from './constants';
 import { getInitialMapPosition, LAST_CENTER_KEY } from './utils';
+import { useCommonStore } from '@/stores/common-store';
+import { useDirectionsStore } from '@/stores/directions-store';
+import { useIsochronesStore } from '@/stores/isochrones-store';
+import {
+  useDirectionsQuery,
+  useReverseGeocodeDirections,
+} from '@/hooks/use-directions-queries';
+import {
+  useIsochronesQuery,
+  useReverseGeocodeIsochrones,
+} from '@/hooks/use-isochrones-queries';
 
 const { center, zoom: zoom_initial } = getInitialMapPosition();
 
@@ -68,14 +67,14 @@ interface MarkerData {
 }
 
 export const MapComponent = () => {
-  const dispatch = useDispatch<AppDispatch>();
   const { activeTab } = useParams({ from: '/$activeTab' });
-  const { coordinates, showDirectionsPanel, showSettings } = useSelector(
-    (state: RootState) => state.common
+  const coordinates = useCommonStore((state) => state.coordinates);
+  const directionsPanelOpen = useCommonStore(
+    (state) => state.directionsPanelOpen
   );
+  const settingsPanelOpen = useCommonStore((state) => state.settingsPanelOpen);
+  const updateSettings = useCommonStore((state) => state.updateSettings);
   const { profile } = useSearch({ from: '/$activeTab' });
-  const directions = useSelector((state: RootState) => state.directions);
-  const isochrones = useSelector((state: RootState) => state.isochrones);
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [showContextPopup, setShowContextPopup] = useState(false);
   const [isLocateLoading, setIsLocateLoading] = useState(false);
@@ -94,7 +93,21 @@ export const MapComponent = () => {
   const [heightgraphData, setHeightgraphData] = useState<FeatureCollection[]>(
     []
   );
-
+  const waypoints = useDirectionsStore((state) => state.waypoints);
+  const directionResults = useDirectionsStore((state) => state.results);
+  const directionsSuccessful = useDirectionsStore((state) => state.successful);
+  const updateInclineDecline = useDirectionsStore(
+    (state) => state.updateInclineDecline
+  );
+  const highlightSegment = useDirectionsStore(
+    (state) => state.highlightSegment
+  );
+  const { refetch: refetchDirections } = useDirectionsQuery();
+  const { refetch: refetchIsochrones } = useIsochronesQuery();
+  const { reverseGeocode: reverseGeocodeDirections } =
+    useReverseGeocodeDirections();
+  const { reverseGeocode: reverseGeocodeIsochrones } =
+    useReverseGeocodeIsochrones();
   const [heightgraphHoverDistance, setHeightgraphHoverDistance] = useState<
     number | null
   >(null);
@@ -158,19 +171,14 @@ export const MapComponent = () => {
       }
     });
 
-    dispatch(
-      updateSettings({
-        name: 'exclude_polygons',
-        value: excludePolygons as unknown as string,
-      })
-    );
+    updateSettings('exclude_polygons', excludePolygons as unknown as string);
 
     if (activeTab === 'directions') {
-      dispatch(makeRequest());
+      refetchDirections();
     } else {
-      dispatch(makeIsochronesRequest());
+      refetchIsochrones();
     }
-  }, [dispatch, activeTab]);
+  }, [activeTab, refetchDirections, updateSettings, refetchIsochrones]);
 
   const updateWaypointPosition = useCallback(
     (object: {
@@ -178,16 +186,24 @@ export const MapComponent = () => {
       index: number;
       fromDrag?: boolean;
     }) => {
-      dispatch(fetchReverseGeocode(object));
+      reverseGeocodeDirections(
+        object.latLng.lng,
+        object.latLng.lat,
+        object.index
+      ).then(() => {
+        refetchDirections();
+      });
     },
-    [dispatch]
+    [reverseGeocodeDirections, refetchDirections]
   );
 
   const updateIsoPosition = useCallback(
     (lng: number, lat: number) => {
-      dispatch(fetchReverseGeocodeIso(lng, lat));
+      reverseGeocodeIsochrones(lng, lat).then(() => {
+        refetchIsochrones();
+      });
     },
-    [dispatch]
+    [reverseGeocodeIsochrones, refetchIsochrones]
   );
 
   const handleOpenOSM = useCallback(() => {
@@ -249,9 +265,10 @@ export const MapComponent = () => {
     (index: number) => {
       if (!popupLngLat) return;
       setShowContextPopup(false);
+
       updateWaypointPosition({
         latLng: { lat: popupLngLat.lat, lng: popupLngLat.lng },
-        index: index,
+        index,
       });
     },
     [popupLngLat, updateWaypointPosition]
@@ -264,12 +281,10 @@ export const MapComponent = () => {
   }, [popupLngLat, updateIsoPosition]);
 
   const getHeightData = useCallback(() => {
-    const { results } = directions;
-
-    if (!results[VALHALLA_OSM_URL!]?.data?.decodedGeometry) return;
+    if (!directionResults.data?.decodedGeometry) return;
 
     const heightPayloadNew = buildHeightRequest(
-      results[VALHALLA_OSM_URL!]!.data.decodedGeometry as [number, number][]
+      directionResults.data.decodedGeometry as [number, number][]
     );
 
     if (JSON.stringify(heightPayload) !== JSON.stringify(heightPayloadNew)) {
@@ -283,7 +298,7 @@ export const MapComponent = () => {
         })
         .then(({ data }) => {
           const reversedGeometry = JSON.parse(
-            JSON.stringify(results[VALHALLA_OSM_URL!]!.data.decodedGeometry)
+            JSON.stringify(directionResults.data?.decodedGeometry)
           ).map((pair: number[]) => {
             return [...pair.reverse()];
           });
@@ -292,12 +307,10 @@ export const MapComponent = () => {
             data.range_height
           );
           const { inclineTotal, declineTotal } = heightData[0]!.properties;
-          dispatch(
-            updateInclineDeclineTotal({
-              inclineTotal,
-              declineTotal,
-            })
-          );
+          updateInclineDecline({
+            inclineTotal,
+            declineTotal,
+          });
           setHeightgraphData(heightData);
         })
         .catch(({ response }) => {
@@ -307,11 +320,10 @@ export const MapComponent = () => {
           setIsHeightLoading(false);
         });
     }
-  }, [directions, heightPayload, dispatch]);
+  }, [directionResults, heightPayload, updateInclineDecline]);
 
   // Update markers when waypoints or isochrone centers change
-  const { waypoints } = directions;
-  const { geocodeResults } = isochrones;
+  const geocodeResults = useIsochronesStore((state) => state.geocodeResults);
   const markers = useMemo(() => {
     const newMarkers: MarkerData[] = [];
 
@@ -353,19 +365,17 @@ export const MapComponent = () => {
   }, [waypoints, geocodeResults]);
 
   // Update route lines
-  const { results: directionResults, successful: directionsSuccessful } =
-    directions;
   const routeGeoJSON = useMemo(() => {
     if (
-      !directionResults[VALHALLA_OSM_URL!]?.data ||
-      Object.keys(directionResults[VALHALLA_OSM_URL!]!.data).length === 0 ||
+      !directionResults.data ||
+      Object.keys(directionResults.data).length === 0 ||
       !directionsSuccessful
     ) {
       return null;
     }
 
-    const response = directionResults[VALHALLA_OSM_URL!]!.data;
-    const showRoutes = directionResults[VALHALLA_OSM_URL!]!.show || {};
+    const response = directionResults.data;
+    const showRoutes = directionResults.show || {};
     const features: Feature<LineString>[] = [];
 
     // Add alternates
@@ -417,7 +427,8 @@ export const MapComponent = () => {
   }, [directionResults, directionsSuccessful]);
 
   // Update isochrones
-  const { results: isoResults, successful: isoSuccessful } = isochrones;
+  const isoResults = useIsochronesStore((state) => state.results);
+  const isoSuccessful = useIsochronesStore((state) => state.successful);
   const { isochroneGeoJSON, isoLocationsGeoJSON } = useMemo(() => {
     if (!isoResults || !isoSuccessful) {
       return { isochroneGeoJSON: null, isoLocationsGeoJSON: null };
@@ -426,26 +437,24 @@ export const MapComponent = () => {
     const isoFeatures: Feature[] = [];
     const locationFeatures: Feature[] = [];
 
-    for (const provider of [VALHALLA_OSM_URL]) {
-      if (
-        isoResults[provider!]?.data &&
-        Object.keys(isoResults[provider!]!.data).length > 0 &&
-        isoResults[provider!]!.show
-      ) {
-        for (const feature of isoResults[provider!]!.data.features) {
-          if (['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
-            isoFeatures.push({
-              ...feature,
-              properties: {
-                ...feature.properties,
-                fillColor: feature.properties?.fill || '#6200ea',
-              },
-            });
-          } else {
-            // locations
-            if (feature.properties!.type !== 'input') {
-              locationFeatures.push(feature);
-            }
+    if (
+      isoResults.data &&
+      Object.keys(isoResults.data).length > 0 &&
+      isoResults.show
+    ) {
+      for (const feature of isoResults.data.features) {
+        if (['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
+          isoFeatures.push({
+            ...feature,
+            properties: {
+              ...feature.properties,
+              fillColor: feature.properties?.fill || '#6200ea',
+            },
+          });
+        } else {
+          // locations
+          if (feature.properties!.type !== 'input') {
+            locationFeatures.push(feature);
           }
         }
       }
@@ -464,9 +473,8 @@ export const MapComponent = () => {
   }, [isoResults, isoSuccessful]);
 
   // Update highlight segment
-  const { highlightSegment } = directions;
   const highlightSegmentGeoJSON = useMemo(() => {
-    if (!highlightSegment || !directionResults[VALHALLA_OSM_URL!]?.data) {
+    if (!highlightSegment || !directionResults.data) {
       return null;
     }
 
@@ -474,12 +482,12 @@ export const MapComponent = () => {
 
     let coords;
     if (alternate == -1) {
-      coords = directionResults[VALHALLA_OSM_URL!]!.data.decodedGeometry;
+      coords = directionResults.data.decodedGeometry;
     } else {
-      if (!directionResults[VALHALLA_OSM_URL!]!.data.alternates?.[alternate]) {
+      if (!directionResults.data.alternates?.[alternate]) {
         return null;
       }
-      coords = (directionResults[VALHALLA_OSM_URL!]!.data.alternates?.[
+      coords = (directionResults.data.alternates?.[
         alternate
       ] as ParsedDirectionsGeometry)!.decodedGeometry;
     }
@@ -523,12 +531,12 @@ export const MapComponent = () => {
       );
 
       const paddingTopLeft = [
-        screen.width < 550 ? 50 : showDirectionsPanel ? 420 : 50,
+        screen.width < 550 ? 50 : directionsPanelOpen ? 420 : 50,
         50,
       ];
 
       const paddingBottomRight = [
-        screen.width < 550 ? 50 : showSettings ? 420 : 50,
+        screen.width < 550 ? 50 : settingsPanelOpen ? 420 : 50,
         50,
       ];
 
@@ -542,7 +550,7 @@ export const MapComponent = () => {
         maxZoom: coordinates.length === 1 ? 11 : 18,
       });
     }
-  }, [coordinates, showDirectionsPanel, showSettings]);
+  }, [coordinates, directionsPanelOpen, settingsPanelOpen]);
 
   // Handle map click
   const handleMapClick = useCallback(
@@ -789,6 +797,7 @@ export const MapComponent = () => {
             activeTab={activeTab}
             onAddWaypoint={handleAddWaypoint}
             onAddIsoWaypoint={handleAddIsoWaypoint}
+            popupLocation={popupLngLat}
           />
         </Popup>
       )}
@@ -834,11 +843,11 @@ export const MapComponent = () => {
         Open OSM
       </Button>
 
-      {directions.successful && (
+      {directionsSuccessful && (
         <HeightGraph
           data={heightgraphData}
           width={
-            showDirectionsPanel
+            directionsPanelOpen
               ? window.innerWidth * 0.75
               : window.innerWidth * 0.9
           }

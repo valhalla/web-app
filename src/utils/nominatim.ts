@@ -24,7 +24,7 @@ export const reverse_geocode = (lon: number, lat: number) =>
 
 export const parseGeocodeResponse = (
   results: NominationResponse | NominationResponse[],
-  lngLat: [number, number]
+  lngLat?: [number, number]
 ) => {
   if (!Array.isArray(results)) {
     results = [results];
@@ -38,7 +38,7 @@ export const parseGeocodeResponse = (
       result.error.toLowerCase() === 'unable to geocode'
     ) {
       processedResults.push({
-        title: lngLat.toString(),
+        title: lngLat?.toString() || '',
         description: '',
         selected: true,
         addresslnglat: '',
@@ -52,7 +52,7 @@ export const parseGeocodeResponse = (
         title:
           result.display_name.length > 0
             ? result.display_name
-            : lngLat.toString(),
+            : lngLat?.toString() || '',
         description: `https://www.openstreetmap.org/${result.osm_type}/${result.osm_id}`,
         selected: false,
         addresslnglat: [parseFloat(result.lon), parseFloat(result.lat)],
