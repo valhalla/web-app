@@ -13,15 +13,15 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from '@dnd-kit/sortable';
-import { useDispatch, useSelector } from 'react-redux';
 
 import { Waypoint } from './waypoint-item';
-import { setWaypoints, makeRequest } from '@/actions/directions-actions';
-import type { AppDispatch, RootState } from '@/store';
+import { useDirectionsStore } from '@/stores/directions-store';
+import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 
 export const Waypoints = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { waypoints } = useSelector((state: RootState) => state.directions);
+  const { refetch: refetchDirections } = useDirectionsQuery();
+  const waypoints = useDirectionsStore((state) => state.waypoints);
+  const setWaypoint = useDirectionsStore((state) => state.setWaypoint);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -48,11 +48,11 @@ export const Waypoints = () => {
 
       if (oldIndex !== -1 && newIndex !== -1) {
         const items = arrayMove(waypoints, oldIndex, newIndex);
-        dispatch(setWaypoints(items));
-        dispatch(makeRequest());
+        setWaypoint(items);
+        refetchDirections();
       }
     },
-    [dispatch, waypoints]
+    [setWaypoint, refetchDirections, waypoints]
   );
 
   return (

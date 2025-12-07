@@ -1,4 +1,4 @@
-import type { Profile } from '@/reducers/common';
+import type { Profile } from '@/stores/common-store';
 
 export const VALID_PROFILES: readonly Profile[] = [
   'auto',

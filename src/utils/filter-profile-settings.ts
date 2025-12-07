@@ -1,82 +1,9 @@
 import {
-  UPDATE_SETTINGS,
-  LOADING,
-  SHOW_SETTINGS,
-  ZOOM_TO,
-  RESET_SETTINGS,
-  TOGGLE_DIRECTIONS,
-  UPDATE_DATETIME,
-} from './types';
-
-import {
   profileSettings,
   generalSettings,
 } from '../components/settings-panel/settings-options';
-import type { Profile } from '@/reducers/common';
+import type { Profile } from '@/stores/common-store';
 import type { PossibleSettings } from '@/components/types';
-
-export const showLoading = (loading: boolean) => ({
-  type: LOADING,
-  payload: loading,
-});
-
-interface SettingsObject {
-  name: string;
-  value: string | number | boolean | string[];
-}
-
-export const updateSettings = (object: SettingsObject) => ({
-  type: UPDATE_SETTINGS,
-  payload: object,
-});
-
-export const doShowSettings = () => ({
-  type: SHOW_SETTINGS,
-});
-
-export const toggleDirections = () => ({
-  type: TOGGLE_DIRECTIONS,
-});
-
-export const resetSettings = (profile: Profile) => ({
-  type: RESET_SETTINGS,
-  payload: profile,
-});
-
-export const zoomTo = (coords: number[][]) => ({
-  type: ZOOM_TO,
-  payload: coords,
-});
-
-export const doUpdateDateTime = (key: string, value: string) => ({
-  type: UPDATE_DATETIME,
-  payload: { key, value },
-});
-
-export const downloadFile = ({
-  data,
-  fileName,
-  fileType,
-}: {
-  data: string | ArrayBuffer;
-  fileName: string;
-  fileType: string;
-}) => {
-  // Create a blob with the data we want to download as a file
-  const blob = new Blob([data], { type: fileType });
-  // Create an anchor element and dispatch a click event on it
-  // to trigger a download
-  const aElem = document.createElement('a');
-  aElem.download = fileName;
-  aElem.href = window.URL.createObjectURL(blob);
-  const clickEvt = new MouseEvent('click', {
-    view: window,
-    bubbles: true,
-    cancelable: true,
-  });
-  aElem.dispatchEvent(clickEvt);
-  aElem.remove();
-};
 
 // Type guard to check if profile exists in settings objects
 type SettingsProfile = Exclude<Profile, 'auto'>;

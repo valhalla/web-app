@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import { downloadFile } from '@/actions/common-actions';
+import { downloadFile } from '@/utils/download-file';
 import { Summary } from './summary';
 import { Maneuvers } from './maneuvers';
 import { Button } from '@/components/ui/button';

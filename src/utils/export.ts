@@ -1,4 +1,4 @@
-import { downloadFile } from '@/actions/common-actions';
+import { downloadFile } from '@/utils/download-file';
 import { getDateTimeString } from './date-time';
 
 /**

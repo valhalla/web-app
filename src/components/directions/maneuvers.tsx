@@ -1,16 +1,11 @@
 import React from 'react';
 
-import {
-  highlightManeuver,
-  zoomToManeuver,
-} from '@/actions/directions-actions';
-import type { AppDispatch } from '@/store';
 import type { Leg } from '@/components/types';
-import { useDispatch } from 'react-redux';
 import { Clock, MoveHorizontal, DollarSign, Ship } from 'lucide-react';
 import { MetricItem } from '@/components/ui/metric-item';
 import { RouteAttributes } from '@/components/ui/route-attributes';
 import { formatDuration } from '@/utils/date-time';
+import { useDirectionsStore } from '@/stores/directions-store';
 
 const getLength = (length: number) => {
   const visibleLength = length * 1000;
@@ -26,14 +21,17 @@ interface ManeuversProps {
 }
 
 export const Maneuvers = ({ legs, index }: ManeuversProps) => {
-  const dispatch = useDispatch<AppDispatch>();
+  const highlightManeuver = useDirectionsStore(
+    (state) => state.highlightManeuver
+  );
+  const zoomToManeuver = useDirectionsStore((state) => state.zoomToManeuver);
 
   const highlightMnv = (startIndex: number, endIndex: number) => {
-    dispatch(highlightManeuver({ startIndex, endIndex, alternate: index }));
+    highlightManeuver({ startIndex, endIndex, alternate: index });
   };
 
   const zoomToMnv = (startIndex: number) => {
-    dispatch(zoomToManeuver({ index: startIndex, timeNow: Date.now() }));
+    zoomToManeuver({ index: startIndex, timeNow: Date.now() });
   };
 
   const startIndices: number[] = [

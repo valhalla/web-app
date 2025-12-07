@@ -1,21 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { WaypointSearch } from '@/components/ui/waypoint-search';
 import type { ActiveWaypoint } from '@/components/types';
 
-import {
-  updateTextInput,
-  updateIsoSettings,
-  makeIsochronesRequest,
-  clearIsos,
-} from '@/actions/isochrones-actions';
-import { RECEIVE_GEOCODE_RESULTS_ISO } from '@/actions/types';
+import { useIsochronesStore } from '@/stores/isochrones-store';
 
 import { settingsInit } from '@/components/settings-panel/settings-options';
 
 import { debounce } from 'throttle-debounce';
-import type { AppDispatch, RootState } from '@/store';
 import {
   Tooltip,
   TooltipContent,
@@ -32,64 +24,43 @@ import { SliderSetting } from '@/components/ui/slider-setting';
 import { AccessibleIcon } from '@radix-ui/react-accessible-icon';
 import { parseUrlParams } from '@/utils/parse-url-params';
 import { useNavigate } from '@tanstack/react-router';
+import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
 
 export const Waypoints = () => {
   const params = parseUrlParams();
-  const dispatch = useDispatch<AppDispatch>();
-  const isochrones = useSelector((state: RootState) => state.isochrones);
+  const updateSettings = useIsochronesStore((state) => state.updateSettings);
+  const { refetch: refetchIsochrones } = useIsochronesQuery();
+  const clearIsos = useIsochronesStore((state) => state.clearIsos);
+  const updateTextInput = useIsochronesStore((state) => state.updateTextInput);
+  const maxRange = useIsochronesStore((state) => state.maxRange);
+  const interval = useIsochronesStore((state) => state.interval);
+  const denoise = useIsochronesStore((state) => state.denoise);
+  const generalize = useIsochronesStore((state) => state.generalize);
   const navigate = useNavigate({ from: '/$activeTab' });
-
-  const handleIsoSliderUpdateSettings = useCallback(
-    ({
-      value,
-      maxRangeName,
-      intervalName,
-      denoiseName,
-      generalizeName,
-    }: {
-      value: number;
-      maxRangeName?: string;
-      intervalName?: string;
-      denoiseName?: string;
-      generalizeName?: string;
-    }) => {
-      // maxRangeName can be undefined if interval is being updated
-      dispatch(
-        updateIsoSettings({
-          maxRangeName,
-          intervalName,
-          denoiseName,
-          generalizeName,
-          value: parseFloat(value.toString()),
-        })
-      );
-    },
-    [dispatch]
+  const userInput = useIsochronesStore((state) => state.userInput);
+  const geocodeResults = useIsochronesStore((state) => state.geocodeResults);
+  const receiveGeocodeResults = useIsochronesStore(
+    (state) => state.receiveGeocodeResults
   );
 
   const makeIsochronesRequestDebounced = useMemo(
-    () => debounce(100, () => dispatch(makeIsochronesRequest())),
-    [dispatch]
+    () => debounce(100, () => refetchIsochrones()),
+    [refetchIsochrones]
   );
 
   const handleRemoveIsos = () => {
-    dispatch(clearIsos());
+    clearIsos();
   };
 
   const handleGeocodeResults = (addresses: ActiveWaypoint[]) => {
-    dispatch({
-      type: RECEIVE_GEOCODE_RESULTS_ISO,
-      payload: addresses,
-    });
+    receiveGeocodeResults(addresses);
   };
 
   const handleResultSelect = (result: ActiveWaypoint) => {
-    dispatch(
-      updateTextInput({
-        userInput: result.title,
-        addressindex: result.addressindex,
-      })
-    );
+    updateTextInput({
+      userInput: result.title,
+      addressIndex: result.addressindex,
+    });
     makeIsochronesRequestDebounced();
   };
 
@@ -100,55 +71,31 @@ export const Waypoints = () => {
       const rangeVal = parseInt(params.range, 10);
       const intervalVal = parseInt(params.interval, 10);
 
-      if (rangeVal !== isochrones.maxRange) {
-        dispatch(
-          updateIsoSettings({
-            maxRangeName: 'maxRange',
-            intervalName: 'interval',
-            value: rangeVal,
-          })
-        );
+      if (rangeVal !== maxRange) {
+        updateSettings({ name: 'maxRange', value: rangeVal });
       }
 
-      if (intervalVal !== isochrones.interval) {
-        dispatch(
-          updateIsoSettings({
-            intervalName: 'interval',
-            value: intervalVal,
-          })
-        );
+      if (intervalVal !== interval) {
+        updateSettings({ name: 'interval', value: intervalVal });
       }
     }
 
     if (params.denoise) {
       const denoiseVal = parseFloat(params.denoise);
-      if (denoiseVal !== isochrones.denoise) {
-        dispatch(
-          updateIsoSettings({
-            denoiseName: 'denoise',
-            value: denoiseVal,
-          })
-        );
+      if (denoiseVal !== denoise) {
+        updateSettings({ name: 'denoise', value: denoiseVal });
       }
     }
 
     if (params.generalize) {
       const generalizeVal = parseInt(params.generalize, 10);
-      if (generalizeVal !== isochrones.generalize) {
-        dispatch(
-          updateIsoSettings({
-            generalizeName: 'generalize',
-            value: generalizeVal,
-          })
-        );
+      if (generalizeVal !== generalize) {
+        updateSettings({ name: 'generalize', value: generalizeVal });
       }
     }
     urlParamsProcessed.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const { geocodeResults, userInput, maxRange, interval, denoise, generalize } =
-    isochrones;
 
   // Sync settings to URL
   useEffect(() => {
@@ -215,21 +162,13 @@ export const Waypoints = () => {
             unit="mins"
             onValueChange={(values) => {
               const value = values[0] ?? 0;
-              handleIsoSliderUpdateSettings({
-                maxRangeName: 'maxRange',
-                intervalName: 'interval',
-                value,
-              });
+              updateSettings({ name: 'maxRange', value });
             }}
             onValueCommit={makeIsochronesRequestDebounced}
             onInputChange={(values) => {
               let value = values[0] ?? 0;
               value = isNaN(value) ? 0 : Math.min(value, 120);
-              handleIsoSliderUpdateSettings({
-                maxRangeName: 'maxRange',
-                intervalName: 'interval',
-                value,
-              });
+              updateSettings({ name: 'maxRange', value });
               makeIsochronesRequestDebounced();
             }}
           />
@@ -245,19 +184,13 @@ export const Waypoints = () => {
             unit="mins"
             onValueChange={(values) => {
               const value = values[0] ?? 0;
-              handleIsoSliderUpdateSettings({
-                intervalName: 'interval',
-                value,
-              });
+              updateSettings({ name: 'interval', value });
             }}
             onValueCommit={makeIsochronesRequestDebounced}
             onInputChange={(values) => {
               let value = values[0] ?? 0;
               value = isNaN(value) ? 0 : Math.min(value, maxRange);
-              handleIsoSliderUpdateSettings({
-                intervalName: 'interval',
-                value,
-              });
+              updateSettings({ name: 'interval', value });
               makeIsochronesRequestDebounced();
             }}
           />
@@ -272,19 +205,13 @@ export const Waypoints = () => {
             value={denoise}
             onValueChange={(values) => {
               const value = values[0] ?? 0;
-              handleIsoSliderUpdateSettings({
-                denoiseName: 'denoise',
-                value,
-              });
+              updateSettings({ name: 'denoise', value });
             }}
             onValueCommit={makeIsochronesRequestDebounced}
             onInputChange={(values) => {
               const value = values[0] ?? settingsInit.denoise;
               const validValue = isNaN(value) ? settingsInit.denoise : value;
-              handleIsoSliderUpdateSettings({
-                denoiseName: 'denoise',
-                value: validValue,
-              });
+              updateSettings({ name: 'denoise', value: validValue });
               makeIsochronesRequestDebounced();
             }}
           />
@@ -300,19 +227,13 @@ export const Waypoints = () => {
             unit="meters"
             onValueChange={(values) => {
               const value = values[0] ?? 0;
-              handleIsoSliderUpdateSettings({
-                generalizeName: 'generalize',
-                value,
-              });
+              updateSettings({ name: 'generalize', value });
             }}
             onValueCommit={makeIsochronesRequestDebounced}
             onInputChange={(values) => {
               const value = values[0] ?? settingsInit.generalize;
               const validValue = isNaN(value) ? settingsInit.generalize : value;
-              handleIsoSliderUpdateSettings({
-                generalizeName: 'generalize',
-                value: validValue,
-              });
+              updateSettings({ name: 'generalize', value: validValue });
               makeIsochronesRequestDebounced();
             }}
           />
