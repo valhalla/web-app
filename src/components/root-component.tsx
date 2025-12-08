@@ -1,9 +1,30 @@
 import { Outlet } from '@tanstack/react-router';
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
-import { TanStackDevtools } from '@tanstack/react-devtools';
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { toast } from 'sonner';
-import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools';
+
+const TanStackDevtools = import.meta.env.DEV
+  ? lazy(() =>
+      import('@tanstack/react-devtools').then((mod) => ({
+        default: mod.TanStackDevtools,
+      }))
+    )
+  : () => null;
+
+const ReactQueryDevtoolsPanel = import.meta.env.DEV
+  ? lazy(() =>
+      import('@tanstack/react-query-devtools').then((mod) => ({
+        default: mod.ReactQueryDevtoolsPanel,
+      }))
+    )
+  : () => null;
+
+const TanStackRouterDevtoolsPanel = import.meta.env.DEV
+  ? lazy(() =>
+      import('@tanstack/react-router-devtools').then((mod) => ({
+        default: mod.TanStackRouterDevtoolsPanel,
+      }))
+    )
+  : () => null;
 
 export const RootComponent = () => {
   useEffect(() => {
@@ -16,20 +37,32 @@ export const RootComponent = () => {
   return (
     <>
       <Outlet />
-      <TanStackDevtools
-        plugins={[
-          {
-            name: 'TanStack Query',
-            render: <ReactQueryDevtoolsPanel />,
-            defaultOpen: true,
-          },
-          {
-            name: 'TanStack Router',
-            render: <TanStackRouterDevtoolsPanel />,
-            defaultOpen: false,
-          },
-        ]}
-      />
+      {import.meta.env.DEV && (
+        <Suspense fallback={null}>
+          <TanStackDevtools
+            plugins={[
+              {
+                name: 'TanStack Query',
+                render: (
+                  <Suspense fallback={null}>
+                    <ReactQueryDevtoolsPanel />
+                  </Suspense>
+                ),
+                defaultOpen: true,
+              },
+              {
+                name: 'TanStack Router',
+                render: (
+                  <Suspense fallback={null}>
+                    <TanStackRouterDevtoolsPanel />
+                  </Suspense>
+                ),
+                defaultOpen: false,
+              },
+            ]}
+          />
+        </Suspense>
+      )}
     </>
   );
 };
