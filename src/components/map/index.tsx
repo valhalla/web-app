@@ -760,6 +760,7 @@ export const MapComponent = () => {
       {isoLocationsGeoJSON && <IsochroneLocations data={isoLocationsGeoJSON} />}
       {markers.map((marker) => (
         <Marker
+          anchor="bottom"
           key={marker.id}
           longitude={marker.lng}
           latitude={marker.lat}
