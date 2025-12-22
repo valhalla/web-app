@@ -20,8 +20,10 @@ const searchParamsSchema = z.object({
   interval: z.number().optional(),
   generalize: z.number().optional(),
   denoise: z.number().optional(),
-  style: z.enum(['shortbread', 'carto']).optional(),
+  style: z.enum(['shortbread', 'carto', 'custom']).optional(),
 });
+
+export type SearchParamsSchema = z.infer<typeof searchParamsSchema>;
 
 export const rootRoute = createRootRoute({
   component: RootComponent,

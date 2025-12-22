@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react';
+import * as React from 'react';
 
 import { createPortal } from 'react-dom';
 
@@ -19,18 +19,16 @@ export const CustomControl = ({
   position,
   children,
 }: PropsWithChildren<CustomControlProps>) => {
-  const [groupContainer, setGroupContainer] = useState<HTMLDivElement | null>(
-    null
-  );
+  const [groupContainer, setGroupContainer] =
+    React.useState<HTMLDivElement | null>(null);
 
-  useLayoutEffect(() => {
+  React.useEffect(() => {
     const parentElement = document.querySelector(controlPositions[position]);
     const groupDiv = document.createElement('div');
 
     if (parentElement) {
       groupDiv.classList.add('maplibregl-ctrl', 'maplibregl-ctrl-group');
 
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setGroupContainer(groupDiv);
       parentElement.appendChild(groupDiv);
     }
@@ -49,16 +47,20 @@ export const CustomControl = ({
 
 type ControlButtonProps = {
   title: string;
-  onClick: () => void;
   icon: ReactNode;
 };
 
-export const ControlButton = ({ title, onClick, icon }: ControlButtonProps) => {
+export const ControlButton = React.forwardRef<
+  HTMLButtonElement,
+  Omit<React.ComponentPropsWithoutRef<'button'>, 'title'> & ControlButtonProps
+>(({ title, icon, type = 'button', ...props }, ref) => {
   return (
-    <button type="button" aria-label={title} title={title} onClick={onClick}>
+    <button ref={ref} type={type} aria-label={title} title={title} {...props}>
       <span className="flex justify-center items-center" aria-hidden={true}>
         {icon}
       </span>
     </button>
   );
-};
+});
+
+ControlButton.displayName = 'ControlButton';

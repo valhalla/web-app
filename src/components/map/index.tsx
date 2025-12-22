@@ -27,7 +27,12 @@ import { Button } from '@/components/ui/button';
 
 import mapStyle from './style.json';
 import cartoStyle from './carto.json';
-import { MapStyleControl, getInitialMapStyle } from './map-style-control';
+import {
+  MapStyleControl,
+  getInitialMapStyle,
+  getCustomStyle,
+  type MapStyleType,
+} from './map-style-control';
 import { RouteLines } from './parts/route-lines';
 import { HighlightSegment } from './parts/highlight-segment';
 import { IsochronePolygons } from './parts/isochrone-polygons';
@@ -74,7 +79,7 @@ export const MapComponent = () => {
   );
   const settingsPanelOpen = useCommonStore((state) => state.settingsPanelOpen);
   const updateSettings = useCommonStore((state) => state.updateSettings);
-  const { profile } = useSearch({ from: '/$activeTab' });
+  const { profile, style } = useSearch({ from: '/$activeTab' });
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [showContextPopup, setShowContextPopup] = useState(false);
   const [isLocateLoading, setIsLocateLoading] = useState(false);
@@ -121,9 +126,25 @@ export const MapComponent = () => {
     latitude: center[1],
     zoom: zoom_initial,
   });
-  const [currentMapStyle, setCurrentMapStyle] = useState<
-    'shortbread' | 'carto'
-  >(getInitialMapStyle);
+  const [currentMapStyle, setCurrentMapStyle] = useState<MapStyleType>(
+    getInitialMapStyle(style)
+  );
+  const [customStyleData, setCustomStyleData] =
+    useState<maplibregl.StyleSpecification | null>(() => getCustomStyle());
+
+  const resolvedMapStyle = useMemo(() => {
+    switch (currentMapStyle) {
+      case 'custom':
+        return customStyleData ?? mapStyle;
+      case 'carto':
+        return cartoStyle;
+      default:
+        return mapStyle;
+    }
+  }, [
+    currentMapStyle,
+    customStyleData,
+  ]) as unknown as maplibregl.StyleSpecification;
 
   const mapRef = useRef<MapRef>(null);
   const drawRef = useRef<MaplibreTerradrawControl | null>(null);
@@ -136,19 +157,29 @@ export const MapComponent = () => {
     []
   );
 
-  const handleStyleChange = useCallback((style: 'shortbread' | 'carto') => {
+  const handleStyleChange = useCallback((style: MapStyleType) => {
     setCurrentMapStyle(style);
 
-    // Update URL params (only add 'style' param if not shortbread)
     const url = new URL(window.location.href);
-    if (style === 'carto') {
-      url.searchParams.set('style', 'carto');
+    if (style === 'carto' || style === 'custom') {
+      url.searchParams.set('style', style);
     } else {
-      // Remove style param for shortbread (it's the default)
       url.searchParams.delete('style');
     }
     window.history.replaceState({}, '', url.toString());
   }, []);
+
+  const handleCustomStyleLoaded = useCallback(
+    (styleData: maplibregl.StyleSpecification) => {
+      setCustomStyleData(styleData);
+      setCurrentMapStyle('custom');
+
+      const url = new URL(window.location.href);
+      url.searchParams.set('style', 'custom');
+      window.history.replaceState({}, '', url.toString());
+    },
+    []
+  );
 
   const updateExcludePolygons = useCallback(() => {
     if (!drawRef.current) return;
@@ -737,11 +768,7 @@ export const MapComponent = () => {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       interactiveLayerIds={['routes-line']}
-      mapStyle={
-        (currentMapStyle === 'carto'
-          ? cartoStyle
-          : mapStyle) as unknown as maplibregl.StyleSpecification
-      }
+      mapStyle={resolvedMapStyle}
       style={{ width: '100%', height: '100vh' }}
       maxBounds={maxBounds}
       minZoom={2}
@@ -751,7 +778,11 @@ export const MapComponent = () => {
     >
       <NavigationControl />
       <DrawControl onUpdate={updateExcludePolygons} controlRef={drawRef} />
-      <MapStyleControl onStyleChange={handleStyleChange} />
+      <MapStyleControl
+        customStyleData={customStyleData}
+        onStyleChange={handleStyleChange}
+        onCustomStyleLoaded={handleCustomStyleLoaded}
+      />
       {routeGeoJSON && <RouteLines data={routeGeoJSON} />}
       {highlightSegmentGeoJSON && (
         <HighlightSegment data={highlightSegmentGeoJSON} />
