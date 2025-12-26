@@ -19,3 +19,24 @@ export const routeObjects = {
     name: 'OSM',
   },
 };
+
+export const MAP_STYLE_STORAGE_KEY = 'selectedMapStyle';
+export const CUSTOM_STYLE_STORAGE_KEY = 'customMapStyle';
+
+export const MAP_STYLES = [
+  {
+    id: 'shortbread',
+    label: 'Shortbread',
+    style: '/styles/versatiles-colorful.json',
+  },
+  { id: 'carto', label: 'Carto', style: '/styles/carto.json' },
+  {
+    id: 'alidade-smooth',
+    label: 'Alidade Smooth',
+    style: 'https://tiles.stadiamaps.com/styles/alidade_smooth.json',
+  },
+] as const;
+
+export const DEFAULT_MAP_STYLE = MAP_STYLES[0].style;
+export const DEFAULT_MAP_STYLE_ID = MAP_STYLES[0].id;
+export const MAP_STYLE_IDS = MAP_STYLES.map((s) => s.id);

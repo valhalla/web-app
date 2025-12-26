@@ -13,10 +13,7 @@ import {
 import { Button } from '../ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '../ui/field';
 import { Textarea } from '../ui/textarea';
-import {
-  CUSTOM_STYLE_STORAGE_KEY,
-  MAP_STYLE_STORAGE_KEY,
-} from './map-style-control';
+import { CUSTOM_STYLE_STORAGE_KEY, MAP_STYLE_STORAGE_KEY } from './constants';
 
 const mapStyleSchema = z.object({
   version: z.number(),

@@ -19,10 +19,7 @@ import {
 } from '../ui/field';
 import { FolderIcon, LoaderIcon } from 'lucide-react';
 import { Input } from '../ui/input';
-import {
-  CUSTOM_STYLE_STORAGE_KEY,
-  MAP_STYLE_STORAGE_KEY,
-} from './map-style-control';
+import { CUSTOM_STYLE_STORAGE_KEY, MAP_STYLE_STORAGE_KEY } from './constants';
 
 const styleUrlSchema = z.string().url('Please enter a valid URL');
 
