@@ -9,12 +9,16 @@ function getBaseUrl() {
   const { homepage } = JSON.parse(readFileSync('package.json', 'utf-8')) as {
     homepage?: string;
   };
-  if (!homepage) return '';
-  const base =
-    homepage.startsWith('http') || homepage.startsWith('/')
-      ? homepage
-      : `/${homepage}`;
-  return base.replace(/\/$/, '');
+  if (!homepage) return '/';
+
+  // If it's a full URL, extract just the pathname
+  if (homepage.startsWith('http')) {
+    const url = new URL(homepage);
+    return url.pathname === '/' ? '/' : url.pathname.replace(/\/$/, '') + '/';
+  }
+
+  const base = homepage.startsWith('/') ? homepage : `/${homepage}`;
+  return base.replace(/\/$/, '') + '/';
 }
 
 export default defineConfig({

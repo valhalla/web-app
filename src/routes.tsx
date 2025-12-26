@@ -78,6 +78,7 @@ export const router = createRouter({
   scrollRestoration: true,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
+  basepath: import.meta.env.BASE_URL,
 });
 
 declare module '@tanstack/react-router' {
