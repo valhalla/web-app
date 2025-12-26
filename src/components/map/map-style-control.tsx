@@ -3,76 +3,18 @@ import { LayersIcon } from 'lucide-react';
 import Map, { useMap } from 'react-map-gl/maplibre';
 import type maplibregl from 'maplibre-gl';
 import { ControlButton, CustomControl } from './custom-control';
-
-import shortbreadStyle from './style.json';
-import cartoStyle from './carto.json';
-import type { SearchParamsSchema } from '@/routes';
-import { z } from 'zod';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { CustomStylesDialog } from './custom-styles-dialog';
 import { EditStylesDialog } from './edit-styles-dialog';
-
-export const MAP_STYLE_STORAGE_KEY = 'selectedMapStyle';
-export const CUSTOM_STYLE_STORAGE_KEY = 'customMapStyle';
-
-export type MapStyleType = 'shortbread' | 'carto' | 'custom';
-
-// Map style configurations
-const MAP_STYLES = [
-  {
-    id: 'shortbread',
-    label: 'Shortbread',
-    style: shortbreadStyle,
-  },
-  {
-    id: 'carto',
-    label: 'Carto',
-    style: cartoStyle,
-  },
-] as const;
-
-export const getInitialMapStyle = (
-  urlValue?: SearchParamsSchema['style']
-): MapStyleType => {
-  // check url params first
-  if (urlValue === 'carto' || urlValue === 'shortbread') return urlValue;
-
-  if (urlValue === 'custom') {
-    const customStyle = localStorage.getItem(CUSTOM_STYLE_STORAGE_KEY);
-    if (customStyle) return 'custom';
-    return 'shortbread';
-  }
-
-  // fallback to localStorage
-  const savedStyle = localStorage.getItem(MAP_STYLE_STORAGE_KEY);
-
-  const parsedSavedStyle = z
-    .enum(['shortbread', 'carto', 'custom'])
-    .safeParse(savedStyle);
-
-  if (parsedSavedStyle.data === 'custom') {
-    const customStyle = localStorage.getItem(CUSTOM_STYLE_STORAGE_KEY);
-    if (!customStyle) return 'shortbread';
-  }
-
-  return parsedSavedStyle.success ? parsedSavedStyle.data : 'shortbread';
-};
+import { MAP_STYLES, MAP_STYLE_STORAGE_KEY } from './constants';
+import type { MapStyleType } from './types';
+import { getInitialMapStyle } from './utils';
 
 interface MapStyleControlProps {
   customStyleData: maplibregl.StyleSpecification | null;
   onStyleChange?: (style: MapStyleType) => void;
   onCustomStyleLoaded?: (styleData: maplibregl.StyleSpecification) => void;
 }
-
-export const getCustomStyle = (): maplibregl.StyleSpecification | null => {
-  const customStyleJson = localStorage.getItem(CUSTOM_STYLE_STORAGE_KEY);
-  if (!customStyleJson) return null;
-  try {
-    return JSON.parse(customStyleJson) as maplibregl.StyleSpecification;
-  } catch {
-    return null;
-  }
-};
 
 interface MapStyleOptionProps {
   id: MapStyleType;

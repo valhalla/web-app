@@ -14,7 +14,9 @@
   "sources": {
     "versatiles-shortbread": {
       "attribution": "<a href=\"https://map.project-osrm.org/about.html\" target=\"_blank\">About this service and privacy policy</a> | &copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",
-      "tiles": ["https://vector.openstreetmap.org/shortbread_v1/{z}/{x}/{y}.mvt"],
+      "tiles": [
+        "https://vector.openstreetmap.org/shortbread_v1/{z}/{x}/{y}.mvt"
+      ],
       "type": "vector",
       "scheme": "xyz",
       "bounds": [-180, -85.0511287798066, 180, 85.0511287798066],
