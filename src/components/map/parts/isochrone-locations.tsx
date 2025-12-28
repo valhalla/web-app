@@ -1,11 +1,35 @@
+import { useMemo } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
-import type { FeatureCollection } from 'geojson';
+import { useIsochronesStore } from '@/stores/isochrones-store';
+import type { Feature, FeatureCollection } from 'geojson';
 
-interface IsochroneLocationsProps {
-  data: FeatureCollection;
-}
+export function IsochroneLocations() {
+  const isoResults = useIsochronesStore((state) => state.results);
+  const isoSuccessful = useIsochronesStore((state) => state.successful);
 
-export function IsochroneLocations({ data }: IsochroneLocationsProps) {
+  const data = useMemo(() => {
+    if (!isoResults || !isoSuccessful) return null;
+    if (!isoResults.data || !isoResults.show) return null;
+
+    const hasNoFeatures = Object.keys(isoResults.data).length === 0;
+    if (hasNoFeatures) return null;
+
+    const features: Feature[] = [];
+
+    for (const feature of isoResults.data.features) {
+      if (!['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
+        if (feature.properties?.type !== 'input') {
+          features.push(feature);
+        }
+      }
+    }
+
+    return {
+      type: 'FeatureCollection',
+      features,
+    } as FeatureCollection;
+  }, [isoResults, isoSuccessful]);
+
   if (!data) return null;
 
   return (
