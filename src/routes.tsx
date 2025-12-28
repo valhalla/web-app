@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { RootComponent } from './components/root-component';
 import { profileEnum } from './stores/common-store';
 import * as TanStackQueryProvider from './lib/tanstack-query/root-provider';
+import { mapStyleSchema } from './components/map/utils';
 
 // Zod schema for search params validation
 const searchParamsSchema = z.object({
@@ -20,7 +21,7 @@ const searchParamsSchema = z.object({
   interval: z.number().optional(),
   generalize: z.number().optional(),
   denoise: z.number().optional(),
-  style: z.enum(['shortbread', 'carto', 'custom']).optional(),
+  style: mapStyleSchema.optional(),
 });
 
 export type SearchParamsSchema = z.infer<typeof searchParamsSchema>;
@@ -77,6 +78,7 @@ export const router = createRouter({
   scrollRestoration: true,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
+  basepath: import.meta.env.BASE_URL,
 });
 
 declare module '@tanstack/react-router' {

@@ -25,14 +25,10 @@ import type { ParsedDirectionsGeometry, Summary } from '@/components/types';
 import type { Feature, FeatureCollection, LineString } from 'geojson';
 import { Button } from '@/components/ui/button';
 
-import mapStyle from './style.json';
-import cartoStyle from './carto.json';
-import {
-  MapStyleControl,
-  getInitialMapStyle,
-  getCustomStyle,
-  type MapStyleType,
-} from './map-style-control';
+import { MapStyleControl } from './map-style-control';
+import { getInitialMapStyle, getCustomStyle, getMapStyleUrl } from './utils';
+import { DEFAULT_MAP_STYLE_ID } from './constants';
+import type { MapStyleType } from './types';
 import { RouteLines } from './parts/route-lines';
 import { HighlightSegment } from './parts/highlight-segment';
 import { IsochronePolygons } from './parts/isochrone-polygons';
@@ -133,14 +129,10 @@ export const MapComponent = () => {
     useState<maplibregl.StyleSpecification | null>(() => getCustomStyle());
 
   const resolvedMapStyle = useMemo(() => {
-    switch (currentMapStyle) {
-      case 'custom':
-        return customStyleData ?? mapStyle;
-      case 'carto':
-        return cartoStyle;
-      default:
-        return mapStyle;
+    if (currentMapStyle === 'custom') {
+      return customStyleData ?? getMapStyleUrl('shortbread');
     }
+    return getMapStyleUrl(currentMapStyle);
   }, [
     currentMapStyle,
     customStyleData,
@@ -161,7 +153,7 @@ export const MapComponent = () => {
     setCurrentMapStyle(style);
 
     const url = new URL(window.location.href);
-    if (style === 'carto' || style === 'custom') {
+    if (style !== DEFAULT_MAP_STYLE_ID) {
       url.searchParams.set('style', style);
     } else {
       url.searchParams.delete('style');

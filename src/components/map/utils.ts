@@ -1,6 +1,64 @@
-import { DEFAULT_CENTER, DEFAULT_ZOOM } from './constants';
+import { z } from 'zod';
+import type maplibregl from 'maplibre-gl';
+import {
+  DEFAULT_CENTER,
+  DEFAULT_ZOOM,
+  MAP_STYLES,
+  MAP_STYLE_IDS,
+  DEFAULT_MAP_STYLE,
+  DEFAULT_MAP_STYLE_ID,
+  MAP_STYLE_STORAGE_KEY,
+  CUSTOM_STYLE_STORAGE_KEY,
+} from './constants';
+import type { MapStyleType } from './types';
 
 export const LAST_CENTER_KEY = 'last_center';
+
+export const mapStyleSchema = z.enum([
+  ...MAP_STYLE_IDS,
+  'custom',
+] as unknown as [string, ...string[]]);
+
+export const getMapStyleUrl = (styleId: MapStyleType): string => {
+  const found = MAP_STYLES.find((s) => s.id === styleId);
+  return found?.style ?? DEFAULT_MAP_STYLE;
+};
+
+const isBuiltInStyle = (value: unknown): value is MapStyleType =>
+  typeof value === 'string' &&
+  (MAP_STYLE_IDS.includes(value as (typeof MAP_STYLE_IDS)[number]) ||
+    value === 'custom');
+
+export const getInitialMapStyle = (urlValue?: string): MapStyleType => {
+  if (isBuiltInStyle(urlValue)) {
+    if (urlValue === 'custom') {
+      const customStyle = localStorage.getItem(CUSTOM_STYLE_STORAGE_KEY);
+      if (customStyle) return 'custom';
+      return DEFAULT_MAP_STYLE_ID;
+    }
+    return urlValue;
+  }
+
+  const savedStyle = localStorage.getItem(MAP_STYLE_STORAGE_KEY);
+  const parsed = mapStyleSchema.safeParse(savedStyle);
+
+  if (parsed.data === 'custom') {
+    const customStyle = localStorage.getItem(CUSTOM_STYLE_STORAGE_KEY);
+    if (!customStyle) return DEFAULT_MAP_STYLE_ID;
+  }
+
+  return parsed.success ? (parsed.data as MapStyleType) : DEFAULT_MAP_STYLE_ID;
+};
+
+export const getCustomStyle = (): maplibregl.StyleSpecification | null => {
+  const customStyleJson = localStorage.getItem(CUSTOM_STYLE_STORAGE_KEY);
+  if (!customStyleJson) return null;
+  try {
+    return JSON.parse(customStyleJson) as maplibregl.StyleSpecification;
+  } catch {
+    return null;
+  }
+};
 
 export const convertDDToDMS = (decimalDegrees: number): string => {
   const absDegrees =
