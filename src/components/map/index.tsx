@@ -21,8 +21,8 @@ import {
 import { buildHeightgraphData } from '@/utils/heightgraph';
 import HeightGraph from '@/components/heightgraph';
 import { DrawControl } from './draw-control';
-import type { ParsedDirectionsGeometry, Summary } from '@/components/types';
-import type { Feature, FeatureCollection, LineString } from 'geojson';
+import type { Summary } from '@/components/types';
+import type { FeatureCollection } from 'geojson';
 import { Button } from '@/components/ui/button';
 
 import { MapStyleControl } from './map-style-control';
@@ -39,7 +39,7 @@ import { MapInfoPopup } from './parts/map-info-popup';
 import { MapContextMenu } from './parts/map-context-menu';
 import { RouteHoverPopup } from './parts/route-hover-popup';
 import { MarkerIcon, type MarkerColor } from './parts/marker-icon';
-import { maxBounds, routeObjects } from './constants';
+import { maxBounds } from './constants';
 import { getInitialMapPosition, LAST_CENTER_KEY } from './utils';
 import { useCommonStore } from '@/stores/common-store';
 import { useDirectionsStore } from '@/stores/directions-store';
@@ -100,9 +100,7 @@ export const MapComponent = () => {
   const updateInclineDecline = useDirectionsStore(
     (state) => state.updateInclineDecline
   );
-  const highlightSegment = useDirectionsStore(
-    (state) => state.highlightSegment
-  );
+
   const { refetch: refetchDirections } = useDirectionsQuery();
   const { refetch: refetchIsochrones } = useIsochronesQuery();
   const { reverseGeocode: reverseGeocodeDirections } =
@@ -387,150 +385,6 @@ export const MapComponent = () => {
     return newMarkers;
   }, [waypoints, geocodeResults]);
 
-  // Update route lines
-  const routeGeoJSON = useMemo(() => {
-    if (
-      !directionResults.data ||
-      Object.keys(directionResults.data).length === 0 ||
-      !directionsSuccessful
-    ) {
-      return null;
-    }
-
-    const response = directionResults.data;
-    const showRoutes = directionResults.show || {};
-    const features: Feature<LineString>[] = [];
-
-    // Add alternates
-    if (response.alternates) {
-      response.alternates.forEach((alternate, i) => {
-        if (!showRoutes[i]) return;
-        const coords = (alternate! as ParsedDirectionsGeometry)!
-          .decodedGeometry;
-        const summary = alternate!.trip.summary;
-
-        features.push({
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: coords.map((c) => [c[1] ?? 0, c[0] ?? 0]),
-          },
-          properties: {
-            color: routeObjects[VALHALLA_OSM_URL!]!.alternativeColor,
-            type: 'alternate',
-            summary,
-          },
-        });
-      });
-    }
-
-    // Add main route
-    if (showRoutes[-1] !== false) {
-      const coords = response.decodedGeometry;
-      const summary = response.trip.summary;
-
-      features.push({
-        type: 'Feature',
-        geometry: {
-          type: 'LineString',
-          coordinates: coords.map((c) => [c[1] ?? 0, c[0] ?? 0]),
-        },
-        properties: {
-          color: routeObjects[VALHALLA_OSM_URL!]!.color,
-          type: 'main',
-          summary,
-        },
-      });
-    }
-
-    return {
-      type: 'FeatureCollection',
-      features,
-    } as FeatureCollection;
-  }, [directionResults, directionsSuccessful]);
-
-  // Update isochrones
-  const isoResults = useIsochronesStore((state) => state.results);
-  const isoSuccessful = useIsochronesStore((state) => state.successful);
-  const { isochroneGeoJSON, isoLocationsGeoJSON } = useMemo(() => {
-    if (!isoResults || !isoSuccessful) {
-      return { isochroneGeoJSON: null, isoLocationsGeoJSON: null };
-    }
-
-    const isoFeatures: Feature[] = [];
-    const locationFeatures: Feature[] = [];
-
-    if (
-      isoResults.data &&
-      Object.keys(isoResults.data).length > 0 &&
-      isoResults.show
-    ) {
-      for (const feature of isoResults.data.features) {
-        if (['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
-          isoFeatures.push({
-            ...feature,
-            properties: {
-              ...feature.properties,
-              fillColor: feature.properties?.fill || '#6200ea',
-            },
-          });
-        } else {
-          // locations
-          if (feature.properties!.type !== 'input') {
-            locationFeatures.push(feature);
-          }
-        }
-      }
-    }
-
-    return {
-      isochroneGeoJSON: {
-        type: 'FeatureCollection',
-        features: isoFeatures,
-      } as FeatureCollection,
-      isoLocationsGeoJSON: {
-        type: 'FeatureCollection',
-        features: locationFeatures,
-      } as FeatureCollection,
-    };
-  }, [isoResults, isoSuccessful]);
-
-  // Update highlight segment
-  const highlightSegmentGeoJSON = useMemo(() => {
-    if (!highlightSegment || !directionResults.data) {
-      return null;
-    }
-
-    const { startIndex, endIndex, alternate } = highlightSegment;
-
-    let coords;
-    if (alternate == -1) {
-      coords = directionResults.data.decodedGeometry;
-    } else {
-      if (!directionResults.data.alternates?.[alternate]) {
-        return null;
-      }
-      coords = (directionResults.data.alternates?.[
-        alternate
-      ] as ParsedDirectionsGeometry)!.decodedGeometry;
-    }
-
-    if (startIndex > -1 && endIndex > -1 && coords) {
-      return {
-        type: 'Feature',
-        geometry: {
-          type: 'LineString',
-          coordinates: coords
-            .slice(startIndex, endIndex + 1)
-            .map((c) => [c[1] ?? 0, c[0] ?? 0]),
-        },
-        properties: {},
-      } as Feature<LineString>;
-    } else {
-      return null;
-    }
-  }, [highlightSegment, directionResults]);
-
   // Zoom to coordinates
   useEffect(() => {
     if (coordinates && coordinates.length > 0 && mapRef.current) {
@@ -775,12 +629,10 @@ export const MapComponent = () => {
         onStyleChange={handleStyleChange}
         onCustomStyleLoaded={handleCustomStyleLoaded}
       />
-      {routeGeoJSON && <RouteLines data={routeGeoJSON} />}
-      {highlightSegmentGeoJSON && (
-        <HighlightSegment data={highlightSegmentGeoJSON} />
-      )}
-      {isochroneGeoJSON && <IsochronePolygons data={isochroneGeoJSON} />}
-      {isoLocationsGeoJSON && <IsochroneLocations data={isoLocationsGeoJSON} />}
+      <RouteLines />
+      <HighlightSegment />
+      <IsochronePolygons />
+      <IsochroneLocations />
       {markers.map((marker) => (
         <Marker
           anchor="bottom"

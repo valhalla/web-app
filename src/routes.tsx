@@ -5,30 +5,13 @@ import {
   redirect,
   retainSearchParams,
 } from '@tanstack/react-router';
-import { fallback, zodValidator } from '@tanstack/zod-adapter';
+import { zodValidator } from '@tanstack/zod-adapter';
 import { App } from './app';
-import { z } from 'zod';
 import { RootComponent } from './components/root-component';
-import { profileEnum } from './stores/common-store';
 import * as TanStackQueryProvider from './lib/tanstack-query/root-provider';
-import { mapStyleSchema } from './components/map/utils';
+import { searchParamsSchema, isValidTab } from './utils/route-schemas';
 
-// Zod schema for search params validation
-const searchParamsSchema = z.object({
-  profile: fallback(profileEnum.optional(), 'bicycle'),
-  wps: z.string().optional(),
-  range: z.number().optional(),
-  interval: z.number().optional(),
-  generalize: z.number().optional(),
-  denoise: z.number().optional(),
-  style: mapStyleSchema.optional(),
-});
-
-export type SearchParamsSchema = z.infer<typeof searchParamsSchema>;
-
-export const rootRoute = createRootRoute({
-  component: RootComponent,
-});
+export const rootRoute = createRootRoute({ component: RootComponent });
 
 const TanStackQueryProviderContext = TanStackQueryProvider.getContext();
 
@@ -56,8 +39,7 @@ const activeTabRoute = createRoute({
     middlewares: [retainSearchParams(['profile', 'style'])],
   },
   beforeLoad: ({ params }) => {
-    const validTabs = ['directions', 'isochrones'];
-    if (!validTabs.includes(params.activeTab)) {
+    if (!isValidTab(params.activeTab)) {
       throw redirect({
         to: '/$activeTab',
         params: { activeTab: 'directions' },

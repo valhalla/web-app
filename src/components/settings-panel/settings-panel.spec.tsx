@@ -1,0 +1,206 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { SettingsPanel } from './settings-panel';
+
+const mockUpdateSettings = vi.fn();
+const mockResetSettings = vi.fn();
+const mockToggleSettings = vi.fn();
+const mockRefetchDirections = vi.fn();
+const mockRefetchIsochrones = vi.fn();
+
+vi.mock('@tanstack/react-router', () => ({
+  useParams: vi.fn(() => ({ activeTab: 'directions' })),
+  useSearch: vi.fn(() => ({ profile: 'bicycle' })),
+}));
+
+vi.mock('@/stores/common-store', () => ({
+  useCommonStore: vi.fn((selector) => {
+    const state = {
+      settings: {
+        cycling_speed: 20,
+        use_roads: 0.5,
+        use_hills: 0.5,
+        avoid_bad_surfaces: 0.25,
+        shortest: false,
+        use_ferry: 0.5,
+        use_living_streets: 0.5,
+        alternates: 2,
+        bicycle_type: 'Hybrid',
+        service_penalty: 15,
+        service_factor: 1,
+        maneuver_penalty: 5,
+        use_geocoding: false,
+        private_access_penalty: 450,
+        gate_penalty: 300,
+        gate_cost: 30,
+        country_crossing_cost: 600,
+        country_crossing_penalty: 0,
+        turn_penalty_factor: 0,
+      },
+      settingsPanelOpen: true,
+      updateSettings: mockUpdateSettings,
+      resetSettings: mockResetSettings,
+      toggleSettings: mockToggleSettings,
+    };
+    return selector(state);
+  }),
+}));
+
+vi.mock('@/hooks/use-directions-queries', () => ({
+  useDirectionsQuery: vi.fn(() => ({
+    refetch: mockRefetchDirections,
+  })),
+}));
+
+vi.mock('@/hooks/use-isochrones-queries', () => ({
+  useIsochronesQuery: vi.fn(() => ({
+    refetch: mockRefetchIsochrones,
+  })),
+}));
+
+describe('SettingsPanel', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should render without crashing', () => {
+    expect(() => render(<SettingsPanel />)).not.toThrow();
+  });
+
+  it('should render the settings title', () => {
+    render(<SettingsPanel />);
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+  });
+
+  it('should render close button', () => {
+    render(<SettingsPanel />);
+    expect(screen.getByTestId('close-settings-button')).toBeInTheDocument();
+  });
+
+  it('should call toggleSettings when close button is clicked', async () => {
+    const user = userEvent.setup();
+    render(<SettingsPanel />);
+
+    await user.click(screen.getByTestId('close-settings-button'));
+
+    expect(mockToggleSettings).toHaveBeenCalled();
+  });
+
+  it('should render Profile Settings section for bicycle profile', () => {
+    render(<SettingsPanel />);
+    expect(screen.getByText('Profile Settings')).toBeInTheDocument();
+  });
+
+  it('should render General Settings section', () => {
+    render(<SettingsPanel />);
+    expect(screen.getByText('General Settings')).toBeInTheDocument();
+  });
+
+  it('should display current profile name', () => {
+    render(<SettingsPanel />);
+    expect(screen.getByText('bicycle')).toBeInTheDocument();
+  });
+
+  it('should render Copy to Clipboard button', () => {
+    render(<SettingsPanel />);
+    expect(
+      screen.getByRole('button', { name: /Copy to Clipboard/i })
+    ).toBeInTheDocument();
+  });
+
+  it('should render Reset button', () => {
+    render(<SettingsPanel />);
+    expect(screen.getByRole('button', { name: /Reset/i })).toBeInTheDocument();
+  });
+
+  it('should render bicycle profile settings like Cycling Speed', () => {
+    render(<SettingsPanel />);
+    expect(screen.getByText('Cycling Speed')).toBeInTheDocument();
+  });
+
+  it('should render Shortest checkbox for bicycle profile', () => {
+    render(<SettingsPanel />);
+    expect(screen.getByText('Shortest')).toBeInTheDocument();
+  });
+
+  it('should render Bicycle Type select for bicycle profile', () => {
+    render(<SettingsPanel />);
+    expect(screen.getByText('Bicycle Type')).toBeInTheDocument();
+  });
+
+  it('should render general settings like Use Ferries', () => {
+    render(<SettingsPanel />);
+    expect(screen.getByText('Use Ferries')).toBeInTheDocument();
+  });
+
+  it('should render Alternates setting from all general settings', () => {
+    render(<SettingsPanel />);
+    expect(screen.getByText('Alternates')).toBeInTheDocument();
+  });
+
+  it('should call resetSettings with current profile when Reset is clicked', async () => {
+    const user = userEvent.setup();
+    render(<SettingsPanel />);
+
+    await user.click(screen.getByRole('button', { name: /Reset/i }));
+
+    expect(mockResetSettings).toHaveBeenCalledWith('bicycle');
+  });
+
+  it('should call refetchDirections after reset', async () => {
+    const user = userEvent.setup();
+    render(<SettingsPanel />);
+
+    await user.click(screen.getByRole('button', { name: /Reset/i }));
+
+    expect(mockRefetchDirections).toHaveBeenCalled();
+  });
+
+  it('should show Copied! feedback after clicking Copy to Clipboard', async () => {
+    const user = userEvent.setup();
+    render(<SettingsPanel />);
+
+    await user.click(
+      screen.getByRole('button', { name: /Copy to Clipboard/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Copied!')).toBeInTheDocument();
+    });
+  });
+
+  it('should toggle shortest checkbox and trigger refetch', async () => {
+    const user = userEvent.setup();
+    render(<SettingsPanel />);
+
+    const shortestCheckbox = screen.getByRole('checkbox', {
+      name: /Shortest/i,
+    });
+    await user.click(shortestCheckbox);
+
+    expect(mockUpdateSettings).toHaveBeenCalledWith('shortest', true);
+    expect(mockRefetchDirections).toHaveBeenCalled();
+  });
+
+  it('should render all expected profile numeric settings for bicycle', () => {
+    render(<SettingsPanel />);
+
+    expect(screen.getByText('Cycling Speed')).toBeInTheDocument();
+    expect(screen.getByText('Use Roads')).toBeInTheDocument();
+    expect(screen.getByText('Use Hills')).toBeInTheDocument();
+    expect(screen.getByText('Avoid Bad Surface')).toBeInTheDocument();
+  });
+
+  it('should render all expected general numeric settings for bicycle', () => {
+    render(<SettingsPanel />);
+
+    expect(screen.getByText('Use Ferries')).toBeInTheDocument();
+    expect(screen.getByText('Use Living Streets')).toBeInTheDocument();
+    expect(screen.getByText('Turn Penalty')).toBeInTheDocument();
+  });
+});
