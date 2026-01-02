@@ -45,6 +45,9 @@ vi.mock('react-map-gl/maplibre', () => ({
   NavigationControl: vi.fn(() => (
     <div data-testid="navigation-control">Nav</div>
   )),
+  GeolocateControl: vi.fn(() => (
+    <div data-testid="geolocate-control">Geolocate</div>
+  )),
   useMap: vi.fn(() => ({ current: mockMapRef })),
 }));
 
@@ -245,6 +248,11 @@ describe('MapComponent', () => {
   it('should render navigation control', () => {
     render(<MapComponent />);
     expect(screen.getByTestId('navigation-control')).toBeInTheDocument();
+  });
+
+  it('should render geolocate control', () => {
+    render(<MapComponent />);
+    expect(screen.getByTestId('geolocate-control')).toBeInTheDocument();
   });
 
   it('should render draw control', () => {
