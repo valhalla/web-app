@@ -18,6 +18,7 @@ import {
   parseGeocodeResponse,
 } from '@/utils/nominatim';
 import { filterProfileSettings } from '@/utils/filter-profile-settings';
+import { getDirectionsLanguage } from '@/utils/directions-language';
 import { useCommonStore } from '@/stores/common-store';
 import { useDirectionsStore, type Waypoint } from '@/stores/directions-store';
 import { router } from '@/routes';
@@ -40,12 +41,15 @@ async function fetchDirections() {
   }
 
   const settings = filterProfileSettings(profile || 'bicycle', rawSettings);
+  const language = getDirectionsLanguage();
+
   const valhallaRequest = buildDirectionsRequest({
     profile: profile || 'bicycle',
     activeWaypoints,
     // @ts-expect-error todo: initial settings and filtered settings types mismatch
     settings,
     dateTime,
+    language,
   });
 
   const { data } = await axios.get<ValhallaRouteResponse>(

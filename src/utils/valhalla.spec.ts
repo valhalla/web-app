@@ -329,6 +329,7 @@ describe('valhalla.ts', () => {
         activeWaypoints: mockActiveWaypoints,
         settings: mockSettings,
         dateTime: mockDateTime,
+        language: 'en-US',
       });
 
       expect(result).toEqual({
@@ -346,6 +347,7 @@ describe('valhalla.ts', () => {
           units: 'kilometers',
           alternates: 0,
           id: 'valhalla_directions',
+          language: 'en-US',
           date_time: mockDateTime,
         },
       });
@@ -359,6 +361,7 @@ describe('valhalla.ts', () => {
         activeWaypoints: mockActiveWaypoints,
         settings: mockSettings,
         dateTime: mockDateTime,
+        language: 'de-DE',
       });
 
       expect(result).toEqual({
@@ -376,6 +379,7 @@ describe('valhalla.ts', () => {
           units: 'kilometers',
           alternates: 0,
           id: 'valhalla_directions',
+          language: 'de-DE',
           date_time: mockDateTime,
         },
       });
@@ -390,6 +394,7 @@ describe('valhalla.ts', () => {
         activeWaypoints: mockActiveWaypoints,
         settings: mockSettings,
         dateTime: dateTimeNoType,
+        language: 'en-US',
       });
 
       expect(result).toEqual({
@@ -407,6 +412,7 @@ describe('valhalla.ts', () => {
           units: 'kilometers',
           alternates: 0,
           id: 'valhalla_directions',
+          language: 'en-US',
         },
       });
       expect(result.json).not.toHaveProperty('date_time');
@@ -421,6 +427,7 @@ describe('valhalla.ts', () => {
         activeWaypoints: singleWaypoint,
         settings: mockSettings,
         dateTime: mockDateTime,
+        language: 'en-US',
       });
 
       expect(result).toEqual({
@@ -434,6 +441,7 @@ describe('valhalla.ts', () => {
           units: 'kilometers',
           alternates: 0,
           id: 'valhalla_directions',
+          language: 'en-US',
           date_time: mockDateTime,
         },
       });

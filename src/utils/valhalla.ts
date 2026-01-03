@@ -41,11 +41,13 @@ export const buildDirectionsRequest = ({
   activeWaypoints,
   settings,
   dateTime,
+  language,
 }: {
   profile: Profile;
   activeWaypoints: ActiveWaypoints;
   settings: Settings;
   dateTime: { type: number; value: string };
+  language: string;
 }) => {
   let valhalla_profile = profile;
 
@@ -64,6 +66,7 @@ export const buildDirectionsRequest = ({
       units: 'kilometers',
       alternates: settings.directions.alternates,
       id: 'valhalla_directions',
+      language,
     },
   };
 
