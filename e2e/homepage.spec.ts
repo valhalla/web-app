@@ -9,6 +9,39 @@ test('has title', async ({ page }) => {
   await expect(page).toHaveTitle(/Valhalla FOSSGIS/);
 });
 
+test('should retain profile when switching between tabs', async ({ page }) => {
+  await expect(page.getByTestId('profile-button-bicycle')).toHaveAttribute(
+    'data-state',
+    'on'
+  );
+  expect(page.url()).toContain('profile=bicycle');
+
+  await page.getByTestId('profile-button-car').click();
+  await expect(page.getByTestId('profile-button-car')).toHaveAttribute(
+    'data-state',
+    'on'
+  );
+  expect(page.url()).toContain('profile=car');
+
+  await page.getByTestId('isochrones-tab-button').click();
+
+  await expect(page.getByTestId('profile-button-car')).toHaveAttribute(
+    'data-state',
+    'on'
+  );
+  expect(page.url()).toContain('profile=car');
+  expect(page.url()).toContain('/isochrones');
+
+  await page.getByTestId('directions-tab-button').click();
+
+  await expect(page.getByTestId('profile-button-car')).toHaveAttribute(
+    'data-state',
+    'on'
+  );
+  expect(page.url()).toContain('profile=car');
+  expect(page.url()).toContain('/directions');
+});
+
 test('has default elements in the page', async ({ page }) => {
   await page.goto('http://localhost:3000/');
 
