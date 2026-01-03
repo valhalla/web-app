@@ -3,6 +3,10 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MapComponent } from './index';
 
+const mockToast = vi.hoisted(() => ({
+  error: vi.fn(),
+}));
+
 const mockMapRef = {
   getCenter: vi.fn(() => ({ lng: 13.4, lat: 52.5 })),
   getZoom: vi.fn(() => 10),
@@ -44,6 +48,22 @@ vi.mock('react-map-gl/maplibre', () => ({
   Popup: vi.fn(({ children }) => <div data-testid="popup">{children}</div>),
   NavigationControl: vi.fn(() => (
     <div data-testid="navigation-control">Nav</div>
+  )),
+  GeolocateControl: vi.fn(({ onError }) => (
+    <div data-testid="geolocate-control">
+      <button
+        data-testid="trigger-geolocate-error"
+        onClick={() => onError?.({ PERMISSION_DENIED: false })}
+      >
+        Trigger Error
+      </button>
+      <button
+        data-testid="trigger-geolocate-permission-denied"
+        onClick={() => onError?.({ PERMISSION_DENIED: true })}
+      >
+        Trigger Permission Denied
+      </button>
+    </div>
   )),
   useMap: vi.fn(() => ({ current: mockMapRef })),
 }));
@@ -212,6 +232,10 @@ vi.mock('@/utils/heightgraph', () => ({
   buildHeightgraphData: vi.fn(() => []),
 }));
 
+vi.mock('sonner', () => ({
+  toast: mockToast,
+}));
+
 describe('MapComponent', () => {
   let localStorageMock: Record<string, string>;
 
@@ -245,6 +269,11 @@ describe('MapComponent', () => {
   it('should render navigation control', () => {
     render(<MapComponent />);
     expect(screen.getByTestId('navigation-control')).toBeInTheDocument();
+  });
+
+  it('should render geolocate control', () => {
+    render(<MapComponent />);
+    expect(screen.getByTestId('geolocate-control')).toBeInTheDocument();
   });
 
   it('should render draw control', () => {
@@ -386,6 +415,32 @@ describe('MapComponent', () => {
 
     await waitFor(() => {
       expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('GeolocateControl error handling', () => {
+    it('should show default error toast when geolocate fails', async () => {
+      const user = userEvent.setup();
+      render(<MapComponent />);
+
+      await user.click(screen.getByTestId('trigger-geolocate-error'));
+
+      expect(mockToast.error).toHaveBeenCalledWith(
+        "We couldn't get your location. Please try again."
+      );
+    });
+
+    it('should show permission denied error toast when location permission is denied', async () => {
+      const user = userEvent.setup();
+      render(<MapComponent />);
+
+      await user.click(
+        screen.getByTestId('trigger-geolocate-permission-denied')
+      );
+
+      expect(mockToast.error).toHaveBeenCalledWith(
+        "We couldn't get your location. Please check your browser settings and allow location access."
+      );
     });
   });
 });

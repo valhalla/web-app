@@ -6,6 +6,8 @@ import {
   Popup,
   type MapRef,
   NavigationControl,
+  GeolocateControl,
+  type GeolocateErrorEvent,
 } from 'react-map-gl/maplibre';
 import type { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
 import type maplibregl from 'maplibre-gl';
@@ -52,6 +54,7 @@ import {
   useIsochronesQuery,
   useReverseGeocodeIsochrones,
 } from '@/hooks/use-isochrones-queries';
+import { toast } from 'sonner';
 
 const { center, zoom: zoom_initial } = getInitialMapPosition();
 
@@ -601,6 +604,16 @@ export const MapComponent = () => {
     setRouteHoverPopup(null);
   }, []);
 
+  const handleGeolocateError = useCallback((error: GeolocateErrorEvent) => {
+    let defaultMessage = "We couldn't get your location. Please try again.";
+    if (error.PERMISSION_DENIED) {
+      defaultMessage =
+        "We couldn't get your location. Please check your browser settings and allow location access.";
+    }
+
+    toast.error(defaultMessage);
+  }, []);
+
   return (
     <Map
       ref={mapRef}
@@ -623,6 +636,7 @@ export const MapComponent = () => {
       id="mainMap"
     >
       <NavigationControl />
+      <GeolocateControl onError={handleGeolocateError} />
       <DrawControl onUpdate={updateExcludePolygons} controlRef={drawRef} />
       <MapStyleControl
         customStyleData={customStyleData}
