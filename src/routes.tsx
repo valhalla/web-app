@@ -38,12 +38,22 @@ const activeTabRoute = createRoute({
   search: {
     middlewares: [retainSearchParams(['profile', 'style'])],
   },
-  beforeLoad: ({ params }) => {
+  beforeLoad: ({ params, search }) => {
     if (!isValidTab(params.activeTab)) {
       throw redirect({
         to: '/$activeTab',
         params: { activeTab: 'directions' },
         search: {
+          profile: 'bicycle',
+        },
+      });
+    }
+    if (!search.profile) {
+      throw redirect({
+        to: '/$activeTab',
+        params: { activeTab: params.activeTab },
+        search: {
+          ...search,
           profile: 'bicycle',
         },
       });
