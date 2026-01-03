@@ -7,6 +7,7 @@ import {
   type MapRef,
   NavigationControl,
   GeolocateControl,
+  type GeolocateErrorEvent,
 } from 'react-map-gl/maplibre';
 import type { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
 import type maplibregl from 'maplibre-gl';
@@ -603,8 +604,14 @@ export const MapComponent = () => {
     setRouteHoverPopup(null);
   }, []);
 
-  const handleGeolocateError = useCallback(() => {
-    toast.error("We couldn't get your location. Please try again.");
+  const handleGeolocateError = useCallback((error: GeolocateErrorEvent) => {
+    let defaultMessage = "We couldn't get your location. Please try again.";
+    if (error.PERMISSION_DENIED) {
+      defaultMessage =
+        "We couldn't get your location. Please check your browser settings and allow location access.";
+    }
+
+    toast.error(defaultMessage);
   }, []);
 
   return (
@@ -629,7 +636,7 @@ export const MapComponent = () => {
       id="mainMap"
     >
       <NavigationControl />
-      <GeolocateControl onError={() => handleGeolocateError()} />
+      <GeolocateControl onError={handleGeolocateError} />
       <DrawControl onUpdate={updateExcludePolygons} controlRef={drawRef} />
       <MapStyleControl
         customStyleData={customStyleData}
