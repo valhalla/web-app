@@ -9,18 +9,33 @@ import {
 } from '@/components/settings-panel/settings-options';
 
 describe('directions-language', () => {
+  const originalNavigator = global.navigator;
+
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+    vi.stubGlobal('navigator', { language: 'en-US' });
   });
 
   afterEach(() => {
     localStorage.clear();
+    vi.stubGlobal('navigator', originalNavigator);
   });
 
   describe('getDirectionsLanguage', () => {
-    it('should return default language when localStorage is empty', () => {
+    it('should return system language when localStorage is empty and locale is supported', () => {
+      vi.stubGlobal('navigator', { language: 'de-DE' });
+      expect(getDirectionsLanguage()).toBe('de-DE');
+    });
+
+    it('should return default language when localStorage is empty and locale is not supported', () => {
+      vi.stubGlobal('navigator', { language: 'xx-XX' });
       expect(getDirectionsLanguage()).toBe(DEFAULT_DIRECTIONS_LANGUAGE);
+    });
+
+    it('should match partial locale when exact match not found', () => {
+      vi.stubGlobal('navigator', { language: 'fr-CA' });
+      expect(getDirectionsLanguage()).toBe('fr-FR');
     });
 
     it('should return stored language when valid', () => {
@@ -28,9 +43,10 @@ describe('directions-language', () => {
       expect(getDirectionsLanguage()).toBe('de-DE');
     });
 
-    it('should return default language when stored value is invalid', () => {
+    it('should return system language when stored value is invalid', () => {
+      vi.stubGlobal('navigator', { language: 'es-ES' });
       localStorage.setItem(DIRECTIONS_LANGUAGE_STORAGE_KEY, 'invalid-lang');
-      expect(getDirectionsLanguage()).toBe(DEFAULT_DIRECTIONS_LANGUAGE);
+      expect(getDirectionsLanguage()).toBe('es-ES');
     });
 
     it('should return stored language for all supported languages', () => {

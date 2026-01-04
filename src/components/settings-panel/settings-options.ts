@@ -783,7 +783,7 @@ export const languageOptions = [
   { key: 'sk-SK', text: 'Slovak (Slovakia)', value: 'sk-SK' },
   { key: 'sl-SI', text: 'Slovenian (Slovenia)', value: 'sl-SI' },
   { key: 'sv-SE', text: 'Swedish (Sweden)', value: 'sv-SE' },
-  { key: 'tr-TR', text: 'Turkish (Turkey)', value: 'tr-TR' },
+  { key: 'tr-TR', text: 'Turkish (Türkiye)', value: 'tr-TR' },
   { key: 'uk-UA', text: 'Ukrainian (Ukraine)', value: 'uk-UA' },
 ] as const;
 

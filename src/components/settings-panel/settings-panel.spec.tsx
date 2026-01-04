@@ -64,16 +64,20 @@ vi.mock('@/hooks/use-isochrones-queries', () => ({
 }));
 
 describe('SettingsPanel', () => {
+  const originalNavigator = global.navigator;
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
     mockUseParams.mockReturnValue({ activeTab: 'directions' });
     mockUseSearch.mockReturnValue({ profile: 'bicycle' });
+    vi.stubGlobal('navigator', { ...originalNavigator, language: 'en-US' });
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
     localStorage.clear();
+    vi.stubGlobal('navigator', originalNavigator);
   });
 
   it('should render without crashing', () => {
@@ -225,7 +229,14 @@ describe('SettingsPanel', () => {
       expect(screen.queryByText('Directions Language')).not.toBeInTheDocument();
     });
 
-    it('should default to en-US when no language is stored', () => {
+    it('should use system locale when no language is stored', () => {
+      vi.stubGlobal('navigator', { language: 'fr-FR' });
+      render(<SettingsPanel />);
+      expect(screen.getByText('French (France)')).toBeInTheDocument();
+    });
+
+    it('should fall back to en-US when system locale is not supported', () => {
+      vi.stubGlobal('navigator', { language: 'xx-XX' });
       render(<SettingsPanel />);
       expect(screen.getByText('English (United States)')).toBeInTheDocument();
     });

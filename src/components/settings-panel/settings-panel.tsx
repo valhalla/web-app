@@ -127,6 +127,26 @@ export const SettingsPanel = () => {
         </SheetHeader>
         <div className="px-3">
           <div className="flex flex-col gap-3 border rounded-md p-2 px-3 mb-3">
+            {activeTab === 'directions' && (
+              <>
+                <section>
+                  <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-1">
+                    Directions Language
+                  </h3>
+                  <SelectSetting
+                    id="directions-language"
+                    label="Language"
+                    description="The language used for turn-by-turn navigation instructions"
+                    placeholder="Select Language"
+                    value={language}
+                    options={[...languageOptions]}
+                    onValueChange={handleLanguageChange}
+                  />
+                </section>
+                <Separator />
+              </>
+            )}
+
             {hasProfileSettings && (
               <section>
                 <div className="flex items-baseline justify-between">
@@ -207,26 +227,6 @@ export const SettingsPanel = () => {
                   )}
                 </div>
               </section>
-            )}
-
-            {activeTab === 'directions' && (
-              <>
-                <Separator />
-                <section>
-                  <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-1">
-                    Directions Language
-                  </h3>
-                  <SelectSetting
-                    id="directions-language"
-                    label="Language"
-                    description="The language used for turn-by-turn navigation instructions"
-                    placeholder="Select Language"
-                    value={language}
-                    options={[...languageOptions]}
-                    onValueChange={handleLanguageChange}
-                  />
-                </section>
-              </>
             )}
 
             <Separator />
