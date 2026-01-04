@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SettingsPanel } from './settings-panel';
+import { DIRECTIONS_LANGUAGE_STORAGE_KEY } from './settings-options';
 
 const mockUpdateSettings = vi.fn();
 const mockResetSettings = vi.fn();
@@ -9,9 +10,12 @@ const mockToggleSettings = vi.fn();
 const mockRefetchDirections = vi.fn();
 const mockRefetchIsochrones = vi.fn();
 
+const mockUseParams = vi.fn(() => ({ activeTab: 'directions' }));
+const mockUseSearch = vi.fn(() => ({ profile: 'bicycle' }));
+
 vi.mock('@tanstack/react-router', () => ({
-  useParams: vi.fn(() => ({ activeTab: 'directions' })),
-  useSearch: vi.fn(() => ({ profile: 'bicycle' })),
+  useParams: () => mockUseParams(),
+  useSearch: () => mockUseSearch(),
 }));
 
 vi.mock('@/stores/common-store', () => ({
@@ -60,12 +64,20 @@ vi.mock('@/hooks/use-isochrones-queries', () => ({
 }));
 
 describe('SettingsPanel', () => {
+  const originalNavigator = global.navigator;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
+    mockUseParams.mockReturnValue({ activeTab: 'directions' });
+    mockUseSearch.mockReturnValue({ profile: 'bicycle' });
+    vi.stubGlobal('navigator', { ...originalNavigator, language: 'en-US' });
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    localStorage.clear();
+    vi.stubGlobal('navigator', originalNavigator);
   });
 
   it('should render without crashing', () => {
@@ -202,5 +214,50 @@ describe('SettingsPanel', () => {
     expect(screen.getByText('Use Ferries')).toBeInTheDocument();
     expect(screen.getByText('Use Living Streets')).toBeInTheDocument();
     expect(screen.getByText('Turn Penalty')).toBeInTheDocument();
+  });
+
+  describe('Language Picker', () => {
+    it('should render Directions Language section when activeTab is directions', () => {
+      render(<SettingsPanel />);
+      expect(screen.getByText('Directions Language')).toBeInTheDocument();
+      expect(screen.getByText('Language')).toBeInTheDocument();
+    });
+
+    it('should not render Directions Language section when activeTab is isochrones', () => {
+      mockUseParams.mockReturnValue({ activeTab: 'isochrones' });
+      render(<SettingsPanel />);
+      expect(screen.queryByText('Directions Language')).not.toBeInTheDocument();
+    });
+
+    it('should use system locale when no language is stored', () => {
+      vi.stubGlobal('navigator', { language: 'fr-FR' });
+      render(<SettingsPanel />);
+      expect(screen.getByText('French (France)')).toBeInTheDocument();
+    });
+
+    it('should fall back to en-US when system locale is not supported', () => {
+      vi.stubGlobal('navigator', { language: 'xx-XX' });
+      render(<SettingsPanel />);
+      expect(screen.getByText('English (United States)')).toBeInTheDocument();
+    });
+
+    it('should use stored language from localStorage on initial render', () => {
+      localStorage.setItem(DIRECTIONS_LANGUAGE_STORAGE_KEY, 'de-DE');
+      render(<SettingsPanel />);
+      expect(screen.getByText('German (Germany)')).toBeInTheDocument();
+    });
+
+    it('should render language select with correct id', () => {
+      render(<SettingsPanel />);
+      const languageSelect = screen.getByRole('combobox', {
+        name: /Language/i,
+      });
+      expect(languageSelect).toBeInTheDocument();
+    });
+
+    it('should render language description in help tooltip', () => {
+      render(<SettingsPanel />);
+      expect(screen.getByText('Language')).toBeInTheDocument();
+    });
   });
 });

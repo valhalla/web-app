@@ -1,7 +1,16 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { profileSettings, generalSettings } from './settings-options';
+import {
+  profileSettings,
+  generalSettings,
+  languageOptions,
+  type DirectionsLanguage,
+} from './settings-options';
 import { filterProfileSettings } from '@/utils/filter-profile-settings';
+import {
+  getDirectionsLanguage,
+  setDirectionsLanguage,
+} from '@/utils/directions-language';
 import type { PossibleSettings } from '@/components/types';
 
 import { SliderSetting } from '@/components/ui/slider-setting';
@@ -34,6 +43,20 @@ export const SettingsPanel = () => {
   const [copied, setCopied] = useState(false);
   const { refetch: refetchDirections } = useDirectionsQuery();
   const { refetch: refetchIsochrones } = useIsochronesQuery();
+
+  const [language, setLanguage] = useState<DirectionsLanguage>(() =>
+    getDirectionsLanguage()
+  );
+
+  const handleLanguageChange = useCallback(
+    (value: string) => {
+      const newLanguage = value as DirectionsLanguage;
+      setDirectionsLanguage(newLanguage);
+      setLanguage(newLanguage);
+      refetchDirections();
+    },
+    [refetchDirections]
+  );
 
   const handleMakeRequest = useCallback(() => {
     if (activeTab === 'directions') {
@@ -104,6 +127,26 @@ export const SettingsPanel = () => {
         </SheetHeader>
         <div className="px-3">
           <div className="flex flex-col gap-3 border rounded-md p-2 px-3 mb-3">
+            {activeTab === 'directions' && (
+              <>
+                <section>
+                  <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-1">
+                    Directions Language
+                  </h3>
+                  <SelectSetting
+                    id="directions-language"
+                    label="Language"
+                    description="The language used for turn-by-turn navigation instructions"
+                    placeholder="Select Language"
+                    value={language}
+                    options={[...languageOptions]}
+                    onValueChange={handleLanguageChange}
+                  />
+                </section>
+                <Separator />
+              </>
+            )}
+
             {hasProfileSettings && (
               <section>
                 <div className="flex items-baseline justify-between">
