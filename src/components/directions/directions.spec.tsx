@@ -285,3 +285,89 @@ describe('DirectionsControl', () => {
     expect(result.wps).toBe('13.4,52.5,10,48');
   });
 });
+
+describe('DirectionsControl URL parsing', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockResults.data = null;
+    mockWaypoints.length = 0;
+    mockWaypoints.push(
+      { id: '0', geocodeResults: [], userInput: '' },
+      { id: '1', geocodeResults: [], userInput: '' }
+    );
+  });
+
+  it('should process URL params with valid coordinates (Berlin)', async () => {
+    const parseUrlParams = await import('@/utils/parse-url-params');
+    vi.mocked(parseUrlParams.parseUrlParams).mockReturnValue({
+      wps: '13.365016850476763,52.483706198952575,13.422421655040836,52.49336042169804',
+    });
+
+    render(<DirectionsControl />);
+
+    expect(mockReverseGeocode).toHaveBeenCalledTimes(2);
+    expect(mockReverseGeocode).toHaveBeenCalledWith(
+      13.365016850476763,
+      52.483706198952575,
+      0,
+      { isPermalink: true }
+    );
+    expect(mockReverseGeocode).toHaveBeenCalledWith(
+      13.422421655040836,
+      52.49336042169804,
+      1,
+      { isPermalink: true }
+    );
+  });
+
+  it('should process URL params with valid coordinates where lng > 90 (Singapore)', async () => {
+    const parseUrlParams = await import('@/utils/parse-url-params');
+    vi.mocked(parseUrlParams.parseUrlParams).mockReturnValue({
+      wps: '103.66492937866911,1.4827280571964963,103.66421854954496,1.4840285187178779',
+    });
+
+    render(<DirectionsControl />);
+
+    expect(mockReverseGeocode).toHaveBeenCalledTimes(2);
+    expect(mockReverseGeocode).toHaveBeenCalledWith(
+      103.66492937866911,
+      1.4827280571964963,
+      0,
+      { isPermalink: true }
+    );
+    expect(mockReverseGeocode).toHaveBeenCalledWith(
+      103.66421854954496,
+      1.4840285187178779,
+      1,
+      { isPermalink: true }
+    );
+  });
+
+  it('should skip truly invalid coordinates from URL', async () => {
+    const parseUrlParams = await import('@/utils/parse-url-params');
+    vi.mocked(parseUrlParams.parseUrlParams).mockReturnValue({
+      wps: '999,999',
+    });
+
+    render(<DirectionsControl />);
+
+    expect(mockReverseGeocode).not.toHaveBeenCalled();
+  });
+
+  it('should handle coordinates near edge of valid range', async () => {
+    const parseUrlParams = await import('@/utils/parse-url-params');
+    vi.mocked(parseUrlParams.parseUrlParams).mockReturnValue({
+      wps: '179.9,89,-179.9,-89',
+    });
+
+    render(<DirectionsControl />);
+
+    expect(mockReverseGeocode).toHaveBeenCalledTimes(2);
+    expect(mockReverseGeocode).toHaveBeenCalledWith(179.9, 89, 0, {
+      isPermalink: true,
+    });
+    expect(mockReverseGeocode).toHaveBeenCalledWith(-179.9, -89, 1, {
+      isPermalink: true,
+    });
+  });
+});
