@@ -37,6 +37,18 @@ jobs:
         run: |
           npm install
           npm run build
+      - name: 📝 Create .htaccess for SPA routing
+        run: |
+          cat > ./build/.htaccess << 'EOF'
+          <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteBase /${{ env.PULL_NUMBER }}/
+
+            RewriteCond %{REQUEST_FILENAME} !-f
+            RewriteCond %{REQUEST_FILENAME} !-d
+            RewriteRule ^ index.html [L]
+          </IfModule>
+          EOF
       - name: 🚀 Preview deploy
         run: |
           eval $(ssh-agent -s)
