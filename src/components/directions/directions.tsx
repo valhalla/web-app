@@ -51,7 +51,7 @@ export const DirectionsControl = () => {
         const lng = coordinates[i]!;
         const lat = coordinates[i + 1]!;
 
-        if (!isValidCoordinates(lng, lat) || isNaN(lng) || isNaN(lat)) continue;
+        if (!isValidCoordinates(lat, lng) || isNaN(lng) || isNaN(lat)) continue;
 
         const index = i / 2;
         reverseGeocode(lng, lat, index, { isPermalink: true });

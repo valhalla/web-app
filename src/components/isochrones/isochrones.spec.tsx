@@ -219,4 +219,22 @@ describe('IsochronesControl URL parsing', () => {
 
     expect(mockReverseGeocode).not.toHaveBeenCalled();
   });
+
+  it('should process URL params with valid coordinates where lng > 90 (Singapore)', async () => {
+    const parseUrlParams = await import('@/utils/parse-url-params');
+    vi.mocked(parseUrlParams.parseUrlParams).mockReturnValue({
+      wps: '103.66492937866911,1.4827280571964963',
+    });
+
+    render(<IsochronesControl />);
+
+    expect(mockReverseGeocode).toHaveBeenCalledWith(
+      103.66492937866911,
+      1.4827280571964963
+    );
+    expect(mockFlyTo).toHaveBeenCalledWith({
+      center: [103.66492937866911, 1.4827280571964963],
+      zoom: 12,
+    });
+  });
 });
