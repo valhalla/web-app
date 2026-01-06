@@ -240,3 +240,15 @@ export interface FetchGeocodeObject {
 }
 
 export type PossibleTabValues = 'directions' | 'isochrones';
+
+export interface OptimizedLocation {
+  type: string;
+  lat: number;
+  lon: number;
+  original_index: number;
+}
+
+export interface ValhallaOptimizedRouteResponse {
+  trip: Trip;
+  id?: string;
+}
