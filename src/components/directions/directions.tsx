@@ -24,7 +24,11 @@ import {
 } from '@/hooks/use-directions-queries';
 import { useOptimizedRouteQuery } from '@/hooks/use-optimized-route-query';
 import { Sparkles } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export const DirectionsControl = () => {
   const waypoints = useDirectionsStore((state) => state.waypoints);
