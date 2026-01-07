@@ -68,6 +68,13 @@ vi.mock('@/hooks/use-directions-queries', () => ({
   })),
 }));
 
+vi.mock('@/hooks/use-optimized-route-query', () => ({
+  useOptimizedRouteQuery: vi.fn(() => ({
+    optimizeRoute: vi.fn(),
+    isPending: false,
+  })),
+}));
+
 vi.mock('./waypoints/waypoint-list', () => ({
   Waypoints: () => <div data-testid="mock-waypoints">Waypoints</div>,
 }));

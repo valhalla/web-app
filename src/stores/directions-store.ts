@@ -67,6 +67,7 @@ export interface DirectionsState {
   selectedAddresses: string | (Waypoint | null)[];
   results: RouteResult;
   inclineDeclineTotal?: InclineDeclineTotal;
+  isOptimized: boolean;
 }
 
 interface DirectionsActions {
@@ -96,6 +97,7 @@ interface DirectionsActions {
     lng: number,
     lat: number
   ) => void;
+  setIsOptimized: (isOptimized: boolean) => void;
 }
 
 type DirectionsStore = DirectionsState & DirectionsActions;
@@ -109,6 +111,7 @@ export const useDirectionsStore = create<DirectionsStore>()(
       zoomObj: { index: -1, timeNow: -1 },
       selectedAddresses: '',
       results: { data: null, show: { '-1': true } },
+      isOptimized: false,
 
       updateInclineDecline: (inclineDeclineTotal) =>
         set(
@@ -158,6 +161,7 @@ export const useDirectionsStore = create<DirectionsStore>()(
           (state) => {
             if (state.waypoints[index]) {
               state.waypoints[index].geocodeResults = addresses;
+              state.isOptimized = false;
             }
           },
           undefined,
@@ -179,6 +183,7 @@ export const useDirectionsStore = create<DirectionsStore>()(
                 ...result,
                 selected: j === addressindex,
               }));
+              state.isOptimized = false;
             }
           },
           undefined,
@@ -189,6 +194,7 @@ export const useDirectionsStore = create<DirectionsStore>()(
         set(
           (state) => {
             state.waypoints = [...defaultWaypoints];
+            state.isOptimized = false;
           },
           undefined,
           'clearWaypoints'
@@ -200,6 +206,7 @@ export const useDirectionsStore = create<DirectionsStore>()(
             if (state.waypoints[index]) {
               state.waypoints[index].userInput = '';
               state.waypoints[index].geocodeResults = [];
+              state.isOptimized = false;
             }
           },
           undefined,
@@ -237,6 +244,7 @@ export const useDirectionsStore = create<DirectionsStore>()(
               : createEmptyWaypoint(id);
 
             state.waypoints.splice(index, 0, newWaypoint);
+            state.isOptimized = false;
           },
           undefined,
           'addWaypointAtIndex'
@@ -248,6 +256,7 @@ export const useDirectionsStore = create<DirectionsStore>()(
             state.waypoints.push(
               createEmptyWaypoint((state.waypoints.length + 1).toString())
             );
+            state.isOptimized = false;
           },
           undefined,
           'addEmptyWaypointToEnd'
@@ -262,6 +271,8 @@ export const useDirectionsStore = create<DirectionsStore>()(
               state.waypoints[index].userInput = '';
               state.waypoints[index].geocodeResults = [];
             }
+
+            state.isOptimized = false;
 
             if (!hasActiveRoute(state.waypoints)) {
               state.successful = false;
@@ -313,10 +324,20 @@ export const useDirectionsStore = create<DirectionsStore>()(
               ];
               state.waypoints[index].userInput =
                 `${lng.toFixed(6)}, ${lat.toFixed(6)}`;
+              state.isOptimized = false;
             }
           },
           undefined,
           'updatePlaceholderAddressAtIndex'
+        ),
+
+      setIsOptimized: (isOptimized) =>
+        set(
+          (state) => {
+            state.isOptimized = isOptimized;
+          },
+          undefined,
+          'setIsOptimized'
         ),
     })),
     { name: 'directions-store' }

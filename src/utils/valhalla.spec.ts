@@ -14,6 +14,7 @@ import {
   buildIsochronesRequest,
   makeContours,
   makeLocations,
+  buildOptimizedRouteRequest,
 } from './valhalla';
 
 // Mock the polyline decode function
@@ -443,6 +444,86 @@ describe('valhalla.ts', () => {
           id: 'valhalla_directions',
           language: 'en-US',
           date_time: mockDateTime,
+        },
+      });
+    });
+  });
+
+  describe('buildOptimizedRouteRequest', () => {
+    const mockActiveWaypoints: ActiveWaypoints = [
+      {
+        title: 'Start',
+        description: 'Starting point',
+        selected: true,
+        addresslnglat: [-74.006, 40.7128],
+        sourcelnglat: [-74.006, 40.7128],
+        displaylnglat: [-74.006, 40.7128],
+        key: 1,
+        addressindex: 0,
+      },
+      {
+        title: 'Via 1',
+        description: 'Via point 1',
+        selected: true,
+        addresslnglat: [-73.99, 40.75],
+        sourcelnglat: [-73.99, 40.75],
+        displaylnglat: [-73.99, 40.75],
+        key: 2,
+        addressindex: 1,
+      },
+      {
+        title: 'Via 2',
+        description: 'Via point 2',
+        selected: true,
+        addresslnglat: [-73.98, 40.755],
+        sourcelnglat: [-73.98, 40.755],
+        displaylnglat: [-73.98, 40.755],
+        key: 3,
+        addressindex: 2,
+      },
+      {
+        title: 'End',
+        description: 'Ending point',
+        selected: true,
+        addresslnglat: [-87.6298, 41.8781],
+        sourcelnglat: [-87.6298, 41.8781],
+        displaylnglat: [-87.6298, 41.8781],
+        key: 4,
+        addressindex: 3,
+      },
+    ];
+    const mockSettings: Settings = {
+      // @ts-expect-error - Partial mock for testing
+      costing: {
+        maneuver_penalty: 5,
+        use_highways: 1,
+      },
+      // @ts-expect-error - Partial mock for testing
+      directions: {},
+    };
+    it('should create an optimized route request with proper structure', () => {
+      const profile: Profile = 'car';
+      const result = buildOptimizedRouteRequest({
+        profile,
+        activeWaypoints: mockActiveWaypoints,
+        settings: mockSettings,
+        language: 'en-US',
+      });
+      expect(result).toEqual({
+        json: {
+          costing: 'auto',
+          costing_options: {
+            auto: mockSettings.costing,
+          },
+          locations: [
+            { lon: -74.006, lat: 40.7128, type: 'break' },
+            { lon: -73.99, lat: 40.75, type: 'via' },
+            { lon: -73.98, lat: 40.755, type: 'via' },
+            { lon: -87.6298, lat: 41.8781, type: 'break' },
+          ],
+          units: 'kilometers',
+          id: 'valhalla_optimized_route',
+          language: 'en-US',
         },
       });
     });

@@ -5,7 +5,6 @@ import type {
   ActiveWaypoints,
   IsochronesRequestParams,
   Settings,
-  ValhallaRouteResponse,
 } from '@/components/types';
 
 export const VALHALLA_OSM_URL = import.meta.env.VITE_VALHALLA_URL;
@@ -77,7 +76,39 @@ export const buildDirectionsRequest = ({
   return req;
 };
 
-export const parseDirectionsGeometry = (data: ValhallaRouteResponse) => {
+export const buildOptimizedRouteRequest = ({
+  profile,
+  activeWaypoints,
+  settings,
+  language,
+}: {
+  profile: Profile;
+  activeWaypoints: ActiveWaypoints;
+  settings: Settings;
+  language: string;
+}) => {
+  let valhalla_profile = profile;
+  if (profile === 'car') {
+    valhalla_profile = 'auto';
+  }
+  const req = {
+    json: {
+      costing: valhalla_profile,
+      costing_options: {
+        [valhalla_profile]: { ...settings.costing },
+      },
+      locations: makeLocations(activeWaypoints),
+      units: 'kilometers',
+      id: 'valhalla_optimized_route',
+      language,
+    },
+  };
+  return req;
+};
+
+export const parseDirectionsGeometry = (data: {
+  trip: { legs: { shape: string }[] };
+}) => {
   const coordinates: number[][] = [];
 
   for (const feat of data.trip.legs) {

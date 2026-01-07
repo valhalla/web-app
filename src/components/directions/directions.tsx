@@ -22,6 +22,13 @@ import {
   useDirectionsQuery,
   useReverseGeocodeDirections,
 } from '@/hooks/use-directions-queries';
+import { useOptimizedRouteQuery } from '@/hooks/use-optimized-route-query';
+import { Sparkles } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export const DirectionsControl = () => {
   const waypoints = useDirectionsStore((state) => state.waypoints);
@@ -38,6 +45,8 @@ export const DirectionsControl = () => {
   const dateTime = useCommonStore((state) => state.dateTime);
   const { refetch: refetchDirections } = useDirectionsQuery();
   const { reverseGeocode } = useReverseGeocodeDirections();
+  const { optimizeRoute, isPending: isOptimizing } = useOptimizedRouteQuery();
+  const isOptimized = useDirectionsStore((state) => state.isOptimized);
 
   useEffect(() => {
     if (urlParamsProcessed.current) return;
@@ -100,6 +109,10 @@ export const DirectionsControl = () => {
     clearRoutes();
   }, [clearWaypoints, clearRoutes]);
 
+  const activeWaypointsCount = waypoints.filter((wp) =>
+    wp.geocodeResults.some((r) => r.selected)
+  ).length;
+
   return (
     <>
       <div className="flex flex-col gap-3 border rounded-md p-2">
@@ -127,6 +140,26 @@ export const DirectionsControl = () => {
             Reset Waypoints
           </Button>
         </div>
+        <Tooltip open={activeWaypointsCount >= 4 ? false : undefined}>
+          <TooltipTrigger asChild>
+            <span>
+              <Button
+                variant="outline"
+                onClick={() => optimizeRoute()}
+                disabled={
+                  activeWaypointsCount < 4 || isOptimizing || isOptimized
+                }
+                className="w-full"
+              >
+                <Sparkles className="size-4" />
+                Optimize Route
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>You should have at least 4 waypoints to optimize the route</p>
+          </TooltipContent>
+        </Tooltip>
         <DateTimePicker
           type={dateTime.type}
           value={dateTime.value}
