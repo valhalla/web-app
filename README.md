@@ -1,9 +1,7 @@
-> [!NOTE]
-> This repository is currently widely unmaintained. We're looking for dedicated OSS heroes who would be willing to help/contribute. The promise is a place in the glorious hall of Valhalla! In case of interest, open an issue or email nilsnolde+github@proton.me.
-
 # Valhalla Demo App
 
-![valhalla_screenshot](https://user-images.githubusercontent.com/10322094/144841673-18ec0772-129d-443e-a040-5172480b0f92.png)
+<img width="2253" height="1303" alt="image" src="https://github.com/user-attachments/assets/00f43ea8-51df-4319-ad31-4feadf0024c1" />
+
 
 This is the ReactJS demo web app running on https://valhalla.openstreetmap.de. It provides routing and isochrones with a magnitude of options and makes requests to [Valhalla](https://github.com/valhalla/valhalla), an open source routing engine and accompanying libraries for use with OpenStreetMap data.
 
