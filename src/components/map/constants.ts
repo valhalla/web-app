@@ -42,3 +42,5 @@ export const MAP_STYLES = [
 export const DEFAULT_MAP_STYLE = MAP_STYLES[0].style;
 export const DEFAULT_MAP_STYLE_ID = MAP_STYLES[0].id;
 export const MAP_STYLE_IDS = MAP_STYLES.map((s) => s.id);
+export const CLICK_DELAY_MS = 200;
+export const DOUBLE_TAP_THRESHOLD_MS = 300;
