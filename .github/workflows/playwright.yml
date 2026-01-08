@@ -3,12 +3,10 @@ on:
   pull_request:
     branches: [main, master]
     paths-ignore:
-      - '**.md'
       - 'docker*'
       - 'Docker*'
 jobs:
   test:
-    if: ${{ !contains(github.event.pull_request.title, '[skip-tests]') }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
