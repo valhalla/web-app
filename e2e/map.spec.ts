@@ -294,16 +294,29 @@ test.describe('Map interactions with right context menu', () => {
     ).toBeVisible();
 
     // Add 7 via points (total waypoints = 9, but only 8 should be allowed)
+    // Use positions that stay within viewport and away from existing markers
+    const viaPositions = [
+      { x: 750, y: 150 },
+      { x: 850, y: 200 },
+      { x: 900, y: 250 },
+      { x: 950, y: 150 },
+      { x: 850, y: 350 },
+      { x: 750, y: 400 },
+      { x: 900, y: 400 },
+    ];
+
     for (let i = 0; i < 7; i++) {
       await page.getByRole('region', { name: 'Map' }).click({
         button: 'right',
-        position: { x: 800, y: 100 + i * 100 },
+        position: viaPositions[i],
         force: true,
       });
       await expect(
         page.getByRole('button', { name: 'Add as via point' })
       ).toBeVisible();
-      await page.getByRole('button', { name: 'Add as via point' }).click();
+      await page
+        .getByRole('button', { name: 'Add as via point' })
+        .click({ force: true });
       await expect(
         page.getByLabel(`Map marker ${i + 3}`).getByRole('img')
       ).toBeVisible();
