@@ -29,7 +29,11 @@ import { Button } from '@/components/ui/button';
 
 import { MapStyleControl } from './map-style-control';
 import { getInitialMapStyle, getCustomStyle, getMapStyleUrl } from './utils';
-import { DEFAULT_MAP_STYLE_ID } from './constants';
+import {
+  CLICK_DELAY_MS,
+  DEFAULT_MAP_STYLE_ID,
+  DOUBLE_TAP_THRESHOLD_MS,
+} from './constants';
 import type { MapStyleType } from './types';
 import { RouteLines } from './parts/route-lines';
 import { HighlightSegment } from './parts/highlight-segment';
@@ -144,6 +148,23 @@ export const MapComponent = () => {
   const touchStartTimeRef = useRef<number | null>(null);
   const touchLocationRef = useRef<{ x: number; y: number } | null>(null);
   const handledLongPressRef = useRef<boolean>(false);
+  const clickStateRef = useRef<{
+    timer: ReturnType<typeof setTimeout> | null;
+    pendingLngLat: { lng: number; lat: number } | null;
+    lastTapTime: number;
+  }>({
+    timer: null,
+    pendingLngLat: null,
+    lastTapTime: 0,
+  });
+
+  const cancelPendingClick = useCallback(() => {
+    if (clickStateRef.current.timer) {
+      clearTimeout(clickStateRef.current.timer);
+      clickStateRef.current.timer = null;
+      clickStateRef.current.pendingLngLat = null;
+    }
+  }, []);
 
   const throttledSetHeightgraphHoverDistance = useMemo(
     () => throttle(50, setHeightgraphHoverDistance),
@@ -432,7 +453,6 @@ export const MapComponent = () => {
     }
   }, [coordinates, directionsPanelOpen, settingsPanelOpen]);
 
-  // Handle map click
   const handleMapClick = useCallback(
     (event: { lngLat: { lng: number; lat: number } }) => {
       // Prevent click if we just handled a long press
@@ -467,12 +487,38 @@ export const MapComponent = () => {
       }
 
       const { lngLat } = event;
-      setPopupLngLat(lngLat);
-      setShowInfoPopup(true);
-      getHeight(lngLat.lng, lngLat.lat);
+
+      cancelPendingClick();
+
+      // store the pending location in ref to avoid stale closure issues
+      clickStateRef.current.pendingLngLat = lngLat;
+
+      // delay showing popup to distinguish single click from double-click/double-tap
+      clickStateRef.current.timer = setTimeout(() => {
+        const pendingLngLat = clickStateRef.current.pendingLngLat;
+        if (pendingLngLat) {
+          setPopupLngLat(pendingLngLat);
+          setShowInfoPopup(true);
+          getHeight(pendingLngLat.lng, pendingLngLat.lat);
+        }
+        clickStateRef.current.timer = null;
+        clickStateRef.current.pendingLngLat = null;
+      }, CLICK_DELAY_MS);
     },
-    [getHeight, showInfoPopup, showContextPopup]
+    [getHeight, showInfoPopup, showContextPopup, cancelPendingClick]
   );
+
+  // handle double-click to cancel the pending single-click popup
+  const handleMapDblClick = useCallback(() => {
+    cancelPendingClick();
+  }, [cancelPendingClick]);
+
+  // cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      cancelPendingClick();
+    };
+  }, [cancelPendingClick]);
 
   const handleMapContextMenu = useCallback(
     (event: { lngLat: { lng: number; lat: number } }) => {
@@ -497,11 +543,29 @@ export const MapComponent = () => {
     localStorage.setItem(LAST_CENTER_KEY, last_center);
   }, []);
 
-  const handleTouchStart = useCallback((event: maplibregl.MapTouchEvent) => {
-    touchStartTimeRef.current = new Date().getTime();
-    touchLocationRef.current = { x: event.point.x, y: event.point.y };
-    handledLongPressRef.current = false;
-  }, []);
+  const handleTouchStart = useCallback(
+    (event: maplibregl.MapTouchEvent) => {
+      const now = Date.now();
+      const touchCount = event.originalEvent.touches.length;
+
+      // multi-finger touch (pinch-to-zoom, etc.) - cancel any pending click popup
+      if (touchCount > 1) {
+        cancelPendingClick();
+        return;
+      }
+
+      touchStartTimeRef.current = now;
+      touchLocationRef.current = { x: event.point.x, y: event.point.y };
+      handledLongPressRef.current = false;
+
+      // detect double-tap: if two single-finger taps occur within threshold, cancel pending click
+      if (now - clickStateRef.current.lastTapTime < DOUBLE_TAP_THRESHOLD_MS) {
+        cancelPendingClick();
+      }
+      clickStateRef.current.lastTapTime = now;
+    },
+    [cancelPendingClick]
+  );
 
   const handleTouchEnd = useCallback(
     (event: maplibregl.MapTouchEvent) => {
@@ -621,6 +685,7 @@ export const MapComponent = () => {
       onMove={(evt) => setViewState(evt.viewState)}
       onMoveEnd={handleMoveEnd}
       onClick={handleMapClick}
+      onDblClick={handleMapDblClick}
       onContextMenu={handleMapContextMenu}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}

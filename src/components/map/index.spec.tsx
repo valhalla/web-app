@@ -17,29 +17,51 @@ const mockMapRef = {
 };
 
 vi.mock('react-map-gl/maplibre', () => ({
-  Map: vi.fn(({ children, onClick, onContextMenu, ...props }) => (
-    <div
-      data-testid="map"
-      data-longitude={props.longitude}
-      data-latitude={props.latitude}
-      data-zoom={props.zoom}
-      onClick={() => {
-        onClick?.({
-          lngLat: { lng: 13.4, lat: 52.5 },
-          point: { x: 100, y: 100 },
-        });
-      }}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        onContextMenu?.({
-          lngLat: { lng: 13.4, lat: 52.5 },
-          point: { x: 100, y: 100 },
-        });
-      }}
-    >
-      {children}
-    </div>
-  )),
+  Map: vi.fn(
+    ({
+      children,
+      onClick,
+      onDblClick,
+      onContextMenu,
+      onTouchStart,
+      ...props
+    }) => (
+      <div
+        data-testid="map"
+        data-longitude={props.longitude}
+        data-latitude={props.latitude}
+        data-zoom={props.zoom}
+        onClick={() => {
+          onClick?.({
+            lngLat: { lng: 13.4, lat: 52.5 },
+            point: { x: 100, y: 100 },
+          });
+        }}
+        onDoubleClick={() => {
+          onDblClick?.({
+            lngLat: { lng: 13.4, lat: 52.5 },
+            point: { x: 100, y: 100 },
+          });
+        }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          onContextMenu?.({
+            lngLat: { lng: 13.4, lat: 52.5 },
+            point: { x: 100, y: 100 },
+          });
+        }}
+        onTouchStart={(e) => {
+          onTouchStart?.({
+            lngLat: { lng: 13.4, lat: 52.5 },
+            point: { x: 100, y: 100 },
+            originalEvent: e,
+          });
+        }}
+      >
+        {children}
+      </div>
+    )
+  ),
   Marker: vi.fn(({ children, longitude, latitude }) => (
     <div data-testid="marker" data-lng={longitude} data-lat={latitude}>
       {children}
@@ -182,24 +204,6 @@ vi.mock('./parts/map-context-menu', () => ({
   )),
 }));
 
-vi.mock('./parts/route-hover-popup', () => ({
-  RouteHoverPopup: vi.fn(() => (
-    <div data-testid="route-hover-popup">Hover</div>
-  )),
-}));
-
-vi.mock('./parts/marker-icon', () => ({
-  MarkerIcon: vi.fn(({ color, number }) => (
-    <div data-testid="marker-icon" data-color={color} data-number={number}>
-      Marker
-    </div>
-  )),
-}));
-
-vi.mock('@/components/heightgraph', () => ({
-  default: vi.fn(() => <div data-testid="heightgraph">HeightGraph</div>),
-}));
-
 vi.mock('./utils', () => ({
   getInitialMapStyle: vi.fn(() => 'shortbread'),
   getCustomStyle: vi.fn(() => null),
@@ -209,27 +213,6 @@ vi.mock('./utils', () => ({
     zoom: 10,
   })),
   LAST_CENTER_KEY: 'last_center',
-}));
-
-vi.mock('./constants', () => ({
-  DEFAULT_MAP_STYLE_ID: 'shortbread',
-  maxBounds: undefined,
-}));
-
-vi.mock('axios', () => ({
-  default: {
-    post: vi.fn().mockResolvedValue({ data: { height: [100] } }),
-  },
-}));
-
-vi.mock('@/utils/valhalla', () => ({
-  VALHALLA_OSM_URL: 'https://valhalla.example.com',
-  buildHeightRequest: vi.fn(() => ({})),
-  buildLocateRequest: vi.fn(() => ({})),
-}));
-
-vi.mock('@/utils/heightgraph', () => ({
-  buildHeightgraphData: vi.fn(() => []),
 }));
 
 vi.mock('sonner', () => ({
@@ -333,15 +316,22 @@ describe('MapComponent', () => {
     await user.click(osmButton);
   });
 
-  it('should show info popup on map click', async () => {
+  it('should show info popup on map click after delay', async () => {
+    vi.useFakeTimers();
     render(<MapComponent />);
 
     fireEvent.click(screen.getByTestId('map'));
 
-    await waitFor(() => {
-      expect(screen.getByTestId('popup')).toBeInTheDocument();
-      expect(screen.getByTestId('map-info-popup')).toBeInTheDocument();
-    });
+    // popup should not appear immediately
+    expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
+
+    // advance timers past the click delay (200ms)
+    await vi.advanceTimersByTimeAsync(250);
+
+    expect(screen.getByTestId('popup')).toBeInTheDocument();
+    expect(screen.getByTestId('map-info-popup')).toBeInTheDocument();
+
+    vi.useRealTimers();
   });
 
   it('should show context menu on right click', async () => {
@@ -356,15 +346,19 @@ describe('MapComponent', () => {
   });
 
   it('should close info popup when close is triggered', async () => {
-    const user = userEvent.setup();
+    vi.useFakeTimers();
     render(<MapComponent />);
 
     fireEvent.click(screen.getByTestId('map'));
 
-    await waitFor(() => {
-      expect(screen.getByTestId('map-info-popup')).toBeInTheDocument();
-    });
+    // advance timers to show popup
+    await vi.advanceTimersByTimeAsync(250);
 
+    expect(screen.getByTestId('map-info-popup')).toBeInTheDocument();
+
+    // use real timers for user interaction
+    vi.useRealTimers();
+    const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: 'Close' }));
 
     await waitFor(() => {
@@ -403,19 +397,23 @@ describe('MapComponent', () => {
   });
 
   it('should close info popup when clicking on map again', async () => {
+    vi.useFakeTimers();
     render(<MapComponent />);
 
     fireEvent.click(screen.getByTestId('map'));
 
-    await waitFor(() => {
-      expect(screen.getByTestId('map-info-popup')).toBeInTheDocument();
-    });
+    // advance timers to show popup
+    await vi.advanceTimersByTimeAsync(250);
 
+    expect(screen.getByTestId('map-info-popup')).toBeInTheDocument();
+
+    // click again to close
     fireEvent.click(screen.getByTestId('map'));
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
-    });
+    // popup should close immediately (no delay for closing)
+    expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
+
+    vi.useRealTimers();
   });
 
   describe('GeolocateControl error handling', () => {
@@ -441,6 +439,139 @@ describe('MapComponent', () => {
       expect(mockToast.error).toHaveBeenCalledWith(
         "We couldn't get your location. Please check your browser settings and allow location access."
       );
+    });
+  });
+
+  describe('double-click and double-tap behavior', () => {
+    it('should not show popup on double-click (zoom only)', async () => {
+      vi.useFakeTimers();
+      render(<MapComponent />);
+
+      const map = screen.getByTestId('map');
+
+      // simulate double-click: click followed quickly by dblclick
+      fireEvent.click(map);
+      fireEvent.doubleClick(map);
+
+      // advance timers past the click delay
+      await vi.advanceTimersByTimeAsync(250);
+
+      // popup should not appear because double-click cancelled it
+      expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
+
+      vi.useRealTimers();
+    });
+
+    it('should cancel pending popup when double-click occurs before delay expires', async () => {
+      vi.useFakeTimers();
+      render(<MapComponent />);
+
+      const map = screen.getByTestId('map');
+
+      // first click starts the timer
+      fireEvent.click(map);
+
+      // popup should not be visible yet
+      expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
+
+      // advance only 100ms (less than 200ms delay)
+      await vi.advanceTimersByTimeAsync(100);
+
+      // double-click cancels the pending popup
+      fireEvent.doubleClick(map);
+
+      // advance past the original delay
+      await vi.advanceTimersByTimeAsync(200);
+
+      // popup should still not appear
+      expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
+
+      vi.useRealTimers();
+    });
+
+    it('should cancel pending popup on double-tap (mobile)', async () => {
+      vi.useFakeTimers();
+      render(<MapComponent />);
+
+      const map = screen.getByTestId('map');
+
+      // create a mock touch event with single finger
+      const createTouchEvent = () => ({
+        touches: [{ identifier: 0, target: map }],
+      });
+
+      // first tap
+      fireEvent.touchStart(map, createTouchEvent());
+      fireEvent.click(map);
+
+      // popup should not be visible yet
+      expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
+
+      // second tap within 300ms threshold (simulating double-tap)
+      await vi.advanceTimersByTimeAsync(100);
+      fireEvent.touchStart(map, createTouchEvent());
+
+      // advance past the click delay
+      await vi.advanceTimersByTimeAsync(250);
+
+      // popup should not appear because double-tap cancelled it
+      expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
+
+      vi.useRealTimers();
+    });
+
+    it('should cancel pending popup on multi-finger touch (pinch-to-zoom)', async () => {
+      vi.useFakeTimers();
+      render(<MapComponent />);
+
+      const map = screen.getByTestId('map');
+
+      // first single-finger tap starts click timer
+      fireEvent.touchStart(map, {
+        touches: [{ identifier: 0, target: map }],
+      });
+      fireEvent.click(map);
+
+      // popup should not be visible yet
+      expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
+
+      // multi-finger touch (pinch gesture) should cancel pending popup
+      await vi.advanceTimersByTimeAsync(50);
+      fireEvent.touchStart(map, {
+        touches: [
+          { identifier: 0, target: map },
+          { identifier: 1, target: map },
+        ],
+      });
+
+      // advance past the click delay
+      await vi.advanceTimersByTimeAsync(250);
+
+      // popup should not appear because multi-touch cancelled it
+      expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
+
+      vi.useRealTimers();
+    });
+
+    it('should show popup on single tap after double-tap threshold passes', async () => {
+      vi.useFakeTimers();
+      render(<MapComponent />);
+
+      const map = screen.getByTestId('map');
+
+      // first tap
+      fireEvent.touchStart(map, {
+        touches: [{ identifier: 0, target: map }],
+      });
+      fireEvent.click(map);
+
+      // wait longer than double-tap threshold (300ms) + click delay (200ms)
+      await vi.advanceTimersByTimeAsync(250);
+
+      // popup should appear since no second tap occurred
+      expect(screen.getByTestId('map-info-popup')).toBeInTheDocument();
+
+      vi.useRealTimers();
     });
   });
 });
