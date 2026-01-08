@@ -13,7 +13,7 @@
   ],
   "sources": {
     "versatiles-shortbread": {
-      "attribution": "<a href=\"https://map.project-osrm.org/about.html\" target=\"_blank\">About this service and privacy policy</a> | &copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",
+      "attribution": "<a href=\"https://github.com/valhalla/valhalla/discussions/3373#discussion-3655404\" target=\"_blank\">About this service</a> | &copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",
       "tiles": [
         "https://vector.openstreetmap.org/shortbread_v1/{z}/{x}/{y}.mvt"
       ],
