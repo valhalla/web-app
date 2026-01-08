@@ -1,0 +1,54 @@
+name: PR Preview Build
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - 'master'
+    paths-ignore:
+      - '**.md'
+      - 'docker*'
+      - 'Docker*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 📝 Save PR number
+        run: echo "${{ github.event.pull_request.number }}" > pr_number.txt
+
+      - name: 🏠 Replace homepage URL
+        run: sed -i "s/https:\/\/valhalla.openstreetmap.de/https:\/\/valhalla-app-tests.gis-ops.com\/${{ github.event.pull_request.number }}/g" package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: 🔧 Install and build
+        run: |
+          npm ci
+          npm run build
+
+      - name: 📝 Create .htaccess for SPA routing
+        run: |
+          cat > ./build/.htaccess << 'EOF'
+          <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteBase /${{ github.event.pull_request.number }}/
+
+            RewriteCond %{REQUEST_FILENAME} !-f
+            RewriteCond %{REQUEST_FILENAME} !-d
+            RewriteRule ^ index.html [L]
+          </IfModule>
+          EOF
+
+      - name: 📦 Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-build
+          path: |
+            ./build
+            pr_number.txt
+          retention-days: 1
