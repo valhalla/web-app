@@ -43,6 +43,7 @@ jobs:
             RewriteRule ^ index.html [L]
           </IfModule>
           EOF
+          sed -i 's/^[[:space:]]*//' ./build/.htaccess
 
       - name: 📦 Upload build artifact
         uses: actions/upload-artifact@v4
