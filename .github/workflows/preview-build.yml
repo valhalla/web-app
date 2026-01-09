@@ -31,26 +31,11 @@ jobs:
           npm ci
           npm run build
 
-      - name: 📝 Create .htaccess for SPA routing
-        env:
-          PULL_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          printf '%s\n' \
-            '<IfModule mod_rewrite.c>' \
-            '  RewriteEngine On' \
-            "  RewriteBase /${PULL_NUMBER}/" \
-            '' \
-            '  RewriteCond %{REQUEST_FILENAME} !-f' \
-            '  RewriteCond %{REQUEST_FILENAME} !-d' \
-            '  RewriteRule ^ index.html [L]' \
-            '</IfModule>' > ./build/.htaccess
-
       - name: 📦 Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: preview-build
           path: |
             ./build
-            ./build/.htaccess
             pr_number.txt
           retention-days: 1

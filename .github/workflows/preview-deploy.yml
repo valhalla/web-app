@@ -22,6 +22,20 @@ jobs:
         id: pr
         run: echo "number=$(cat pr_number.txt)" >> $GITHUB_OUTPUT
 
+      - name: 📝 Create .htaccess for SPA routing
+        env:
+          PULL_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          printf '%s\n' \
+            '<IfModule mod_rewrite.c>' \
+            '  RewriteEngine On' \
+            "  RewriteBase /${PULL_NUMBER}/" \
+            '' \
+            '  RewriteCond %{REQUEST_FILENAME} !-f' \
+            '  RewriteCond %{REQUEST_FILENAME} !-d' \
+            '  RewriteRule ^ index.html [L]' \
+            '</IfModule>' > ./build/.htaccess
+
       - name: 🚀 Deploy preview
         env:
           PULL_NUMBER: ${{ steps.pr.outputs.number }}
