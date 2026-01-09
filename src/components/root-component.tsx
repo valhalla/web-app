@@ -28,10 +28,11 @@ const TanStackRouterDevtoolsPanel = import.meta.env.DEV
 
 export const RootComponent = () => {
   useEffect(() => {
-    toast.success(
-      'Welcome to Valhalla! Global Routing Service - funded by FOSSGIS e.V.',
-      { position: 'bottom-center', duration: 5000, closeButton: true }
-    );
+    toast.success('This is a test toast for preview', {
+      position: 'bottom-center',
+      duration: 5000,
+      closeButton: true,
+    });
   }, []);
 
   return (
