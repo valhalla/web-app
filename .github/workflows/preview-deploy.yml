@@ -23,13 +23,11 @@ jobs:
         run: echo "number=$(cat pr_number.txt)" >> $GITHUB_OUTPUT
 
       - name: 📝 Create .htaccess for SPA routing
-        env:
-          PULL_NUMBER: ${{ steps.pr.outputs.number }}
         run: |
           cat > ./build/.htaccess << 'EOF'
           <IfModule mod_rewrite.c>
             RewriteEngine On
-            RewriteBase /${PULL_NUMBER}/
+            RewriteBase /${{ steps.pr.outputs.number }}/
 
             RewriteCond %{REQUEST_FILENAME} !-f
             RewriteCond %{REQUEST_FILENAME} !-d
