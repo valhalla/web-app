@@ -1,0 +1,20 @@
+name: PR Preview Cleanup
+
+on:
+  pull_request_target:
+    types: [closed]
+    branches:
+      - 'master'
+
+jobs:
+  clean-up:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🧹 Remove preview directory
+        env:
+          PULL_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          eval $(ssh-agent -s)
+          ssh-add - <<< "${{ secrets.PREVIEW_SSH_PRIVATE_KEY }}"
+          ssh -o StrictHostKeyChecking=no ${{ vars.PREVIEW_HOST_USERNAME }}@${{ vars.PREVIEW_HOST_IP }} "rm -rf ${{ vars.PREVIEW_HOST_TARGET_DIR }}/$PULL_NUMBER"
+          echo "🧹 Cleaned up preview for PR #$PULL_NUMBER"
