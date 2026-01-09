@@ -22,6 +22,21 @@ jobs:
         id: pr
         run: echo "number=$(cat pr_number.txt)" >> $GITHUB_OUTPUT
 
+      - name: 📝 Create .htaccess for SPA routing
+        env:
+          PULL_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          cat > ./build/.htaccess << 'EOF'
+          <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteBase /${PULL_NUMBER}/
+
+            RewriteCond %{REQUEST_FILENAME} !-f
+            RewriteCond %{REQUEST_FILENAME} !-d
+            RewriteRule ^ index.html [L]
+          </IfModule>
+          EOF
+
       - name: 🚀 Deploy preview
         env:
           PULL_NUMBER: ${{ steps.pr.outputs.number }}
@@ -29,6 +44,27 @@ jobs:
           eval $(ssh-agent -s)
           ssh-add - <<< "${{ secrets.PREVIEW_SSH_PRIVATE_KEY }}"
           rsync -r --delete --rsync-path="mkdir -p ${{ vars.PREVIEW_HOST_TARGET_DIR }}/$PULL_NUMBER && rsync" -e "ssh -o StrictHostKeyChecking=no" ./build/ ${{ vars.PREVIEW_HOST_USERNAME }}@${{ vars.PREVIEW_HOST_IP }}:${{ vars.PREVIEW_HOST_TARGET_DIR }}/$PULL_NUMBER
+
+      - name: ✅ Update PR status check
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = parseInt('${{ steps.pr.outputs.number }}');
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: pr.head.sha,
+              state: 'success',
+              target_url: `https://valhalla-app-tests.gis-ops.com/${prNumber}`,
+              description: 'Preview deployed successfully',
+              context: 'PR Preview Deploy'
+            });
 
       - name: 🌐 Comment preview URL
         uses: actions/github-script@v7
