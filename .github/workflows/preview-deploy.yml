@@ -26,15 +26,16 @@ jobs:
         env:
           PULL_NUMBER: ${{ steps.pr.outputs.number }}
         run: |
-          printf '%s\n' \
-            '<IfModule mod_rewrite.c>' \
-            '  RewriteEngine On' \
-            "  RewriteBase /${PULL_NUMBER}/" \
-            '' \
-            '  RewriteCond %{REQUEST_FILENAME} !-f' \
-            '  RewriteCond %{REQUEST_FILENAME} !-d' \
-            '  RewriteRule ^ index.html [L]' \
-            '</IfModule>' > ./build/.htaccess
+          cat > ./build/.htaccess << 'EOF'
+          <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteBase /${PULL_NUMBER}/
+
+            RewriteCond %{REQUEST_FILENAME} !-f
+            RewriteCond %{REQUEST_FILENAME} !-d
+            RewriteRule ^ index.html [L]
+          </IfModule>
+          EOF
 
       - name: 🚀 Deploy preview
         env:
