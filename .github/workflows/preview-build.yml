@@ -51,5 +51,6 @@ jobs:
           name: preview-build
           path: |
             ./build
+            ./build/.htaccess
             pr_number.txt
           retention-days: 1
