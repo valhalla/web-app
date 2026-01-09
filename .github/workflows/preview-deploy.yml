@@ -44,6 +44,27 @@ jobs:
           ssh-add - <<< "${{ secrets.PREVIEW_SSH_PRIVATE_KEY }}"
           rsync -r --delete --rsync-path="mkdir -p ${{ vars.PREVIEW_HOST_TARGET_DIR }}/$PULL_NUMBER && rsync" -e "ssh -o StrictHostKeyChecking=no" ./build/ ${{ vars.PREVIEW_HOST_USERNAME }}@${{ vars.PREVIEW_HOST_IP }}:${{ vars.PREVIEW_HOST_TARGET_DIR }}/$PULL_NUMBER
 
+      - name: ✅ Update PR status check
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = parseInt('${{ steps.pr.outputs.number }}');
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: pr.head.sha,
+              state: 'success',
+              target_url: `https://valhalla-app-tests.gis-ops.com/${prNumber}`,
+              description: 'Preview deployed successfully',
+              context: 'PR Preview Deploy'
+            });
+
       - name: 🌐 Comment preview URL
         uses: actions/github-script@v7
         with:
