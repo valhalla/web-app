@@ -1,8 +1,14 @@
 {
   "name": "valhalla-web",
   "version": "1.0.0",
+  "description": "Web interface for Valhalla routing engine",
   "private": false,
+  "license": "MIT",
   "homepage": "https://valhalla.openstreetmap.de",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/valhalla/web-app"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,7 +23,7 @@
     "lint": "eslint .",
     "prettier": "prettier --write \"**/*.{json,md,scss,yaml,yml,js,jsx,ts,tsx}\"",
     "prettier:check": "prettier --check \"**/*.{json,md,scss,yaml,yml,js,jsx,ts,tsx}\"",
-    "check": "yarn prettier:check && yarn lint",
+    "check": "npm run prettier:check && npm run lint",
     "typecheck": "tsc --noEmit",
     "deploy": "gh-pages -d build",
     "prepare": "husky",

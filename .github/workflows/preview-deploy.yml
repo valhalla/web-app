@@ -64,6 +64,32 @@ jobs:
               context: 'PR Preview Deploy'
             });
 
+      - name: ❌ Update PR status on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = parseInt('${{ steps.pr.outputs.number }}');
+            if (!prNumber) {
+              console.log('PR number not available, skipping status update');
+              return;
+            }
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: pr.head.sha,
+              state: 'failure',
+              target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              description: 'Preview deployment failed',
+              context: 'PR Preview Deploy'
+            });
+
       - name: 🌐 Comment preview URL
         uses: actions/github-script@v7
         with:
