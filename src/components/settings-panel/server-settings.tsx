@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -20,16 +21,37 @@ import {
 
 export const ServerSettings = () => {
   const [baseUrl, setBaseUrlState] = useState<string>(() => getBaseUrl());
-  const [baseUrlError, setBaseUrlError] = useState<string | null>(null);
-  const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  const connectionMutation = useMutation({
+    mutationFn: testConnection,
+    onSuccess: (result, url) => {
+      if (result.reachable) {
+        const normalizedUrl = normalizeBaseUrl(url);
+        setBaseUrl(normalizedUrl);
+        setBaseUrlState(normalizedUrl);
+      }
+    },
+  });
+
+  const getErrorMessage = (): string | null => {
+    if (connectionMutation.error) {
+      return connectionMutation.error.message || 'Connection failed';
+    }
+    if (connectionMutation.data && !connectionMutation.data.reachable) {
+      return connectionMutation.data.error || 'Server unreachable';
+    }
+    return null;
+  };
+
+  const errorMessage = getErrorMessage();
 
   const handleBaseUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBaseUrlState(e.target.value);
-    setBaseUrlError(null);
+    connectionMutation.reset();
   };
 
-  const handleBaseUrlBlur = async () => {
+  const handleBaseUrlBlur = () => {
     const currentStoredUrl = getBaseUrl();
     const trimmedUrl = baseUrl.trim();
 
@@ -37,41 +59,32 @@ export const ServerSettings = () => {
       return;
     }
 
+    const lastTestedUrl = connectionMutation.variables;
+    if (lastTestedUrl === trimmedUrl && errorMessage) {
+      return;
+    }
+
     if (trimmedUrl === '' || trimmedUrl === getDefaultBaseUrl()) {
       setBaseUrl(trimmedUrl);
       setBaseUrlState(trimmedUrl || getDefaultBaseUrl());
-      setBaseUrlError(null);
+      connectionMutation.reset();
       return;
     }
 
     const validation = validateBaseUrl(trimmedUrl);
     if (!validation.valid) {
-      setBaseUrlError(validation.error || 'Invalid URL');
+      connectionMutation.mutate(trimmedUrl);
       return;
     }
 
-    setIsTestingConnection(true);
-    setBaseUrlError(null);
-
-    const result = await testConnection(trimmedUrl);
-
-    setIsTestingConnection(false);
-
-    if (result.reachable) {
-      const normalizedUrl = normalizeBaseUrl(trimmedUrl);
-      setBaseUrl(normalizedUrl);
-      setBaseUrlState(normalizedUrl);
-      setBaseUrlError(null);
-    } else {
-      setBaseUrlError(result.error || 'Server unreachable');
-    }
+    connectionMutation.mutate(trimmedUrl);
   };
 
   const handleResetBaseUrl = () => {
     const defaultUrl = getDefaultBaseUrl();
     setBaseUrlState(defaultUrl);
     setBaseUrl(defaultUrl);
-    setBaseUrlError(null);
+    connectionMutation.reset();
   };
 
   return (
@@ -82,7 +95,7 @@ export const ServerSettings = () => {
       onOpenChange={setIsOpen}
     >
       <div className="space-y-2">
-        <Field data-invalid={!!baseUrlError}>
+        <Field data-invalid={!!errorMessage}>
           <FieldLabel htmlFor="base-url-input">Base URL</FieldLabel>
           <FieldDescription>
             The Valhalla server URL for routing and isochrone requests
@@ -96,29 +109,29 @@ export const ServerSettings = () => {
                 value={baseUrl}
                 onChange={handleBaseUrlChange}
                 onBlur={handleBaseUrlBlur}
-                disabled={isTestingConnection}
-                aria-invalid={!!baseUrlError}
+                disabled={connectionMutation.isPending}
+                aria-invalid={!!errorMessage}
                 className={
-                  baseUrlError
+                  errorMessage
                     ? 'border-destructive focus-visible:ring-destructive/50'
                     : ''
                 }
               />
-              {isTestingConnection && (
+              {connectionMutation.isPending && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                   <Loader2 className="size-4 animate-spin text-muted-foreground" />
                 </div>
               )}
             </div>
           </div>
-          <FieldError>{baseUrlError}</FieldError>
+          <FieldError>{errorMessage}</FieldError>
         </Field>
         <Button
           variant="outline"
           size="sm"
           onClick={handleResetBaseUrl}
           disabled={
-            isTestingConnection ||
+            connectionMutation.isPending ||
             normalizeBaseUrl(baseUrl) === getDefaultBaseUrl()
           }
           className="w-full"

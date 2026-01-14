@@ -1,8 +1,28 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SettingsPanel } from './settings-panel';
 import { DIRECTIONS_LANGUAGE_STORAGE_KEY } from './settings-options';
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
+
+const renderWithQueryClient = (ui: React.ReactElement) => {
+  const testQueryClient = createTestQueryClient();
+  return render(
+    <QueryClientProvider client={testQueryClient}>{ui}</QueryClientProvider>
+  );
+};
 
 const mockUpdateSettings = vi.fn();
 const mockResetSettings = vi.fn();
@@ -83,22 +103,22 @@ describe('SettingsPanel', () => {
   });
 
   it('should render without crashing', () => {
-    expect(() => render(<SettingsPanel />)).not.toThrow();
+    expect(() => renderWithQueryClient(<SettingsPanel />)).not.toThrow();
   });
 
   it('should render the settings title', () => {
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
     expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 
   it('should render close button', () => {
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
     expect(screen.getByTestId('close-settings-button')).toBeInTheDocument();
   });
 
   it('should call toggleSettings when close button is clicked', async () => {
     const user = userEvent.setup();
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
 
     await user.click(screen.getByTestId('close-settings-button'));
 
@@ -106,62 +126,62 @@ describe('SettingsPanel', () => {
   });
 
   it('should render Profile Settings section for bicycle profile', () => {
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
     expect(screen.getByText('Profile Settings')).toBeInTheDocument();
   });
 
   it('should render General Settings section', () => {
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
     expect(screen.getByText('General Settings')).toBeInTheDocument();
   });
 
   it('should display current profile name', () => {
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
     expect(screen.getByText('(bicycle)')).toBeInTheDocument();
   });
 
   it('should render Copy to Clipboard button', () => {
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
     expect(
       screen.getByRole('button', { name: /Copy to Clipboard/i })
     ).toBeInTheDocument();
   });
 
   it('should render Reset button', () => {
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
     expect(
       screen.getByRole('button', { name: /^Reset$/i })
     ).toBeInTheDocument();
   });
 
   it('should render bicycle profile settings like Cycling Speed', () => {
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
     expect(screen.getByText('Cycling Speed')).toBeInTheDocument();
   });
 
   it('should render Shortest checkbox for bicycle profile', () => {
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
     expect(screen.getByText('Shortest')).toBeInTheDocument();
   });
 
   it('should render Bicycle Type select for bicycle profile', () => {
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
     expect(screen.getByText('Bicycle Type')).toBeInTheDocument();
   });
 
   it('should render general settings like Use Ferries', () => {
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
     expect(screen.getByText('Use Ferries')).toBeInTheDocument();
   });
 
   it('should render Alternates setting from all general settings', () => {
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
     expect(screen.getByText('Alternates')).toBeInTheDocument();
   });
 
   it('should call resetSettings with current profile when Reset is clicked', async () => {
     const user = userEvent.setup();
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
 
     await user.click(screen.getByRole('button', { name: /^Reset$/i }));
 
@@ -170,7 +190,7 @@ describe('SettingsPanel', () => {
 
   it('should call refetchDirections after reset', async () => {
     const user = userEvent.setup();
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
 
     await user.click(screen.getByRole('button', { name: /^Reset$/i }));
 
@@ -179,7 +199,7 @@ describe('SettingsPanel', () => {
 
   it('should show Copied! feedback after clicking Copy to Clipboard', async () => {
     const user = userEvent.setup();
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
 
     await user.click(
       screen.getByRole('button', { name: /Copy to Clipboard/i })
@@ -192,7 +212,7 @@ describe('SettingsPanel', () => {
 
   it('should toggle shortest checkbox and trigger refetch', async () => {
     const user = userEvent.setup();
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
 
     const shortestCheckbox = screen.getByRole('checkbox', {
       name: /Shortest/i,
@@ -204,7 +224,7 @@ describe('SettingsPanel', () => {
   });
 
   it('should render all expected profile numeric settings for bicycle', () => {
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
 
     expect(screen.getByText('Cycling Speed')).toBeInTheDocument();
     expect(screen.getByText('Use Roads')).toBeInTheDocument();
@@ -213,7 +233,7 @@ describe('SettingsPanel', () => {
   });
 
   it('should render all expected general numeric settings for bicycle', () => {
-    render(<SettingsPanel />);
+    renderWithQueryClient(<SettingsPanel />);
 
     expect(screen.getByText('Use Ferries')).toBeInTheDocument();
     expect(screen.getByText('Use Living Streets')).toBeInTheDocument();
@@ -222,13 +242,13 @@ describe('SettingsPanel', () => {
 
   describe('Server Settings', () => {
     it('should render Server Settings section', () => {
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
       expect(screen.getByText('Server Settings')).toBeInTheDocument();
     });
 
     it('should render Base URL label when expanded', async () => {
       const user = userEvent.setup();
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
 
       await user.click(screen.getByText('Server Settings'));
 
@@ -237,7 +257,7 @@ describe('SettingsPanel', () => {
 
     it('should render base URL input when expanded', async () => {
       const user = userEvent.setup();
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
 
       await user.click(screen.getByText('Server Settings'));
 
@@ -248,7 +268,7 @@ describe('SettingsPanel', () => {
 
     it('should render Reset Base URL button when expanded', async () => {
       const user = userEvent.setup();
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
 
       await user.click(screen.getByText('Server Settings'));
 
@@ -261,7 +281,7 @@ describe('SettingsPanel', () => {
       const user = userEvent.setup();
       const customUrl = 'https://custom.valhalla.com';
       localStorage.setItem(BASE_URL_STORAGE_KEY, customUrl);
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
 
       await user.click(screen.getByText('Server Settings'));
 
@@ -271,7 +291,7 @@ describe('SettingsPanel', () => {
 
     it('should update input value when typing', async () => {
       const user = userEvent.setup();
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
 
       await user.click(screen.getByText('Server Settings'));
 
@@ -284,7 +304,7 @@ describe('SettingsPanel', () => {
 
     it('should not save to localStorage while typing', async () => {
       const user = userEvent.setup();
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
 
       await user.click(screen.getByText('Server Settings'));
 
@@ -297,7 +317,7 @@ describe('SettingsPanel', () => {
 
     it('should show error for invalid URL format on blur', async () => {
       const user = userEvent.setup();
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
 
       await user.click(screen.getByText('Server Settings'));
 
@@ -313,7 +333,7 @@ describe('SettingsPanel', () => {
 
     it('should show error for non-http protocol on blur', async () => {
       const user = userEvent.setup();
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
 
       await user.click(screen.getByText('Server Settings'));
 
@@ -331,7 +351,7 @@ describe('SettingsPanel', () => {
 
     it('should clear error when typing after error', async () => {
       const user = userEvent.setup();
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
 
       await user.click(screen.getByText('Server Settings'));
 
@@ -355,7 +375,7 @@ describe('SettingsPanel', () => {
 
     it('should have aria-invalid attribute when there is an error', async () => {
       const user = userEvent.setup();
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
 
       await user.click(screen.getByText('Server Settings'));
 
@@ -373,7 +393,7 @@ describe('SettingsPanel', () => {
       const user = userEvent.setup();
       const customUrl = 'https://custom.valhalla.com';
       localStorage.setItem(BASE_URL_STORAGE_KEY, customUrl);
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
 
       await user.click(screen.getByText('Server Settings'));
 
@@ -387,7 +407,7 @@ describe('SettingsPanel', () => {
 
     it('should disable Reset Base URL button when URL equals default', async () => {
       const user = userEvent.setup();
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
 
       await user.click(screen.getByText('Server Settings'));
 
@@ -401,7 +421,7 @@ describe('SettingsPanel', () => {
       const user = userEvent.setup();
       const customUrl = 'https://custom.valhalla.com';
       localStorage.setItem(BASE_URL_STORAGE_KEY, customUrl);
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
 
       await user.click(screen.getByText('Server Settings'));
 
@@ -410,41 +430,110 @@ describe('SettingsPanel', () => {
       });
       expect(resetButton).toBeEnabled();
     });
+
+    it('should not re-send request on blur when input is in error state and value unchanged', async () => {
+      const user = userEvent.setup();
+      renderWithQueryClient(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      const input = screen.getByRole('textbox', { name: /Base URL/i });
+      await user.clear(input);
+      await user.type(input, 'invalid-url');
+      await user.tab();
+
+      await waitFor(() => {
+        expect(screen.getByText('Invalid URL format')).toBeInTheDocument();
+      });
+
+      await user.click(input);
+      await user.tab();
+
+      expect(screen.getByText('Invalid URL format')).toBeInTheDocument();
+    });
+
+    it('should re-send request on blur after user modifies the error input value', async () => {
+      const user = userEvent.setup();
+      renderWithQueryClient(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      const input = screen.getByRole('textbox', { name: /Base URL/i });
+      await user.clear(input);
+      await user.type(input, 'invalid-url');
+      await user.tab();
+
+      await waitFor(() => {
+        expect(screen.getByText('Invalid URL format')).toBeInTheDocument();
+      });
+
+      await user.type(input, '-modified');
+      await user.tab();
+
+      await waitFor(() => {
+        expect(screen.getByText('Invalid URL format')).toBeInTheDocument();
+      });
+    });
+
+    it('should clear error state when reset button is clicked after error', async () => {
+      const user = userEvent.setup();
+      const customUrl = 'https://custom.valhalla.com';
+      localStorage.setItem(BASE_URL_STORAGE_KEY, customUrl);
+      renderWithQueryClient(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      const input = screen.getByRole('textbox', { name: /Base URL/i });
+      await user.clear(input);
+      await user.type(input, 'invalid-url');
+      await user.tab();
+
+      await waitFor(() => {
+        expect(screen.getByText('Invalid URL format')).toBeInTheDocument();
+      });
+
+      const resetButton = screen.getByRole('button', {
+        name: /Reset Base URL/i,
+      });
+      await user.click(resetButton);
+
+      expect(screen.queryByText('Invalid URL format')).not.toBeInTheDocument();
+    });
   });
 
   describe('Language Picker', () => {
     it('should render Directions Language section when activeTab is directions', () => {
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
       expect(screen.getByText('Directions Language')).toBeInTheDocument();
       expect(screen.getByText('Language')).toBeInTheDocument();
     });
 
     it('should not render Directions Language section when activeTab is isochrones', () => {
       mockUseParams.mockReturnValue({ activeTab: 'isochrones' });
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
       expect(screen.queryByText('Directions Language')).not.toBeInTheDocument();
     });
 
     it('should use system locale when no language is stored', () => {
       vi.stubGlobal('navigator', { language: 'fr-FR' });
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
       expect(screen.getByText('French (France)')).toBeInTheDocument();
     });
 
     it('should fall back to en-US when system locale is not supported', () => {
       vi.stubGlobal('navigator', { language: 'xx-XX' });
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
       expect(screen.getByText('English (United States)')).toBeInTheDocument();
     });
 
     it('should use stored language from localStorage on initial render', () => {
       localStorage.setItem(DIRECTIONS_LANGUAGE_STORAGE_KEY, 'de-DE');
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
       expect(screen.getByText('German (Germany)')).toBeInTheDocument();
     });
 
     it('should render language select with correct id', () => {
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
       const languageSelect = screen.getByRole('combobox', {
         name: /Language/i,
       });
@@ -452,7 +541,7 @@ describe('SettingsPanel', () => {
     });
 
     it('should render language description in help tooltip', () => {
-      render(<SettingsPanel />);
+      renderWithQueryClient(<SettingsPanel />);
       expect(screen.getByText('Language')).toBeInTheDocument();
     });
   });
