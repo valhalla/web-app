@@ -7,7 +7,7 @@ import type {
   Center,
   ValhallaIsochroneResponse,
 } from '@/components/types';
-import { VALHALLA_OSM_URL, buildIsochronesRequest } from '@/utils/valhalla';
+import { getValhallaUrl, buildIsochronesRequest } from '@/utils/valhalla';
 import {
   reverse_geocode,
   forward_geocode,
@@ -18,10 +18,6 @@ import { calcArea } from '@/utils/geom';
 import { useCommonStore } from '@/stores/common-store';
 import { useIsochronesStore } from '@/stores/isochrones-store';
 import { router } from '@/routes';
-
-const serverMapping: Record<string, string> = {
-  [VALHALLA_OSM_URL!]: 'OSM',
-};
 
 async function fetchIsochrones() {
   const { geocodeResults, maxRange, interval, denoise, generalize } =
@@ -48,7 +44,7 @@ async function fetchIsochrones() {
   });
 
   const { data } = await axios.get<ValhallaIsochroneResponse>(
-    VALHALLA_OSM_URL + '/isochrone',
+    getValhallaUrl() + '/isochrone',
     {
       params: { json: JSON.stringify(valhallaRequest.json) },
       headers: { 'Content-Type': 'application/json' },
@@ -90,7 +86,7 @@ export function useIsochronesQuery() {
         if (axios.isAxiosError(error) && error.response) {
           const response = error.response;
           toast.warning(`${response.data.status}`, {
-            description: `${serverMapping[VALHALLA_OSM_URL!]}: ${response.data.error}`,
+            description: `${response.data.error}`,
             position: 'bottom-center',
             duration: 5000,
             closeButton: true,

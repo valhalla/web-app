@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { useDirectionsStore } from '@/stores/directions-store';
 import {
-  VALHALLA_OSM_URL,
+  getValhallaUrl,
   buildOptimizedRouteRequest,
   parseDirectionsGeometry,
 } from '@/utils/valhalla';
@@ -51,7 +51,7 @@ export function useOptimizedRouteQuery() {
         language,
       });
       const { data } = await axios.get<ValhallaOptimizedRouteResponse>(
-        `${VALHALLA_OSM_URL}/optimized_route`,
+        `${getValhallaUrl()}/optimized_route`,
         { params: { json: JSON.stringify(request.json) } }
       );
 

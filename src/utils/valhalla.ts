@@ -6,8 +6,9 @@ import type {
   IsochronesRequestParams,
   Settings,
 } from '@/components/types';
+import { getBaseUrl } from './base-url';
 
-export const VALHALLA_OSM_URL = import.meta.env.VITE_VALHALLA_URL;
+export const getValhallaUrl = () => getBaseUrl();
 
 export const buildLocateRequest = (
   latLng: { lat: number; lng: number },

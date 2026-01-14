@@ -1,5 +1,3 @@
-import { VALHALLA_OSM_URL } from '@/utils/valhalla';
-
 const centerCoords = import.meta.env.VITE_CENTER_COORDS?.split(',') || [];
 
 export const DEFAULT_CENTER: [number, number] = [
@@ -13,11 +11,8 @@ export const maxBounds: [[number, number], [number, number]] | undefined =
   undefined;
 
 export const routeObjects = {
-  [VALHALLA_OSM_URL!]: {
-    color: '#0066ff',
-    alternativeColor: '#66a3ff',
-    name: 'OSM',
-  },
+  color: '#0066ff',
+  alternativeColor: '#66a3ff',
 };
 
 export const MAP_STYLE_STORAGE_KEY = 'selectedMapStyle';

@@ -23,19 +23,6 @@ vi.mock('@/stores/directions-store', () => ({
     mockUseDirectionsStore(selector),
 }));
 
-vi.mock('@/utils/valhalla', () => ({
-  VALHALLA_OSM_URL: 'https://valhalla.example.com',
-}));
-
-vi.mock('../constants', () => ({
-  routeObjects: {
-    'https://valhalla.example.com': {
-      color: '#0066ff',
-      alternativeColor: '#999999',
-    },
-  },
-}));
-
 const createMockState = (overrides = {}) => ({
   results: {
     data: {
