@@ -16,7 +16,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import axios from 'axios';
 import { throttle } from 'throttle-debounce';
 import {
-  VALHALLA_OSM_URL,
+  getValhallaUrl,
   buildHeightRequest,
   buildLocateRequest,
 } from '@/utils/valhalla';
@@ -262,7 +262,7 @@ export const MapComponent = () => {
   const getHeight = useCallback((lng: number, lat: number) => {
     setIsHeightLoading(true);
     axios
-      .post(VALHALLA_OSM_URL + '/height', buildHeightRequest([[lat, lng]]), {
+      .post(getValhallaUrl() + '/height', buildHeightRequest([[lat, lng]]), {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -285,7 +285,7 @@ export const MapComponent = () => {
       setIsLocateLoading(true);
       axios
         .post(
-          VALHALLA_OSM_URL + '/locate',
+          getValhallaUrl() + '/locate',
           buildLocateRequest({ lng, lat }, profile || 'bicycle'),
           {
             headers: {
@@ -336,7 +336,7 @@ export const MapComponent = () => {
       setIsHeightLoading(true);
       setHeightPayload(heightPayloadNew);
       axios
-        .post(VALHALLA_OSM_URL + '/height', heightPayloadNew, {
+        .post(getValhallaUrl() + '/height', heightPayloadNew, {
           headers: {
             'Content-Type': 'application/json',
           },

@@ -63,6 +63,8 @@ vi.mock('@/hooks/use-isochrones-queries', () => ({
   })),
 }));
 
+const BASE_URL_STORAGE_KEY = 'valhalla_base_url';
+
 describe('SettingsPanel', () => {
   const originalNavigator = global.navigator;
 
@@ -115,7 +117,7 @@ describe('SettingsPanel', () => {
 
   it('should display current profile name', () => {
     render(<SettingsPanel />);
-    expect(screen.getByText('bicycle')).toBeInTheDocument();
+    expect(screen.getByText('(bicycle)')).toBeInTheDocument();
   });
 
   it('should render Copy to Clipboard button', () => {
@@ -127,7 +129,9 @@ describe('SettingsPanel', () => {
 
   it('should render Reset button', () => {
     render(<SettingsPanel />);
-    expect(screen.getByRole('button', { name: /Reset/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^Reset$/i })
+    ).toBeInTheDocument();
   });
 
   it('should render bicycle profile settings like Cycling Speed', () => {
@@ -159,7 +163,7 @@ describe('SettingsPanel', () => {
     const user = userEvent.setup();
     render(<SettingsPanel />);
 
-    await user.click(screen.getByRole('button', { name: /Reset/i }));
+    await user.click(screen.getByRole('button', { name: /^Reset$/i }));
 
     expect(mockResetSettings).toHaveBeenCalledWith('bicycle');
   });
@@ -168,7 +172,7 @@ describe('SettingsPanel', () => {
     const user = userEvent.setup();
     render(<SettingsPanel />);
 
-    await user.click(screen.getByRole('button', { name: /Reset/i }));
+    await user.click(screen.getByRole('button', { name: /^Reset$/i }));
 
     expect(mockRefetchDirections).toHaveBeenCalled();
   });
@@ -214,6 +218,198 @@ describe('SettingsPanel', () => {
     expect(screen.getByText('Use Ferries')).toBeInTheDocument();
     expect(screen.getByText('Use Living Streets')).toBeInTheDocument();
     expect(screen.getByText('Turn Penalty')).toBeInTheDocument();
+  });
+
+  describe('Server Settings', () => {
+    it('should render Server Settings section', () => {
+      render(<SettingsPanel />);
+      expect(screen.getByText('Server Settings')).toBeInTheDocument();
+    });
+
+    it('should render Base URL label when expanded', async () => {
+      const user = userEvent.setup();
+      render(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      expect(screen.getByText('Base URL')).toBeInTheDocument();
+    });
+
+    it('should render base URL input when expanded', async () => {
+      const user = userEvent.setup();
+      render(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      expect(
+        screen.getByRole('textbox', { name: /Base URL/i })
+      ).toBeInTheDocument();
+    });
+
+    it('should render Reset Base URL button when expanded', async () => {
+      const user = userEvent.setup();
+      render(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      expect(
+        screen.getByRole('button', { name: /Reset Base URL/i })
+      ).toBeInTheDocument();
+    });
+
+    it('should display stored base URL from localStorage', async () => {
+      const user = userEvent.setup();
+      const customUrl = 'https://custom.valhalla.com';
+      localStorage.setItem(BASE_URL_STORAGE_KEY, customUrl);
+      render(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      const input = screen.getByRole('textbox', { name: /Base URL/i });
+      expect(input).toHaveValue(customUrl);
+    });
+
+    it('should update input value when typing', async () => {
+      const user = userEvent.setup();
+      render(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      const input = screen.getByRole('textbox', { name: /Base URL/i });
+      await user.clear(input);
+      await user.type(input, 'https://new.valhalla.com');
+
+      expect(input).toHaveValue('https://new.valhalla.com');
+    });
+
+    it('should not save to localStorage while typing', async () => {
+      const user = userEvent.setup();
+      render(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      const input = screen.getByRole('textbox', { name: /Base URL/i });
+      await user.clear(input);
+      await user.type(input, 'https://test.com');
+
+      expect(localStorage.getItem(BASE_URL_STORAGE_KEY)).toBeNull();
+    });
+
+    it('should show error for invalid URL format on blur', async () => {
+      const user = userEvent.setup();
+      render(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      const input = screen.getByRole('textbox', { name: /Base URL/i });
+      await user.clear(input);
+      await user.type(input, 'not-a-valid-url');
+      await user.tab();
+
+      await waitFor(() => {
+        expect(screen.getByText('Invalid URL format')).toBeInTheDocument();
+      });
+    });
+
+    it('should show error for non-http protocol on blur', async () => {
+      const user = userEvent.setup();
+      render(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      const input = screen.getByRole('textbox', { name: /Base URL/i });
+      await user.clear(input);
+      await user.type(input, 'ftp://example.com');
+      await user.tab();
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('URL must use HTTP or HTTPS protocol')
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('should clear error when typing after error', async () => {
+      const user = userEvent.setup();
+      render(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      const input = screen.getByRole('textbox', { name: /Base URL/i });
+      await user.clear(input);
+      await user.type(input, 'invalid');
+      await user.tab();
+
+      await waitFor(() => {
+        expect(screen.getByText('Invalid URL format')).toBeInTheDocument();
+      });
+
+      await user.type(input, 'https://valid.com');
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText('Invalid URL format')
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    it('should have aria-invalid attribute when there is an error', async () => {
+      const user = userEvent.setup();
+      render(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      const input = screen.getByRole('textbox', { name: /Base URL/i });
+      await user.clear(input);
+      await user.type(input, 'invalid');
+      await user.tab();
+
+      await waitFor(() => {
+        expect(input).toHaveAttribute('aria-invalid', 'true');
+      });
+    });
+
+    it('should reset base URL to default when Reset Base URL is clicked', async () => {
+      const user = userEvent.setup();
+      const customUrl = 'https://custom.valhalla.com';
+      localStorage.setItem(BASE_URL_STORAGE_KEY, customUrl);
+      render(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      const resetButton = screen.getByRole('button', {
+        name: /Reset Base URL/i,
+      });
+      await user.click(resetButton);
+
+      expect(localStorage.getItem(BASE_URL_STORAGE_KEY)).toBeNull();
+    });
+
+    it('should disable Reset Base URL button when URL equals default', async () => {
+      const user = userEvent.setup();
+      render(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      const resetButton = screen.getByRole('button', {
+        name: /Reset Base URL/i,
+      });
+      expect(resetButton).toBeDisabled();
+    });
+
+    it('should enable Reset Base URL button when URL differs from default', async () => {
+      const user = userEvent.setup();
+      const customUrl = 'https://custom.valhalla.com';
+      localStorage.setItem(BASE_URL_STORAGE_KEY, customUrl);
+      render(<SettingsPanel />);
+
+      await user.click(screen.getByText('Server Settings'));
+
+      const resetButton = screen.getByRole('button', {
+        name: /Reset Base URL/i,
+      });
+      expect(resetButton).toBeEnabled();
+    });
   });
 
   describe('Language Picker', () => {

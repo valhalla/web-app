@@ -8,7 +8,7 @@ import type {
   ValhallaRouteResponse,
 } from '@/components/types';
 import {
-  VALHALLA_OSM_URL,
+  getValhallaUrl,
   buildDirectionsRequest,
   parseDirectionsGeometry,
 } from '@/utils/valhalla';
@@ -22,10 +22,6 @@ import { getDirectionsLanguage } from '@/utils/directions-language';
 import { useCommonStore } from '@/stores/common-store';
 import { useDirectionsStore, type Waypoint } from '@/stores/directions-store';
 import { router } from '@/routes';
-
-const serverMapping: Record<string, string> = {
-  [VALHALLA_OSM_URL!]: 'OSM',
-};
 
 const getActiveWaypoints = (waypoints: Waypoint[]): ActiveWaypoint[] =>
   waypoints.flatMap((wp) => wp.geocodeResults.filter((r) => r.selected));
@@ -53,7 +49,7 @@ async function fetchDirections() {
   });
 
   const { data } = await axios.get<ValhallaRouteResponse>(
-    VALHALLA_OSM_URL + '/route',
+    getValhallaUrl() + '/route',
     {
       params: { json: JSON.stringify(valhallaRequest.json) },
       headers: { 'Content-Type': 'application/json' },
@@ -103,7 +99,7 @@ export function useDirectionsQuery() {
             error_msg += ` for route.`;
           }
           toast.warning(`${response.data.status}`, {
-            description: `${serverMapping[VALHALLA_OSM_URL!]}: ${error_msg}`,
+            description: `${error_msg}`,
             position: 'bottom-center',
             duration: 5000,
             closeButton: true,

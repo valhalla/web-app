@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
 import { useDirectionsStore } from '@/stores/directions-store';
-import { VALHALLA_OSM_URL } from '@/utils/valhalla';
 import { routeObjects } from '../constants';
 import type { Feature, FeatureCollection, LineString } from 'geojson';
 import type { ParsedDirectionsGeometry } from '@/components/types';
@@ -34,7 +33,7 @@ export function RouteLines() {
             coordinates: coords.map((c) => [c[1] ?? 0, c[0] ?? 0]),
           },
           properties: {
-            color: routeObjects[VALHALLA_OSM_URL!]!.alternativeColor,
+            color: routeObjects.alternativeColor,
             type: 'alternate',
             summary,
           },
@@ -53,7 +52,7 @@ export function RouteLines() {
           coordinates: coords.map((c) => [c[1] ?? 0, c[0] ?? 0]),
         },
         properties: {
-          color: routeObjects[VALHALLA_OSM_URL!]!.color,
+          color: routeObjects.color,
           type: 'main',
           summary,
         },

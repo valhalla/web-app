@@ -23,13 +23,20 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { X, Copy, RotateCcw } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import {
+  X,
+  Copy,
+  RotateCcw,
+  Languages,
+  SlidersHorizontal,
+  Settings2,
+} from 'lucide-react';
 import { useParams, useSearch } from '@tanstack/react-router';
 import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
+import { CollapsibleSection } from '@/components/ui/collapsible-section';
+import { ServerSettings } from '@/components/settings-panel/server-settings';
 
-// Define the profile keys that have settings (excluding 'auto')
 type ProfileWithSettings = Exclude<Profile, 'auto'>;
 
 export const SettingsPanel = () => {
@@ -47,6 +54,10 @@ export const SettingsPanel = () => {
   const [language, setLanguage] = useState<DirectionsLanguage>(() =>
     getDirectionsLanguage()
   );
+
+  const [languageSettingsOpen, setLanguageSettingsOpen] = useState(true);
+  const [profileSettingsOpen, setProfileSettingsOpen] = useState(true);
+  const [generalSettingsOpen, setGeneralSettingsOpen] = useState(true);
 
   const handleLanguageChange = useCallback(
     (value: string) => {
@@ -112,7 +123,7 @@ export const SettingsPanel = () => {
     <Sheet open={settingsPanelOpen} modal={false}>
       <SheetContent
         side="right"
-        className="w-[350px] sm:max-w-[unset] max-h-screen overflow-y-auto gap-1"
+        className="w-[350px] sm:max-w-[unset] max-h-screen overflow-y-scroll"
       >
         <SheetHeader className="justify-between">
           <SheetTitle>Settings</SheetTitle>
@@ -125,120 +136,38 @@ export const SettingsPanel = () => {
             <X className="size-4" />
           </Button>
         </SheetHeader>
-        <div className="px-3">
-          <div className="flex flex-col gap-3 border rounded-md p-2 px-3 mb-3">
-            {activeTab === 'directions' && (
-              <>
-                <section>
-                  <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-1">
-                    Directions Language
-                  </h3>
-                  <SelectSetting
-                    id="directions-language"
-                    label="Language"
-                    description="The language used for turn-by-turn navigation instructions"
-                    placeholder="Select Language"
-                    value={language}
-                    options={[...languageOptions]}
-                    onValueChange={handleLanguageChange}
-                  />
-                </section>
-                <Separator />
-              </>
-            )}
+        <div className="px-3 space-y-3">
+          <ServerSettings />
 
-            {hasProfileSettings && (
-              <section>
-                <div className="flex items-baseline justify-between">
-                  <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    Profile Settings
-                  </h3>
-                  <span className="text-xs text-muted-foreground capitalize">
-                    {profile}
-                  </span>
-                </div>
-                <div className="space-y-1.25">
-                  {profileSettings[profile as ProfileWithSettings].numeric.map(
-                    (option, key) => (
-                      <SliderSetting
-                        key={key}
-                        id={option.param}
-                        label={option.name}
-                        description={option.description}
-                        min={option.settings.min}
-                        max={option.settings.max}
-                        step={option.settings.step}
-                        value={(settings[option.param] as number) ?? 0}
-                        unit={option.unit}
-                        onValueChange={(values) => {
-                          updateSettings(option.param, values[0] ?? 0);
-                        }}
-                        onValueCommit={handleMakeRequest}
-                        onInputChange={(values) => {
-                          let value = values[0] ?? 0;
-                          if (isNaN(value)) value = option.settings.min;
-                          value = Math.max(
-                            option.settings.min,
-                            Math.min(value, option.settings.max)
-                          );
-                          handleUpdateSettings({
-                            name: option.param,
-                            value,
-                          });
-                        }}
-                      />
-                    )
-                  )}
-                  {profileSettings[profile as ProfileWithSettings].boolean.map(
-                    (option, key) => (
-                      <CheckboxSetting
-                        key={key}
-                        id={option.param}
-                        label={option.name}
-                        description={option.description}
-                        checked={Boolean(settings[option.param])}
-                        onCheckedChange={(checked) => {
-                          handleUpdateSettings({
-                            name: option.param,
-                            value: checked,
-                          });
-                        }}
-                      />
-                    )
-                  )}
-                  {profileSettings[profile as ProfileWithSettings].enum.map(
-                    (option, key) => (
-                      <SelectSetting
-                        key={key}
-                        id={option.param}
-                        label={option.name}
-                        description={option.description}
-                        placeholder="Select Bicycle Type"
-                        value={settings.bicycle_type as string}
-                        options={option.enums}
-                        onValueChange={(value) => {
-                          handleUpdateSettings({
-                            name: option.param,
-                            value,
-                          });
-                        }}
-                      />
-                    )
-                  )}
-                </div>
-              </section>
-            )}
+          {activeTab === 'directions' && (
+            <CollapsibleSection
+              title="Directions Language"
+              icon={Languages}
+              open={languageSettingsOpen}
+              onOpenChange={setLanguageSettingsOpen}
+            >
+              <SelectSetting
+                id="directions-language"
+                label="Language"
+                description="The language used for turn-by-turn navigation instructions"
+                placeholder="Select Language"
+                value={language}
+                options={[...languageOptions]}
+                onValueChange={handleLanguageChange}
+              />
+            </CollapsibleSection>
+          )}
 
-            <Separator />
-
-            <section>
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  General Settings
-                </h3>
-              </div>
+          {hasProfileSettings && (
+            <CollapsibleSection
+              title="Profile Settings"
+              icon={SlidersHorizontal}
+              subtitle={`(${profile})`}
+              open={profileSettingsOpen}
+              onOpenChange={setProfileSettingsOpen}
+            >
               <div className="space-y-1.25">
-                {generalSettings[profile as ProfileWithSettings].numeric.map(
+                {profileSettings[profile as ProfileWithSettings].numeric.map(
                   (option, key) => (
                     <SliderSetting
                       key={key}
@@ -269,7 +198,7 @@ export const SettingsPanel = () => {
                     />
                   )
                 )}
-                {generalSettings[profile as ProfileWithSettings].boolean.map(
+                {profileSettings[profile as ProfileWithSettings].boolean.map(
                   (option, key) => (
                     <CheckboxSetting
                       key={key}
@@ -286,22 +215,38 @@ export const SettingsPanel = () => {
                     />
                   )
                 )}
-                {generalSettings.all.boolean.map((option, key) => (
-                  <CheckboxSetting
-                    key={key}
-                    id={option.param}
-                    label={option.name}
-                    description={option.description}
-                    checked={Boolean(settings[option.param])}
-                    onCheckedChange={(checked) => {
-                      handleUpdateSettings({
-                        name: option.param,
-                        value: checked,
-                      });
-                    }}
-                  />
-                ))}
-                {generalSettings.all.numeric.map((option, key) => (
+                {profileSettings[profile as ProfileWithSettings].enum.map(
+                  (option, key) => (
+                    <SelectSetting
+                      key={key}
+                      id={option.param}
+                      label={option.name}
+                      description={option.description}
+                      placeholder="Select Bicycle Type"
+                      value={settings.bicycle_type as string}
+                      options={option.enums}
+                      onValueChange={(value) => {
+                        handleUpdateSettings({
+                          name: option.param,
+                          value,
+                        });
+                      }}
+                    />
+                  )
+                )}
+              </div>
+            </CollapsibleSection>
+          )}
+
+          <CollapsibleSection
+            title="General Settings"
+            icon={Settings2}
+            open={generalSettingsOpen}
+            onOpenChange={setGeneralSettingsOpen}
+          >
+            <div className="space-y-1.25">
+              {generalSettings[profile as ProfileWithSettings].numeric.map(
+                (option, key) => (
                   <SliderSetting
                     key={key}
                     id={option.param}
@@ -329,27 +274,86 @@ export const SettingsPanel = () => {
                       });
                     }}
                   />
-                ))}
-              </div>
-            </section>
-
-            <Separator />
-
-            <div className="flex gap-2 pt-1">
-              <Button
-                variant={copied ? 'default' : 'outline'}
-                size="sm"
-                onClick={handleCopySettings}
-                className={copied ? 'bg-green-600 hover:bg-green-600' : ''}
-              >
-                <Copy className="size-3.5" />
-                {copied ? 'Copied!' : 'Copy to Clipboard'}
-              </Button>
-              <Button variant="outline" size="sm" onClick={resetConfigSettings}>
-                <RotateCcw className="size-3.5" />
-                Reset
-              </Button>
+                )
+              )}
+              {generalSettings[profile as ProfileWithSettings].boolean.map(
+                (option, key) => (
+                  <CheckboxSetting
+                    key={key}
+                    id={option.param}
+                    label={option.name}
+                    description={option.description}
+                    checked={Boolean(settings[option.param])}
+                    onCheckedChange={(checked) => {
+                      handleUpdateSettings({
+                        name: option.param,
+                        value: checked,
+                      });
+                    }}
+                  />
+                )
+              )}
+              {generalSettings.all.boolean.map((option, key) => (
+                <CheckboxSetting
+                  key={key}
+                  id={option.param}
+                  label={option.name}
+                  description={option.description}
+                  checked={Boolean(settings[option.param])}
+                  onCheckedChange={(checked) => {
+                    handleUpdateSettings({
+                      name: option.param,
+                      value: checked,
+                    });
+                  }}
+                />
+              ))}
+              {generalSettings.all.numeric.map((option, key) => (
+                <SliderSetting
+                  key={key}
+                  id={option.param}
+                  label={option.name}
+                  description={option.description}
+                  min={option.settings.min}
+                  max={option.settings.max}
+                  step={option.settings.step}
+                  value={(settings[option.param] as number) ?? 0}
+                  unit={option.unit}
+                  onValueChange={(values) => {
+                    updateSettings(option.param, values[0] ?? 0);
+                  }}
+                  onValueCommit={handleMakeRequest}
+                  onInputChange={(values) => {
+                    let value = values[0] ?? 0;
+                    if (isNaN(value)) value = option.settings.min;
+                    value = Math.max(
+                      option.settings.min,
+                      Math.min(value, option.settings.max)
+                    );
+                    handleUpdateSettings({
+                      name: option.param,
+                      value,
+                    });
+                  }}
+                />
+              ))}
             </div>
+          </CollapsibleSection>
+
+          <div className="flex gap-2 pt-1">
+            <Button
+              variant={copied ? 'default' : 'outline'}
+              size="sm"
+              onClick={handleCopySettings}
+              className={copied ? 'bg-green-600 hover:bg-green-600' : ''}
+            >
+              <Copy className="size-3.5" />
+              {copied ? 'Copied!' : 'Copy to Clipboard'}
+            </Button>
+            <Button variant="outline" size="sm" onClick={resetConfigSettings}>
+              <RotateCcw className="size-3.5" />
+              Reset
+            </Button>
           </div>
         </div>
       </SheetContent>

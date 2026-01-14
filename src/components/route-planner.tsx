@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { DirectionsControl } from './directions/directions';
 import { IsochronesControl } from './isochrones/isochrones';
 import { useCommonStore } from '@/stores/common-store';
-import { VALHALLA_OSM_URL } from '@/utils/valhalla';
+import { getValhallaUrl } from '@/utils/valhalla';
 import {
   Sheet,
   SheetContent,
@@ -40,7 +40,7 @@ export const RoutePlanner = () => {
   } = useQuery({
     queryKey: ['lastUpdate'],
     queryFn: async () => {
-      const response = await fetch(`${VALHALLA_OSM_URL}/status`);
+      const response = await fetch(`${getValhallaUrl()}/status`);
       const data = await response.json();
       return new Date(data.tileset_last_modified * 1000);
     },
