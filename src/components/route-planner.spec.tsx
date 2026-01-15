@@ -55,6 +55,12 @@ vi.mock('./isochrones/isochrones', () => ({
   )),
 }));
 
+vi.mock('./tiles/tiles', () => ({
+  TilesControl: vi.fn(() => (
+    <div data-testid="mock-tiles-control">Tiles Control</div>
+  )),
+}));
+
 vi.mock('./profile-picker', () => ({
   ProfilePicker: vi.fn(({ onProfileChange }) => (
     <div data-testid="mock-profile-picker">
@@ -99,6 +105,7 @@ describe('RoutePlanner', () => {
     render(<RoutePlanner />);
     expect(screen.getByTestId('directions-tab-button')).toBeInTheDocument();
     expect(screen.getByTestId('isochrones-tab-button')).toBeInTheDocument();
+    expect(screen.getByTestId('tiles-tab-button')).toBeInTheDocument();
   });
 
   it('should render close button', () => {
@@ -182,5 +189,49 @@ describe('RoutePlanner', () => {
     render(<RoutePlanner />);
     expect(screen.getByText(/Last Data Update:/)).toBeInTheDocument();
     expect(screen.getByText(/2024-01-15/)).toBeInTheDocument();
+  });
+
+  it('should navigate to tiles tab when tiles tab button is clicked', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<RoutePlanner />);
+
+    await user.click(screen.getByTestId('tiles-tab-button'));
+
+    expect(mockNavigate).toHaveBeenCalledWith({
+      params: { activeTab: 'tiles' },
+    });
+  });
+
+  describe('when on tiles tab', () => {
+    beforeEach(async () => {
+      const router = await import('@tanstack/react-router');
+      vi.mocked(router.useParams).mockReturnValue({ activeTab: 'tiles' });
+    });
+
+    it('should display Tiles text on trigger button', () => {
+      render(<RoutePlanner />);
+      expect(screen.getByTestId('open-directions-button')).toHaveTextContent(
+        'Tiles'
+      );
+    });
+
+    it('should not render ProfilePicker on tiles tab', () => {
+      render(<RoutePlanner />);
+      expect(
+        screen.queryByTestId('mock-profile-picker')
+      ).not.toBeInTheDocument();
+    });
+
+    it('should not render SettingsButton on tiles tab', () => {
+      render(<RoutePlanner />);
+      expect(
+        screen.queryByTestId('mock-settings-button')
+      ).not.toBeInTheDocument();
+    });
+
+    it('should not display last update date on tiles tab', () => {
+      render(<RoutePlanner />);
+      expect(screen.queryByText(/Last Data Update:/)).not.toBeInTheDocument();
+    });
   });
 });

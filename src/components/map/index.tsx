@@ -82,6 +82,7 @@ export const MapComponent = () => {
   );
   const settingsPanelOpen = useCommonStore((state) => state.settingsPanelOpen);
   const updateSettings = useCommonStore((state) => state.updateSettings);
+  const setMapReady = useCommonStore((state) => state.setMapReady);
   const { profile, style } = useSearch({ from: '/$activeTab' });
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [showContextPopup, setShowContextPopup] = useState(false);
@@ -684,6 +685,7 @@ export const MapComponent = () => {
       {...viewState}
       onMove={(evt) => setViewState(evt.viewState)}
       onMoveEnd={handleMoveEnd}
+      onLoad={() => setMapReady(true)}
       onClick={handleMapClick}
       onDblClick={handleMapDblClick}
       onContextMenu={handleMapContextMenu}

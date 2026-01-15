@@ -1,7 +1,12 @@
+import { lazy, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { DirectionsControl } from './directions/directions';
 import { IsochronesControl } from './isochrones/isochrones';
+
+const TilesControl = lazy(() =>
+  import('./tiles/tiles').then((module) => ({ default: module.TilesControl }))
+);
 import { useCommonStore } from '@/stores/common-store';
 import { getValhallaUrl } from '@/utils/valhalla';
 import {
@@ -22,6 +27,21 @@ import type { Profile } from '@/stores/common-store';
 import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
 
+const TAB_CONFIG = {
+  directions: {
+    title: 'Directions',
+    description: 'Plan a route between multiple locations',
+  },
+  isochrones: {
+    title: 'Isochrones',
+    description: 'Calculate reachable areas from a location',
+  },
+  tiles: {
+    title: 'Tiles',
+    description: 'View and manage map tiles',
+  },
+} as const;
+
 export const RoutePlanner = () => {
   const { activeTab } = useParams({ from: '/$activeTab' });
   const navigate = useNavigate({ from: '/$activeTab' });
@@ -32,6 +52,8 @@ export const RoutePlanner = () => {
   const { refetch: refetchIsochrones } = useIsochronesQuery();
   const loading = useCommonStore((state) => state.loading);
   const toggleDirections = useCommonStore((state) => state.toggleDirections);
+
+  const tabConfig = TAB_CONFIG[activeTab as keyof typeof TAB_CONFIG];
 
   const {
     data: lastUpdate,
@@ -75,7 +97,7 @@ export const RoutePlanner = () => {
     <Sheet open={directionsPanelOpen} modal={false}>
       <SheetTrigger className="absolute top-4 left-4 z-10" asChild>
         <Button onClick={toggleDirections} data-testid="open-directions-button">
-          {activeTab === 'directions' ? 'Directions' : 'Isochrones'}
+          {tabConfig.title}
         </Button>
       </SheetTrigger>
       <Tabs
@@ -101,6 +123,9 @@ export const RoutePlanner = () => {
               >
                 Isochrones
               </TabsTrigger>
+              <TabsTrigger value="tiles" data-testid="tiles-tab-button">
+                Tiles
+              </TabsTrigger>
             </TabsList>
             <Button
               variant="ghost"
@@ -110,23 +135,21 @@ export const RoutePlanner = () => {
             >
               <X className="size-4" />
             </Button>
-            <SheetTitle className="sr-only">
-              {activeTab === 'directions' ? 'Directions' : 'Isochrones'}
-            </SheetTitle>
+            <SheetTitle className="sr-only">{tabConfig.title}</SheetTitle>
             <SheetDescription className="sr-only">
-              {activeTab === 'directions'
-                ? 'Plan a route between multiple locations'
-                : 'Calculate reachable areas from a location'}
+              {tabConfig.description}
             </SheetDescription>
           </SheetHeader>
 
-          <div className="flex justify-between px-2 mb-1">
-            <ProfilePicker
-              loading={loading}
-              onProfileChange={handleProfileChange}
-            />
-            <SettingsButton />
-          </div>
+          {activeTab !== 'tiles' && (
+            <div className="flex justify-between px-2 mb-1">
+              <ProfilePicker
+                loading={loading}
+                onProfileChange={handleProfileChange}
+              />
+              <SettingsButton />
+            </div>
+          )}
 
           <TabsContent value="directions" className="flex flex-col gap-3 px-2">
             <DirectionsControl />
@@ -134,24 +157,34 @@ export const RoutePlanner = () => {
           <TabsContent value="isochrones" className="flex flex-col gap-3 px-2">
             <IsochronesControl />
           </TabsContent>
+          <TabsContent
+            value="tiles"
+            className="flex flex-col gap-3 px-2 flex-1 overflow-hidden min-h-0"
+          >
+            <Suspense fallback={<div>Loading...</div>}>
+              <TilesControl />
+            </Suspense>
+          </TabsContent>
 
-          <div className="flex p-2 text-sm">
-            {isLoadingLastUpdate && (
-              <span className="text-muted-foreground">
-                Loading last update...
-              </span>
-            )}
-            {isErrorLastUpdate && (
-              <span className="text-destructive">
-                Failed to load last update
-              </span>
-            )}
-            {lastUpdate && (
-              <span>
-                Last Data Update: {format(lastUpdate, 'yyyy-MM-dd, HH:mm')}
-              </span>
-            )}
-          </div>
+          {activeTab !== 'tiles' && (
+            <div className="flex p-2 text-sm">
+              {isLoadingLastUpdate && (
+                <span className="text-muted-foreground">
+                  Loading last update...
+                </span>
+              )}
+              {isErrorLastUpdate && (
+                <span className="text-destructive">
+                  Failed to load last update
+                </span>
+              )}
+              {lastUpdate && (
+                <span>
+                  Last Data Update: {format(lastUpdate, 'yyyy-MM-dd, HH:mm')}
+                </span>
+              )}
+            </div>
+          )}
         </SheetContent>
       </Tabs>
     </Sheet>
