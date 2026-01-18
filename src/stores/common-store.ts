@@ -28,6 +28,7 @@ interface CommonState {
   loading: boolean;
   settings: PossibleSettings;
   dateTime: { type: number; value: string };
+  mapReady: boolean;
 }
 
 interface CommonActions {
@@ -41,6 +42,7 @@ interface CommonActions {
   ) => void;
   resetSettings: (profile: Profile) => void;
   updateDateTime: (key: 'type' | 'value', value: string | number) => void;
+  setMapReady: (ready: boolean) => void;
 }
 
 type CommonStore = CommonState & CommonActions;
@@ -57,9 +59,11 @@ export const useCommonStore = create<CommonStore>()(
         type: -1,
         value: new Date().toISOString().slice(0, 16),
       },
+      mapReady: false,
 
       showLoading: (loading) => set({ loading }),
       zoomTo: (coordinates) => set({ coordinates }),
+      setMapReady: (ready) => set({ mapReady: ready }),
       toggleSettings: () =>
         set(
           (state) => {
