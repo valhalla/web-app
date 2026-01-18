@@ -20,7 +20,7 @@ export function getValhallaSourceSpec(): SourceSpecification {
     type: 'vector',
     tiles: [getValhallaTileUrl()],
     minzoom: 7,
-    maxzoom: 22,
+    maxzoom: 14,
     scheme: 'xyz',
   };
 }
