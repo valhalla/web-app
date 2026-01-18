@@ -154,7 +154,7 @@ describe('valhalla-layers', () => {
       const spec = getValhallaSourceSpec() as VectorSourceSpecification;
 
       expect(spec.minzoom).toBe(7);
-      expect(spec.maxzoom).toBe(22);
+      expect(spec.maxzoom).toBe(14);
     });
 
     it('should use xyz scheme', () => {
