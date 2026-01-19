@@ -16,6 +16,8 @@ const createMockLayers = () => [
 
 const createMockMap = (layers = createMockLayers()) => {
   const layerVisibility: Record<string, string> = {};
+  const sources: Record<string, unknown> = {};
+  const dynamicLayers: Record<string, unknown> = {};
 
   return {
     getStyle: vi.fn(() => ({ layers })),
@@ -34,6 +36,20 @@ const createMockMap = (layers = createMockLayers()) => {
     ),
     on: vi.fn(),
     off: vi.fn(),
+    getSource: vi.fn((id: string) => sources[id]),
+    addSource: vi.fn((id: string, spec: unknown) => {
+      sources[id] = spec;
+    }),
+    removeSource: vi.fn((id: string) => {
+      delete sources[id];
+    }),
+    getLayer: vi.fn((id: string) => dynamicLayers[id]),
+    addLayer: vi.fn((layer: { id: string }) => {
+      dynamicLayers[layer.id] = layer;
+    }),
+    removeLayer: vi.fn((id: string) => {
+      delete dynamicLayers[id];
+    }),
   };
 };
 
@@ -360,7 +376,7 @@ describe('TilesControl', () => {
       render(<TilesControl />);
 
       const groupSwitches = screen.getAllByRole('switch');
-      const roadsGroupSwitch = groupSwitches[1]!;
+      const roadsGroupSwitch = groupSwitches[2]!;
 
       await user.click(roadsGroupSwitch);
 
@@ -386,7 +402,7 @@ describe('TilesControl', () => {
       render(<TilesControl />);
 
       const groupSwitches = screen.getAllByRole('switch');
-      const waterGroupSwitch = groupSwitches[0]!;
+      const waterGroupSwitch = groupSwitches[1]!;
 
       await user.click(waterGroupSwitch);
       await user.click(waterGroupSwitch);
@@ -431,12 +447,14 @@ describe('TilesControl', () => {
       expect(mockMap.getStyle).toHaveBeenCalled();
       const initialCallCount = mockMap.getStyle.mock.calls.length;
 
-      const styleDataHandler = mockMap.on.mock.calls.find(
-        (call) => call[0] === 'styledata'
-      )?.[1];
+      const styleDataHandlers = mockMap.on.mock.calls
+        .filter((call) => call[0] === 'styledata')
+        .map((call) => call[1]);
 
       await act(async () => {
-        styleDataHandler?.();
+        for (const handler of styleDataHandlers) {
+          handler?.();
+        }
       });
 
       await waitFor(() => {
@@ -456,12 +474,14 @@ describe('TilesControl', () => {
         expect(screen.getByText('water-fill')).toBeInTheDocument();
       });
 
-      const styleDataHandler = mockMap.on.mock.calls.find(
-        (call) => call[0] === 'styledata'
-      )?.[1];
+      const styleDataHandlers = mockMap.on.mock.calls
+        .filter((call) => call[0] === 'styledata')
+        .map((call) => call[1]);
 
       await act(async () => {
-        styleDataHandler?.();
+        for (const handler of styleDataHandlers) {
+          handler?.();
+        }
       });
 
       await waitFor(() => {

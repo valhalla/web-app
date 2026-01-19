@@ -10,11 +10,15 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { ValhallaLayersToggle } from './valhalla-layers-toggle';
+import { VALHALLA_SOURCE_ID } from './valhalla-layers';
 
 interface LayerInfo {
   id: string;
   type: string;
   sourceLayer?: string;
+  source?: string;
 }
 
 interface GroupedLayers {
@@ -67,6 +71,7 @@ export const TilesControl = () => {
         type: layer.type,
         sourceLayer:
           'source-layer' in layer ? layer['source-layer'] : undefined,
+        source: 'source' in layer ? (layer.source as string) : undefined,
       }));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- styleVersion is used to invalidate cache on style changes
   }, [mapReady, mainMap, styleVersion]);
@@ -163,8 +168,15 @@ export const TilesControl = () => {
     return visibleCount > 0 && visibleCount < layersInGroup.length;
   };
 
+  const isValhallaGroup = (sourceLayer: string) => {
+    const layersInGroup = groupedLayers.grouped[sourceLayer] || [];
+    return layersInGroup.some((layer) => layer.source === VALHALLA_SOURCE_ID);
+  };
+
   return (
     <div className="flex flex-col gap-3 flex-1 overflow-hidden min-h-0">
+      <ValhallaLayersToggle />
+
       <Input
         type="text"
         placeholder="Search layers..."
@@ -180,7 +192,13 @@ export const TilesControl = () => {
               open={expandedGroups.has(sourceLayer)}
               onOpenChange={() => toggleExpanded(sourceLayer)}
             >
-              <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md">
+              <div
+                className={cn(
+                  'flex items-center gap-2 p-2 bg-muted/50 rounded-md',
+                  isValhallaGroup(sourceLayer) &&
+                    'border-l-2 border-l-green-600'
+                )}
+              >
                 <CollapsibleTrigger className="flex items-center gap-1 flex-1 text-left">
                   {expandedGroups.has(sourceLayer) ? (
                     <ChevronDown className="size-4" />
@@ -191,6 +209,11 @@ export const TilesControl = () => {
                   <span className="text-xs text-muted-foreground ml-1">
                     ({groupLayers.length})
                   </span>
+                  {isValhallaGroup(sourceLayer) && (
+                    <span className="text-xs bg-green-600 text-white px-1.5 py-0.5 rounded ml-2">
+                      Valhalla
+                    </span>
+                  )}
                 </CollapsibleTrigger>
                 <Switch
                   checked={isGroupVisible(sourceLayer)}
