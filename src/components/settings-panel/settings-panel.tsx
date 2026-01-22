@@ -20,6 +20,7 @@ import { useCommonStore, type Profile } from '@/stores/common-store';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
@@ -127,6 +128,9 @@ export const SettingsPanel = () => {
       >
         <SheetHeader className="justify-between">
           <SheetTitle>Settings</SheetTitle>
+          <SheetDescription className="sr-only">
+            Settings for the current profile
+          </SheetDescription>
           <Button
             variant="ghost"
             size="icon"

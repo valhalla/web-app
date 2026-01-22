@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import {
+  render,
+  screen,
+  waitFor,
+  fireEvent,
+  act,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MapComponent } from './index';
 
@@ -7,91 +13,122 @@ const mockToast = vi.hoisted(() => ({
   error: vi.fn(),
 }));
 
-const mockMapRef = {
+const mockQueryRenderedFeatures = vi.hoisted(() =>
+  vi.fn(() => [] as unknown[])
+);
+const mockGetLayer = vi.hoisted(() => vi.fn((): unknown => true));
+const mockMapRef = vi.hoisted(() => ({
   getCenter: vi.fn(() => ({ lng: 13.4, lat: 52.5 })),
   getZoom: vi.fn(() => 10),
   fitBounds: vi.fn(),
   getMap: vi.fn(() => ({
     getCanvas: vi.fn(() => ({ style: { cursor: '' } })),
+    queryRenderedFeatures: mockQueryRenderedFeatures,
+    getLayer: mockGetLayer,
   })),
-};
-
-vi.mock('react-map-gl/maplibre', () => ({
-  Map: vi.fn(
-    ({
-      children,
-      onClick,
-      onDblClick,
-      onContextMenu,
-      onTouchStart,
-      ...props
-    }) => (
-      <div
-        data-testid="map"
-        data-longitude={props.longitude}
-        data-latitude={props.latitude}
-        data-zoom={props.zoom}
-        onClick={() => {
-          onClick?.({
-            lngLat: { lng: 13.4, lat: 52.5 },
-            point: { x: 100, y: 100 },
-          });
-        }}
-        onDoubleClick={() => {
-          onDblClick?.({
-            lngLat: { lng: 13.4, lat: 52.5 },
-            point: { x: 100, y: 100 },
-          });
-        }}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          onContextMenu?.({
-            lngLat: { lng: 13.4, lat: 52.5 },
-            point: { x: 100, y: 100 },
-          });
-        }}
-        onTouchStart={(e) => {
-          onTouchStart?.({
-            lngLat: { lng: 13.4, lat: 52.5 },
-            point: { x: 100, y: 100 },
-            originalEvent: e,
-          });
-        }}
-      >
-        {children}
-      </div>
-    )
-  ),
-  Marker: vi.fn(({ children, longitude, latitude }) => (
-    <div data-testid="marker" data-lng={longitude} data-lat={latitude}>
-      {children}
-    </div>
-  )),
-  Popup: vi.fn(({ children }) => <div data-testid="popup">{children}</div>),
-  NavigationControl: vi.fn(() => (
-    <div data-testid="navigation-control">Nav</div>
-  )),
-  GeolocateControl: vi.fn(({ onError }) => (
-    <div data-testid="geolocate-control">
-      <button
-        data-testid="trigger-geolocate-error"
-        onClick={() => onError?.({ PERMISSION_DENIED: false })}
-      >
-        Trigger Error
-      </button>
-      <button
-        data-testid="trigger-geolocate-permission-denied"
-        onClick={() => onError?.({ PERMISSION_DENIED: true })}
-      >
-        Trigger Permission Denied
-      </button>
-    </div>
-  )),
-  useMap: vi.fn(() => ({ current: mockMapRef })),
 }));
 
+vi.mock('react-map-gl/maplibre', async () => {
+  const React = await import('react');
+  return {
+    // eslint-disable-next-line react/display-name
+    Map: React.forwardRef(
+      (
+        {
+          children,
+          onClick,
+          onDblClick,
+          onContextMenu,
+          onTouchStart,
+          ...props
+        }: {
+          children?: React.ReactNode;
+          onClick?: (e: unknown) => void;
+          onDblClick?: (e: unknown) => void;
+          onContextMenu?: (e: unknown) => void;
+          onTouchStart?: (e: unknown) => void;
+          longitude?: number;
+          latitude?: number;
+          zoom?: number;
+        },
+        ref: React.Ref<typeof mockMapRef>
+      ) => {
+        // Set up the ref to return our mock map
+        React.useImperativeHandle(ref, () => mockMapRef);
+
+        return (
+          <div
+            data-testid="map"
+            data-longitude={props.longitude}
+            data-latitude={props.latitude}
+            data-zoom={props.zoom}
+            onClick={() => {
+              onClick?.({
+                lngLat: { lng: 13.4, lat: 52.5 },
+                point: { x: 100, y: 100 },
+              });
+            }}
+            onDoubleClick={() => {
+              onDblClick?.({
+                lngLat: { lng: 13.4, lat: 52.5 },
+                point: { x: 100, y: 100 },
+              });
+            }}
+            onContextMenu={(e: React.MouseEvent) => {
+              e.preventDefault();
+              onContextMenu?.({
+                lngLat: { lng: 13.4, lat: 52.5 },
+                point: { x: 100, y: 100 },
+              });
+            }}
+            onTouchStart={(e: React.TouchEvent) => {
+              onTouchStart?.({
+                lngLat: { lng: 13.4, lat: 52.5 },
+                point: { x: 100, y: 100 },
+                originalEvent: e,
+              });
+            }}
+          >
+            {children}
+          </div>
+        );
+      }
+    ),
+    Marker: vi.fn(({ children, longitude, latitude }) => (
+      <div data-testid="marker" data-lng={longitude} data-lat={latitude}>
+        {children}
+      </div>
+    )),
+    Popup: vi.fn(({ children }) => <div data-testid="popup">{children}</div>),
+    NavigationControl: vi.fn(() => (
+      <div data-testid="navigation-control">Nav</div>
+    )),
+    GeolocateControl: vi.fn(({ onError }) => (
+      <div data-testid="geolocate-control">
+        <button
+          data-testid="trigger-geolocate-error"
+          onClick={() => onError?.({ PERMISSION_DENIED: false })}
+        >
+          Trigger Error
+        </button>
+        <button
+          data-testid="trigger-geolocate-permission-denied"
+          onClick={() => onError?.({ PERMISSION_DENIED: true })}
+        >
+          Trigger Permission Denied
+        </button>
+      </div>
+    )),
+    useMap: vi.fn(() => ({ current: mockMapRef })),
+  };
+});
+
+const mockUseParams = vi.hoisted(() =>
+  vi.fn(() => ({ activeTab: 'directions' }))
+);
+
 vi.mock('@tanstack/react-router', () => ({
-  useParams: vi.fn(() => ({ activeTab: 'directions' })),
+  useParams: mockUseParams,
   useSearch: vi.fn(() => ({ profile: 'bicycle', style: undefined })),
 }));
 
@@ -200,6 +237,14 @@ vi.mock('./parts/map-context-menu', () => ({
   MapContextMenu: vi.fn(({ onAddWaypoint }) => (
     <div data-testid="map-context-menu">
       <button onClick={() => onAddWaypoint(0)}>Add Waypoint</button>
+    </div>
+  )),
+}));
+
+vi.mock('./parts/tiles-info-popup', () => ({
+  TilesInfoPopup: vi.fn(({ onClose }) => (
+    <div data-testid="tiles-info-popup">
+      <button onClick={onClose}>Close Tiles Popup</button>
     </div>
   )),
 }));
@@ -326,7 +371,9 @@ describe('MapComponent', () => {
     expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
 
     // advance timers past the click delay (200ms)
-    await vi.advanceTimersByTimeAsync(250);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
 
     expect(screen.getByTestId('popup')).toBeInTheDocument();
     expect(screen.getByTestId('map-info-popup')).toBeInTheDocument();
@@ -352,7 +399,9 @@ describe('MapComponent', () => {
     fireEvent.click(screen.getByTestId('map'));
 
     // advance timers to show popup
-    await vi.advanceTimersByTimeAsync(250);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
 
     expect(screen.getByTestId('map-info-popup')).toBeInTheDocument();
 
@@ -403,7 +452,9 @@ describe('MapComponent', () => {
     fireEvent.click(screen.getByTestId('map'));
 
     // advance timers to show popup
-    await vi.advanceTimersByTimeAsync(250);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
 
     expect(screen.getByTestId('map-info-popup')).toBeInTheDocument();
 
@@ -454,7 +505,9 @@ describe('MapComponent', () => {
       fireEvent.doubleClick(map);
 
       // advance timers past the click delay
-      await vi.advanceTimersByTimeAsync(250);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
 
       // popup should not appear because double-click cancelled it
       expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
@@ -475,13 +528,17 @@ describe('MapComponent', () => {
       expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
 
       // advance only 100ms (less than 200ms delay)
-      await vi.advanceTimersByTimeAsync(100);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(100);
+      });
 
       // double-click cancels the pending popup
       fireEvent.doubleClick(map);
 
       // advance past the original delay
-      await vi.advanceTimersByTimeAsync(200);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(200);
+      });
 
       // popup should still not appear
       expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
@@ -508,11 +565,15 @@ describe('MapComponent', () => {
       expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
 
       // second tap within 300ms threshold (simulating double-tap)
-      await vi.advanceTimersByTimeAsync(100);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(100);
+      });
       fireEvent.touchStart(map, createTouchEvent());
 
       // advance past the click delay
-      await vi.advanceTimersByTimeAsync(250);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
 
       // popup should not appear because double-tap cancelled it
       expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
@@ -536,7 +597,9 @@ describe('MapComponent', () => {
       expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
 
       // multi-finger touch (pinch gesture) should cancel pending popup
-      await vi.advanceTimersByTimeAsync(50);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(50);
+      });
       fireEvent.touchStart(map, {
         touches: [
           { identifier: 0, target: map },
@@ -545,7 +608,9 @@ describe('MapComponent', () => {
       });
 
       // advance past the click delay
-      await vi.advanceTimersByTimeAsync(250);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
 
       // popup should not appear because multi-touch cancelled it
       expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
@@ -566,10 +631,207 @@ describe('MapComponent', () => {
       fireEvent.click(map);
 
       // wait longer than double-tap threshold (300ms) + click delay (200ms)
-      await vi.advanceTimersByTimeAsync(250);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
 
       // popup should appear since no second tap occurred
       expect(screen.getByTestId('map-info-popup')).toBeInTheDocument();
+
+      vi.useRealTimers();
+    });
+  });
+
+  describe('tiles tab behavior', () => {
+    beforeEach(() => {
+      mockUseParams.mockReturnValue({ activeTab: 'tiles' });
+      mockQueryRenderedFeatures.mockClear();
+      mockGetLayer.mockClear();
+    });
+
+    afterEach(() => {
+      mockUseParams.mockReturnValue({ activeTab: 'directions' });
+    });
+
+    it('should show tiles info popup when clicking on tiles with features', async () => {
+      vi.useFakeTimers();
+      mockGetLayer.mockReturnValue(true);
+      mockQueryRenderedFeatures.mockReturnValue([
+        {
+          type: 'Feature',
+          sourceLayer: 'edges',
+          properties: { id: '123', speed: 50 },
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+          layer: { id: 'valhalla-edges' },
+        },
+      ]);
+
+      render(<MapComponent />);
+
+      fireEvent.click(screen.getByTestId('map'));
+
+      // advance timers past the click delay
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+
+      expect(screen.getByTestId('tiles-info-popup')).toBeInTheDocument();
+
+      vi.useRealTimers();
+    });
+
+    it('should not show tiles info popup when no features are found', async () => {
+      vi.useFakeTimers();
+      mockGetLayer.mockReturnValue(true);
+      mockQueryRenderedFeatures.mockReturnValue([]);
+
+      render(<MapComponent />);
+
+      fireEvent.click(screen.getByTestId('map'));
+
+      // advance timers past the click delay
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+
+      expect(screen.queryByTestId('tiles-info-popup')).not.toBeInTheDocument();
+
+      vi.useRealTimers();
+    });
+
+    it('should not query features when valhalla layers do not exist', async () => {
+      vi.useFakeTimers();
+      mockGetLayer.mockReturnValue(undefined);
+
+      render(<MapComponent />);
+
+      fireEvent.click(screen.getByTestId('map'));
+
+      // advance timers past the click delay
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+
+      expect(mockQueryRenderedFeatures).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('tiles-info-popup')).not.toBeInTheDocument();
+
+      vi.useRealTimers();
+    });
+
+    it('should only query available layers when some layers exist', async () => {
+      vi.useFakeTimers();
+      // Only edges layer exists, nodes layer does not
+      mockGetLayer.mockImplementation((layerId?: string) =>
+        layerId === 'valhalla-edges' ? { id: 'valhalla-edges' } : undefined
+      );
+      mockQueryRenderedFeatures.mockReturnValue([
+        {
+          type: 'Feature',
+          sourceLayer: 'edges',
+          properties: { id: '123' },
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+          layer: { id: 'valhalla-edges' },
+        },
+      ]);
+
+      render(<MapComponent />);
+
+      fireEvent.click(screen.getByTestId('map'));
+
+      // advance timers past the click delay
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+
+      expect(mockQueryRenderedFeatures).toHaveBeenCalledWith(
+        { x: 100, y: 100 },
+        { layers: ['valhalla-edges'] }
+      );
+
+      vi.useRealTimers();
+    });
+
+    it('should close tiles info popup when close button is clicked', async () => {
+      vi.useFakeTimers();
+      mockGetLayer.mockReturnValue(true);
+      mockQueryRenderedFeatures.mockReturnValue([
+        {
+          type: 'Feature',
+          sourceLayer: 'edges',
+          properties: { id: '123' },
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+          layer: { id: 'valhalla-edges' },
+        },
+      ]);
+
+      render(<MapComponent />);
+
+      fireEvent.click(screen.getByTestId('map'));
+
+      // advance timers past the click delay
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+
+      expect(screen.getByTestId('tiles-info-popup')).toBeInTheDocument();
+
+      vi.useRealTimers();
+
+      const user = userEvent.setup();
+      await user.click(
+        screen.getByRole('button', { name: 'Close Tiles Popup' })
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId('tiles-info-popup')
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    it('should not show context menu on right click in tiles tab', () => {
+      render(<MapComponent />);
+
+      fireEvent.contextMenu(screen.getByTestId('map'));
+
+      // Context menu should not appear in tiles tab
+      expect(screen.queryByTestId('map-context-menu')).not.toBeInTheDocument();
+    });
+
+    it('should not show info popup on click in tiles tab', async () => {
+      vi.useFakeTimers();
+      mockGetLayer.mockReturnValue(undefined);
+      mockQueryRenderedFeatures.mockReturnValue([]);
+
+      render(<MapComponent />);
+
+      fireEvent.click(screen.getByTestId('map'));
+
+      // advance timers past the click delay
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+
+      // should not show info popup (only tiles popup behavior)
+      expect(screen.queryByTestId('map-info-popup')).not.toBeInTheDocument();
 
       vi.useRealTimers();
     });
