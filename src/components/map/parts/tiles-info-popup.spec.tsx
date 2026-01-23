@@ -58,7 +58,7 @@ describe('TilesInfoPopup', () => {
   it('should display "Edge" label for edge features', () => {
     render(<TilesInfoPopup {...defaultProps} />);
 
-    expect(screen.getByText('Edge 1')).toBeInTheDocument();
+    expect(screen.getByText('Edge')).toBeInTheDocument();
   });
 
   it('should display "Node" label for node features', () => {
@@ -69,23 +69,23 @@ describe('TilesInfoPopup', () => {
 
     render(<TilesInfoPopup features={[nodeFeature]} onClose={vi.fn()} />);
 
-    expect(screen.getByText('Node 1')).toBeInTheDocument();
+    expect(screen.getByText('Node')).toBeInTheDocument();
   });
 
   it('should display all properties of a feature', () => {
     render(<TilesInfoPopup {...defaultProps} />);
 
-    expect(screen.getByText('id:')).toBeInTheDocument();
+    expect(screen.getByText('id')).toBeInTheDocument();
     expect(screen.getByText('12345')).toBeInTheDocument();
-    expect(screen.getByText('speed:')).toBeInTheDocument();
+    expect(screen.getByText('speed')).toBeInTheDocument();
     expect(screen.getByText('50')).toBeInTheDocument();
-    expect(screen.getByText('road_class:')).toBeInTheDocument();
+    expect(screen.getByText('road_class')).toBeInTheDocument();
     expect(screen.getByText('primary')).toBeInTheDocument();
-    expect(screen.getByText('surface:')).toBeInTheDocument();
+    expect(screen.getByText('surface')).toBeInTheDocument();
     expect(screen.getByText('paved')).toBeInTheDocument();
   });
 
-  it('should display multiple features', () => {
+  it('should display multiple features with numbered labels', () => {
     const features = [
       createMockFeature('edges', { id: '111', speed: 30 }),
       createMockFeature('edges', { id: '222', speed: 60 }),
@@ -99,7 +99,7 @@ describe('TilesInfoPopup', () => {
     expect(screen.getByText('Node 3')).toBeInTheDocument();
   });
 
-  it('should display boolean values as strings', () => {
+  it('should display boolean values with indicators', () => {
     const feature = createMockFeature('nodes', {
       traffic_signal: true,
       toll: false,
@@ -107,8 +107,8 @@ describe('TilesInfoPopup', () => {
 
     render(<TilesInfoPopup features={[feature]} onClose={vi.fn()} />);
 
-    expect(screen.getByText('true')).toBeInTheDocument();
-    expect(screen.getByText('false')).toBeInTheDocument();
+    expect(screen.getByText('Yes')).toBeInTheDocument();
+    expect(screen.getByText('No')).toBeInTheDocument();
   });
 
   it('should display object values as JSON strings', () => {
@@ -152,6 +152,163 @@ describe('TilesInfoPopup', () => {
     render(<TilesInfoPopup features={[feature]} onClose={vi.fn()} />);
 
     expect(screen.getByText('1234.567')).toBeInTheDocument();
+    expect(screen.getByText('m')).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
+  });
+
+  it('should map road_class numeric values to names', () => {
+    const feature = createMockFeature('edges', {
+      road_class: 2,
+    });
+
+    render(<TilesInfoPopup features={[feature]} onClose={vi.fn()} />);
+
+    expect(screen.getByText('Primary')).toBeInTheDocument();
+    expect(screen.getByText('(2)')).toBeInTheDocument();
+  });
+
+  it('should map use numeric values to names', () => {
+    const feature = createMockFeature('edges', {
+      use: 10,
+    });
+
+    render(<TilesInfoPopup features={[feature]} onClose={vi.fn()} />);
+
+    expect(screen.getByText('Cycleway')).toBeInTheDocument();
+    expect(screen.getByText('(10)')).toBeInTheDocument();
+  });
+
+  it('should display Unknown for unmapped numeric values', () => {
+    const feature = createMockFeature('edges', {
+      road_class: 99,
+    });
+
+    render(<TilesInfoPopup features={[feature]} onClose={vi.fn()} />);
+
+    expect(screen.getByText('Unknown')).toBeInTheDocument();
+    expect(screen.getByText('(99)')).toBeInTheDocument();
+  });
+
+  it('should display slope values with degree symbol', () => {
+    const feature = createMockFeature('edges', {
+      max_up_slope: 5,
+      max_down_slope: 3,
+    });
+
+    render(<TilesInfoPopup features={[feature]} onClose={vi.fn()} />);
+
+    expect(screen.getByText('5')).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getAllByText('°').length).toBe(2);
+  });
+
+  it('should display access properties with indicators', () => {
+    const feature = createMockFeature('edges', {
+      'access:car': true,
+      'access:bicycle': false,
+    });
+
+    const { container } = render(
+      <TilesInfoPopup features={[feature]} onClose={vi.fn()} />
+    );
+
+    expect(container.querySelector('.text-emerald-600')).toBeInTheDocument();
+    expect(container.querySelector('.text-red-600')).toBeInTheDocument();
+  });
+
+  it('should map surface numeric values to names', () => {
+    const feature = createMockFeature('edges', {
+      surface: 0,
+    });
+
+    render(<TilesInfoPopup features={[feature]} onClose={vi.fn()} />);
+
+    expect(screen.getByText('Paved Smooth')).toBeInTheDocument();
+    expect(screen.getByText('(0)')).toBeInTheDocument();
+  });
+
+  it('should map cyclelane numeric values to names', () => {
+    const feature = createMockFeature('edges', {
+      cyclelane: 2,
+    });
+
+    render(<TilesInfoPopup features={[feature]} onClose={vi.fn()} />);
+
+    expect(screen.getByText('Dedicated')).toBeInTheDocument();
+    expect(screen.getByText('(2)')).toBeInTheDocument();
+  });
+
+  it('should map sac_scale numeric values to names', () => {
+    const feature = createMockFeature('edges', {
+      sac_scale: 3,
+    });
+
+    render(<TilesInfoPopup features={[feature]} onClose={vi.fn()} />);
+
+    expect(screen.getByText('Demanding Mountain Hiking')).toBeInTheDocument();
+    expect(screen.getByText('(3)')).toBeInTheDocument();
+  });
+
+  it('should map node_type numeric values to names', () => {
+    const feature = createMockFeature('nodes', {
+      node_type: 7,
+    });
+
+    render(<TilesInfoPopup features={[feature]} onClose={vi.fn()} />);
+
+    expect(screen.getByText('Motor Way Junction')).toBeInTheDocument();
+    expect(screen.getByText('(7)')).toBeInTheDocument();
+  });
+
+  it('should map intersection_type numeric values to names', () => {
+    const feature = createMockFeature('nodes', {
+      intersection_type: 1,
+    });
+
+    render(<TilesInfoPopup features={[feature]} onClose={vi.fn()} />);
+
+    expect(screen.getByText('Fork')).toBeInTheDocument();
+    expect(screen.getByText('(1)')).toBeInTheDocument();
+  });
+
+  it('should render osm_id as a link to OpenStreetMap', () => {
+    const feature = createMockFeature('edges', {
+      osm_id: 730703719,
+    });
+
+    render(<TilesInfoPopup features={[feature]} onClose={vi.fn()} />);
+
+    const link = screen.getByRole('link', { name: /730703719/ });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute(
+      'href',
+      'https://www.openstreetmap.org/way/730703719'
+    );
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  it('should render osm_way_id as a link to OpenStreetMap', () => {
+    const feature = createMockFeature('edges', {
+      osm_way_id: 123456789,
+    });
+
+    render(<TilesInfoPopup features={[feature]} onClose={vi.fn()} />);
+
+    const link = screen.getByRole('link', { name: /123456789/ });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute(
+      'href',
+      'https://www.openstreetmap.org/way/123456789'
+    );
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  it('should render properties in a table', () => {
+    const { container } = render(<TilesInfoPopup {...defaultProps} />);
+
+    expect(container.querySelector('table')).toBeInTheDocument();
+    expect(container.querySelectorAll('tr').length).toBeGreaterThan(0);
   });
 });

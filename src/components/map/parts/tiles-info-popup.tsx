@@ -1,6 +1,8 @@
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, Route, MapPin } from 'lucide-react';
 import type { MapGeoJSONFeature } from 'maplibre-gl';
+
+import { TilesProperty } from './tiles-property';
 
 interface TilesInfoPopupProps {
   features: MapGeoJSONFeature[];
@@ -11,49 +13,63 @@ export function TilesInfoPopup({ features, onClose }: TilesInfoPopupProps) {
   if (features.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2 p-2 max-w-sm max-h-80 overflow-auto">
+    <div className="flex flex-col gap-3 p-2 max-w-sm max-h-96 overflow-auto">
       <Button
         variant="ghost"
         size="icon-xs"
         onClick={onClose}
-        className="absolute right-1 top-1"
+        className="absolute right-5 top-1"
       >
         <X className="size-4" />
       </Button>
 
       {features.map((feature, index) => {
-        const layerType = feature.sourceLayer === 'edges' ? 'Edge' : 'Node';
+        const isEdge = feature.sourceLayer === 'edges';
+        const layerType = isEdge ? 'Edge' : 'Node';
         const properties = feature.properties || {};
+        const Icon = isEdge ? Route : MapPin;
 
         return (
           <div
             key={index}
-            className="border-b border-border pb-2 last:border-b-0"
+            className="border-b border-border pb-3 last:border-b-0 last:pb-0"
           >
-            <div className="font-semibold text-sm mb-1 text-primary">
-              {layerType} {index + 1}
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-md bg-primary/10">
+                <Icon className="size-3.5 text-primary" />
+              </div>
+              <span className="font-semibold text-sm">
+                {layerType} {features.length > 1 ? index + 1 : ''}
+              </span>
             </div>
-            <div className="flex flex-col gap-0.5">
-              {Object.entries(properties).map(([key, value]) => (
-                <div key={key} className="flex justify-between gap-2 text-xs">
-                  <span className="text-muted-foreground font-medium truncate">
-                    {key}:
-                  </span>
-                  <span className="text-right break-all">
-                    {typeof value === 'boolean'
-                      ? value.toString()
-                      : typeof value === 'object'
-                        ? JSON.stringify(value)
-                        : String(value)}
-                  </span>
-                </div>
-              ))}
-              {Object.keys(properties).length === 0 && (
-                <span className="text-xs text-muted-foreground italic">
-                  No properties available
-                </span>
-              )}
-            </div>
+
+            {Object.keys(properties).length === 0 ? (
+              <span className="text-xs text-muted-foreground italic">
+                No properties available
+              </span>
+            ) : (
+              <div className="rounded-md border border-border overflow-hidden">
+                <table className="w-full text-xs">
+                  <tbody>
+                    {Object.entries(properties).map(([key, value], idx) => (
+                      <tr
+                        key={key}
+                        className={
+                          idx % 2 === 0 ? 'bg-muted/30' : 'bg-transparent'
+                        }
+                      >
+                        <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap">
+                          {key}
+                        </td>
+                        <td className="py-1.5 px-2 text-right font-medium">
+                          <TilesProperty propertyKey={key} value={value} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         );
       })}
