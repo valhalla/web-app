@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import type { MapGeoJSONFeature } from 'maplibre-gl';
 import { useParams, useSearch } from '@tanstack/react-router';
 import {
   Map,
@@ -44,6 +45,11 @@ import { BrandLogos } from './parts/brand-logos';
 import { MapInfoPopup } from './parts/map-info-popup';
 import { MapContextMenu } from './parts/map-context-menu';
 import { RouteHoverPopup } from './parts/route-hover-popup';
+import { TilesInfoPopup } from './parts/tiles-info-popup';
+import {
+  VALHALLA_EDGES_LAYER_ID,
+  VALHALLA_NODES_LAYER_ID,
+} from '@/components/tiles/valhalla-layers';
 import { MarkerIcon, type MarkerColor } from './parts/marker-icon';
 import { maxBounds } from './constants';
 import { getInitialMapPosition, LAST_CENTER_KEY } from './utils';
@@ -122,6 +128,11 @@ export const MapComponent = () => {
     lng: number;
     lat: number;
     summary: Summary;
+  } | null>(null);
+  const [tilesPopup, setTilesPopup] = useState<{
+    lng: number;
+    lat: number;
+    features: MapGeoJSONFeature[];
   } | null>(null);
   const [viewState, setViewState] = useState({
     longitude: center[0],
@@ -454,8 +465,34 @@ export const MapComponent = () => {
     }
   }, [coordinates, directionsPanelOpen, settingsPanelOpen]);
 
+  const handleMapTilesClick = useCallback(
+    (event: maplibregl.MapLayerMouseEvent) => {
+      if (!mapRef.current) return;
+
+      const map = mapRef.current.getMap();
+
+      const availableLayers = [
+        VALHALLA_EDGES_LAYER_ID,
+        VALHALLA_NODES_LAYER_ID,
+      ].filter((layerId) => map.getLayer(layerId));
+
+      if (availableLayers.length === 0) return;
+
+      const features = map.queryRenderedFeatures(event.point, {
+        layers: availableLayers,
+      });
+
+      const { lng, lat } = event.lngLat;
+
+      if (features && features.length > 0) {
+        setTilesPopup({ lng, lat, features });
+      }
+    },
+    []
+  );
+
   const handleMapClick = useCallback(
-    (event: { lngLat: { lng: number; lat: number } }) => {
+    (event: maplibregl.MapLayerMouseEvent) => {
       // Prevent click if we just handled a long press
       if (handledLongPressRef.current) {
         handledLongPressRef.current = false;
@@ -498,15 +535,26 @@ export const MapComponent = () => {
       clickStateRef.current.timer = setTimeout(() => {
         const pendingLngLat = clickStateRef.current.pendingLngLat;
         if (pendingLngLat) {
-          setPopupLngLat(pendingLngLat);
-          setShowInfoPopup(true);
-          getHeight(pendingLngLat.lng, pendingLngLat.lat);
+          if (activeTab === 'tiles') {
+            handleMapTilesClick(event);
+          } else {
+            setPopupLngLat(pendingLngLat);
+            setShowInfoPopup(true);
+            getHeight(pendingLngLat.lng, pendingLngLat.lat);
+          }
         }
         clickStateRef.current.timer = null;
         clickStateRef.current.pendingLngLat = null;
       }, CLICK_DELAY_MS);
     },
-    [getHeight, showInfoPopup, showContextPopup, cancelPendingClick]
+    [
+      getHeight,
+      showInfoPopup,
+      showContextPopup,
+      cancelPendingClick,
+      activeTab,
+      handleMapTilesClick,
+    ]
   );
 
   // handle double-click to cancel the pending single-click popup
@@ -523,12 +571,14 @@ export const MapComponent = () => {
 
   const handleMapContextMenu = useCallback(
     (event: { lngLat: { lng: number; lat: number } }) => {
+      if (activeTab === 'tiles') return;
+
       const { lngLat } = event;
       setPopupLngLat(lngLat);
       setShowInfoPopup(false);
       setShowContextPopup(true);
     },
-    []
+    [activeTab]
   );
 
   // Handle move end to save position
@@ -546,6 +596,8 @@ export const MapComponent = () => {
 
   const handleTouchStart = useCallback(
     (event: maplibregl.MapTouchEvent) => {
+      if (activeTab === 'tiles') return;
+
       const now = Date.now();
       const touchCount = event.originalEvent.touches.length;
 
@@ -565,11 +617,13 @@ export const MapComponent = () => {
       }
       clickStateRef.current.lastTapTime = now;
     },
-    [cancelPendingClick]
+    [cancelPendingClick, activeTab]
   );
 
   const handleTouchEnd = useCallback(
     (event: maplibregl.MapTouchEvent) => {
+      if (activeTab === 'tiles') return;
+
       const longTouchTimeMS = 100;
       const acceptableMoveDistance = 20;
 
@@ -606,7 +660,7 @@ export const MapComponent = () => {
       touchStartTimeRef.current = null;
       touchLocationRef.current = null;
     },
-    [handleMapContextMenu]
+    [handleMapContextMenu, activeTab]
   );
 
   // Handle route line hover
@@ -693,7 +747,11 @@ export const MapComponent = () => {
       onTouchEnd={handleTouchEnd}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      interactiveLayerIds={['routes-line']}
+      interactiveLayerIds={
+        activeTab === 'tiles'
+          ? [VALHALLA_EDGES_LAYER_ID, VALHALLA_NODES_LAYER_ID]
+          : ['routes-line']
+      }
       mapStyle={resolvedMapStyle}
       style={{ width: '100%', height: '100vh' }}
       maxBounds={maxBounds}
@@ -788,6 +846,22 @@ export const MapComponent = () => {
           lat={routeHoverPopup.lat}
           summary={routeHoverPopup.summary}
         />
+      )}
+
+      {tilesPopup && (
+        <Popup
+          longitude={tilesPopup.lng}
+          latitude={tilesPopup.lat}
+          closeButton={false}
+          // closeOnClick={false}
+          maxWidth="none"
+          onClose={() => setTilesPopup(null)}
+        >
+          <TilesInfoPopup
+            features={tilesPopup.features}
+            onClose={() => setTilesPopup(null)}
+          />
+        </Popup>
       )}
 
       <BrandLogos />
