@@ -164,6 +164,19 @@ describe('TilesProperty', () => {
     });
   });
 
+  describe('live traffic breakpoints and congestion', () => {
+    it('should show speed without km/h unit', () => {
+      render(
+        <TilesProperty
+          propertyKey="live_traffic:forward:congestion0"
+          value={50}
+        />
+      );
+      expect(screen.getByText('50')).toBeInTheDocument();
+      expect(screen.queryByText('km/h')).not.toBeInTheDocument();
+    });
+  });
+
   describe('slope values', () => {
     it('should show slope with degree unit', () => {
       render(<TilesProperty propertyKey="max_up_slope" value={5} />);
