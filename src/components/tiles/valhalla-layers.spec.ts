@@ -130,7 +130,7 @@ describe('valhalla-layers', () => {
     it('should have properly encoded JSON structure', () => {
       const url = getValhallaTileUrl();
       const expectedEncoded =
-        '%7B%22tile%22%3A%7B%22z%22%3A{z}%2C%22x%22%3A{x}%2C%22y%22%3A{y}%7D%7D';
+        '%7B%22verbose%22%3A%20true%2C%20%22tile%22%3A%7B%22z%22%3A{z}%2C%22x%22%3A{x}%2C%22y%22%3A{y}%7D%7D';
 
       expect(url).toContain(expectedEncoded);
     });
