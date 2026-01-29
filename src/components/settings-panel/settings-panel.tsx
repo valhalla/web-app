@@ -240,29 +240,24 @@ export const SettingsPanel = () => {
                   )
                 )}
                 {profileSettings[profile as ProfileWithSettings].list.map(
-                  (option, key) => {
-                    console.log(`setting: ${settings[option.param]}`);
-
-                    return (
-                      <MultiSelectSetting
-                        key={key}
-                        id={option.param}
-                        label={option.name}
-                        description={option.description}
-                        value={
-                          (settings[option.param] as string[]) ?? ['current']
-                        }
-                        options={option.options}
-                        onValueChange={(value) => {
-                          console.log(value);
-                          handleUpdateSettings({
-                            name: option.param,
-                            value,
-                          });
-                        }}
-                      />
-                    );
-                  }
+                  (option, key) => (
+                    <MultiSelectSetting
+                      key={key}
+                      id={option.param}
+                      label={option.name}
+                      description={option.description}
+                      value={
+                        (settings[option.param] as string[]) ?? ['current']
+                      }
+                      options={option.options}
+                      onValueChange={(value) => {
+                        handleUpdateSettings({
+                          name: option.param,
+                          value,
+                        });
+                      }}
+                    />
+                  )
                 )}
               </div>
             </CollapsibleSection>
