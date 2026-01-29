@@ -700,8 +700,17 @@ export const MapComponent = () => {
         features.length > 0 &&
         features[0]?.layer?.id === 'routes-line';
 
+      const isOverTiles =
+        features &&
+        features.length > 0 &&
+        (features[0]?.layer?.id === VALHALLA_EDGES_LAYER_ID ||
+          features[0]?.layer?.id === VALHALLA_NODES_LAYER_ID);
+
       if (isOverRoute) {
         onRouteLineHover(event);
+      } else if (isOverTiles) {
+        const map = mapRef.current.getMap();
+        map.getCanvas().style.cursor = 'pointer';
       } else {
         // Clear popup and cursor when not over route
         if (routeHoverPopup) {
@@ -853,7 +862,6 @@ export const MapComponent = () => {
           longitude={tilesPopup.lng}
           latitude={tilesPopup.lat}
           closeButton={false}
-          // closeOnClick={false}
           maxWidth="none"
           onClose={() => setTilesPopup(null)}
         >
