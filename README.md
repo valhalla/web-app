@@ -22,6 +22,8 @@ Your app is ready to be deployed!
 
 ## Testing
 
+[![Tests and Linting](https://github.com/valhalla/web-app/actions/workflows/playwright.yml/badge.svg)](https://github.com/valhalla/web-app/actions/workflows/playwright.yml)
+
 This project includes end-to-end tests using [Playwright](https://playwright.dev/) to ensure the application works correctly across different scenarios.
 
 ### Running Tests
