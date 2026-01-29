@@ -82,6 +82,12 @@ export const filterProfileSettings = (
             settings[setting as keyof PossibleSettings];
         }
       }
+      for (const item of profileSettings[profile].list) {
+        if (setting === item.param) {
+          filteredSettings.costing[setting] =
+            settings[setting as keyof PossibleSettings];
+        }
+      }
     }
   }
   return filteredSettings;

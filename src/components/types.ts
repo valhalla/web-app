@@ -79,7 +79,14 @@ export interface PossibleSettings {
   denoise: number;
   generalize: number;
   alternates: number;
-  [key: string]: string | number | boolean | GeoJSON.GeoJSON[] | undefined;
+  speed_types: string[];
+  [key: string]:
+    | string
+    | string[]
+    | number
+    | boolean
+    | GeoJSON.GeoJSON[]
+    | undefined;
 }
 
 export interface ParsedDirectionsGeometry {
