@@ -37,6 +37,7 @@ import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
 import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import { ServerSettings } from '@/components/settings-panel/server-settings';
+import { MultiSelectSetting } from '../ui/multiselect-setting';
 
 type ProfileWithSettings = Exclude<Profile, 'auto'>;
 
@@ -229,6 +230,26 @@ export const SettingsPanel = () => {
                       placeholder="Select Bicycle Type"
                       value={settings.bicycle_type as string}
                       options={option.enums}
+                      onValueChange={(value) => {
+                        handleUpdateSettings({
+                          name: option.param,
+                          value,
+                        });
+                      }}
+                    />
+                  )
+                )}
+                {profileSettings[profile as ProfileWithSettings].list.map(
+                  (option, key) => (
+                    <MultiSelectSetting
+                      key={key}
+                      id={option.param}
+                      label={option.name}
+                      description={option.description}
+                      value={
+                        (settings[option.param] as string[]) ?? ['current']
+                      }
+                      options={option.options}
                       onValueChange={(value) => {
                         handleUpdateSettings({
                           name: option.param,

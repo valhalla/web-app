@@ -21,10 +21,18 @@ interface EnumSetting {
   enums: Array<{ key: string; text: string; value: string }>;
 }
 
+interface ListSetting {
+  name: string;
+  param: string;
+  description: string;
+  options: Array<string>;
+}
+
 interface SettingsGroup {
   numeric: NumericSetting[];
   boolean: BooleanSetting[];
   enum: EnumSetting[];
+  list: ListSetting[];
 }
 
 export type SettingsProfile =
@@ -39,11 +47,13 @@ export type SettingsProfile =
 const createSettings = (
   numeric: NumericSetting[],
   boolean: BooleanSetting[],
-  enumSettings: EnumSetting[] = []
+  enumSettings: EnumSetting[] = [],
+  listSettings: ListSetting[] = []
 ): SettingsGroup => ({
   numeric: [...numeric],
   boolean: [...boolean],
   enum: enumSettings,
+  list: listSettings,
 });
 
 const length = {
@@ -254,6 +264,13 @@ const includeHot = {
   param: 'include_hot',
   description:
     "A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met. Default false.",
+};
+
+const speedTypes = {
+  name: 'Speed Types',
+  param: 'speed_types',
+  description: 'Which speed types to use.',
+  options: ['current', 'predicted', 'freeflow', 'constrained'],
 };
 
 const transitStartEndMaxDistance = {
@@ -851,6 +868,7 @@ export const settingsInit = {
   denoise: 0.1,
   generalize: 0,
   alternates: 0,
+  speed_types: ['current', 'freeflow', 'predicted', 'constrained'],
 };
 
 export const settingsInitTruckOverride = {
@@ -918,17 +936,23 @@ export const profileSettings: Record<SettingsProfile, SettingsGroup> = {
       ...borderSettings,
       useTruckRoutes,
     ],
-    [hazardousMaterials, shortest, ignoreHierarchies]
+    [hazardousMaterials, shortest, ignoreHierarchies],
+    [],
+    [speedTypes]
   ),
 
   car: createSettings(
     [...commonVehicleProfileNumeric],
-    [...commonVehicleProfileBoolean]
+    [...commonVehicleProfileBoolean],
+    [],
+    [speedTypes]
   ),
 
   bus: createSettings(
     [length, weight, ...commonVehicleProfileNumeric],
-    [...commonVehicleProfileBoolean]
+    [...commonVehicleProfileBoolean],
+    [],
+    [speedTypes]
   ),
 
   pedestrian: createSettings(
@@ -955,7 +979,9 @@ export const profileSettings: Record<SettingsProfile, SettingsGroup> = {
       ...gateSettings,
       ...borderSettings,
     ],
-    [shortest, ignoreHierarchies]
+    [shortest, ignoreHierarchies],
+    [],
+    [speedTypes]
   ),
 
   bicycle: createSettings(
@@ -966,7 +992,9 @@ export const profileSettings: Record<SettingsProfile, SettingsGroup> = {
 
   motorcycle: createSettings(
     [...commonVehicleProfileNumeric],
-    [...commonVehicleProfileBoolean]
+    [...commonVehicleProfileBoolean],
+    [],
+    [speedTypes]
   ),
 };
 

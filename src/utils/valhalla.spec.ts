@@ -257,6 +257,7 @@ describe('valhalla.ts', () => {
         denoise: 0.1,
         generalize: 0,
         alternates: 0,
+        speed_types: [],
       },
       directions: {
         maneuver_penalty: 5,
@@ -317,6 +318,7 @@ describe('valhalla.ts', () => {
         denoise: 0.1,
         generalize: 0,
         alternates: 0,
+        speed_types: [],
       },
     };
 
@@ -775,6 +777,7 @@ describe('valhalla.ts', () => {
         denoise: 0.1,
         generalize: 0,
         alternates: 0,
+        speed_types: [],
       },
       directions: {
         maneuver_penalty: 5,
@@ -835,6 +838,7 @@ describe('valhalla.ts', () => {
         denoise: 0.1,
         generalize: 0,
         alternates: 0,
+        speed_types: [],
       },
     };
 
