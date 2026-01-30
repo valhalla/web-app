@@ -266,7 +266,7 @@ export const MapComponent = () => {
   const handleOpenOSM = useCallback(() => {
     if (!mapRef.current) return;
     const { lng, lat } = mapRef.current.getCenter();
-    const zoom = mapRef.current.getZoom();
+    const zoom = Math.round(mapRef.current.getZoom());
     const osmURL = `https://www.openstreetmap.org/#map=${zoom}/${lat}/${lng}`;
     window.open(osmURL, '_blank');
   }, []);
