@@ -107,7 +107,7 @@ export const propertyNameMappings: Record<string, Record<number, string>> = {
   surface: surfaceNames,
   cyclelane: cyclelaneNames,
   sac_scale: sacScaleNames,
-  node_type: nodeTypeNames,
+  type: nodeTypeNames,
   intersection_type: intersectionTypeNames,
 };
 
@@ -140,3 +140,59 @@ export const bitmaskPropertyMappings: Record<string, Record<number, string>> = {
   access: accessFlagNames,
   bike_network: bikeNetworkFlagNames,
 };
+
+const hideWhenFalseKeys: string[] = [
+  // edges
+  'tunnel',
+  'bridge',
+  'roundabout',
+  'shortcut',
+  'leaves_tile',
+  'toll',
+  'destonly',
+  'destonly_hgv',
+  'indoor',
+  'truck_route',
+  'country_crossing',
+  'unpaved',
+  'ramp',
+  'internal',
+  'shoulder',
+  'dismount',
+  'use_sidepath',
+  'sidewalk_left',
+  'sidewalk_right',
+  'bss_connection',
+  'lit',
+  'not_thru',
+  'part_of_complex_restriction',
+  'deadend:fwd',
+  'deadend:bwd',
+  'traffic_signal:fwd',
+  'traffic_signal:bwd',
+  'stop_sign:fwd',
+  'stop_sign:bwd',
+  'yield_sign:fwd',
+  'yield_sign:bwd',
+  // nodes
+  'traffic_signal',
+  'drive_on_right',
+  'tagged_access',
+  'private_access',
+  'cash_only_toll',
+  'mode_change_allowed',
+  'named_intersection',
+];
+
+export function shouldHideProperty(key: string, value: unknown): boolean {
+  if (typeof value === 'boolean' && !value && hideWhenFalseKeys.includes(key)) {
+    return true;
+  } else if (
+    typeof value == 'number' &&
+    key.includes('speed') &&
+    (value == 0 || value == 254)
+  ) {
+    return true;
+  }
+  return false;
+}
