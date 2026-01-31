@@ -227,8 +227,8 @@ export const SettingsPanel = () => {
                       id={option.param}
                       label={option.name}
                       description={option.description}
-                      placeholder="Select Bicycle Type"
-                      value={settings.bicycle_type as string}
+                      placeholder={`Select ${option.name}`}
+                      value={settings[option.param] as string}
                       options={option.enums}
                       onValueChange={(value) => {
                         handleUpdateSettings({

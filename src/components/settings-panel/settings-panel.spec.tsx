@@ -51,6 +51,7 @@ vi.mock('@/stores/common-store', () => ({
         use_living_streets: 0.5,
         alternates: 2,
         bicycle_type: 'Hybrid',
+        type: 'Foot',
         service_penalty: 15,
         service_factor: 1,
         maneuver_penalty: 5,
@@ -61,6 +62,16 @@ vi.mock('@/stores/common-store', () => ({
         country_crossing_cost: 600,
         country_crossing_penalty: 0,
         turn_penalty_factor: 0,
+        use_lit: 0.5,
+        walking_speed: 5.1,
+        walkway_factor: 1,
+        sidewalk_factor: 1,
+        alley_factor: 2,
+        driveway_factor: 5,
+        step_penalty: 0,
+        max_hiking_difficulty: 1,
+        destination_only_penalty: 300,
+        elevator_penalty: 120,
       },
       settingsPanelOpen: true,
       updateSettings: mockUpdateSettings,
@@ -498,6 +509,51 @@ describe('SettingsPanel', () => {
       await user.click(resetButton);
 
       expect(screen.queryByText('Invalid URL format')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Enum Settings', () => {
+    it('should render Bicycle Type select only once for bicycle profile', () => {
+      renderWithQueryClient(<SettingsPanel />);
+      const bicycleTypeLabels = screen.getAllByText('Bicycle Type');
+      expect(bicycleTypeLabels).toHaveLength(1);
+    });
+
+    it('should display current bicycle_type value from settings', () => {
+      renderWithQueryClient(<SettingsPanel />);
+      // The mock has bicycle_type: 'Hybrid'
+      expect(screen.getByText('Hybrid')).toBeInTheDocument();
+    });
+
+    it('should render Pedestrian Type select only once for pedestrian profile', () => {
+      mockUseSearch.mockReturnValue({ profile: 'pedestrian' });
+      renderWithQueryClient(<SettingsPanel />);
+      const pedestrianTypeLabels = screen.getAllByText('Pedestrian Type');
+      expect(pedestrianTypeLabels).toHaveLength(1);
+    });
+
+    it('should display current pedestrian type value from settings', () => {
+      mockUseSearch.mockReturnValue({ profile: 'pedestrian' });
+      renderWithQueryClient(<SettingsPanel />);
+      // The mock has type: 'Foot'
+      expect(screen.getByText('Foot')).toBeInTheDocument();
+    });
+
+    it('should render bicycle type combobox with correct id', () => {
+      renderWithQueryClient(<SettingsPanel />);
+      const bicycleTypeSelect = screen.getByRole('combobox', {
+        name: /Bicycle Type/i,
+      });
+      expect(bicycleTypeSelect).toBeInTheDocument();
+    });
+
+    it('should render pedestrian type combobox with correct id', () => {
+      mockUseSearch.mockReturnValue({ profile: 'pedestrian' });
+      renderWithQueryClient(<SettingsPanel />);
+      const pedestrianTypeSelect = screen.getByRole('combobox', {
+        name: /Pedestrian Type/i,
+      });
+      expect(pedestrianTypeSelect).toBeInTheDocument();
     });
   });
 

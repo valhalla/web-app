@@ -19,6 +19,7 @@ export type Settings = Record<
 >;
 
 export type BicycleType = 'Hybrid' | 'Road' | 'City' | 'Cross' | 'Mountain';
+export type PedestrianType = 'Foot' | 'Wheelchair' | 'Blind';
 
 export interface PossibleSettings {
   maneuver_penalty: number;
@@ -37,6 +38,8 @@ export interface PossibleSettings {
   use_living_streets: number;
   use_tracks: number;
   private_access_penalty: number;
+  destination_only_penalty: number;
+  elevator_penalty: number;
   ignore_closures: boolean;
   ignore_restrictions: boolean;
   ignore_access: boolean;
@@ -47,6 +50,7 @@ export interface PossibleSettings {
   shortest: boolean;
   exclude_cash_only_tolls: boolean;
   bicycle_type: BicycleType;
+  type: PedestrianType;
   cycling_speed: number;
   use_roads: number;
   use_hills: number;
@@ -178,27 +182,6 @@ export interface Center {
   displaylnglat: number[];
   key: number;
   addressindex: number;
-}
-
-export interface Costing {
-  maneuver_penalty: number;
-  use_ferry: number;
-  use_living_streets: number;
-  service_penalty: number;
-  service_factor: number;
-  shortest: boolean;
-  bicycle_type: string;
-  cycling_speed: number;
-  use_roads: number;
-  use_hills: number;
-  avoid_bad_surfaces: number;
-  gate_penalty: number;
-  gate_cost: number;
-}
-
-export interface Directions {
-  alternates: number;
-  exclude_polygons: GeoJSON.GeoJSON[];
 }
 
 export interface NominationResponse {

@@ -1,4 +1,4 @@
-import type { BicycleType } from '@/components/types';
+import type { BicycleType, PedestrianType } from '@/components/types';
 
 interface NumericSetting {
   name: string;
@@ -186,6 +186,32 @@ const gatePenalty = {
   param: 'gate_penalty',
   description:
     'A penalty applied when a gate with no access information is on the road. The default gate penalty is 300 seconds.',
+  unit: 'sec',
+  settings: {
+    min: 0,
+    max: 600,
+    step: 30,
+  },
+};
+
+const destinationOnlyPenalty = {
+  name: 'Destination-only Penalty',
+  param: 'destination_only_penalty',
+  description:
+    'A penalty applied when entering an road which is only allowed to enter if necessary to reach the destination.',
+  unit: 'sec',
+  settings: {
+    min: 0,
+    max: 600,
+    step: 30,
+  },
+};
+
+const elevatorPenalty = {
+  name: 'Elevator Penalty',
+  param: 'elevator_penalty',
+  description:
+    'A penalty in seconds added to each transition via an elevator node or onto an elevator edge. Higher values apply larger cost penalties to avoid elevators.',
   unit: 'sec',
   settings: {
     min: 0,
@@ -551,6 +577,29 @@ const bicycleType = {
   ],
 };
 
+const pedestrianType = {
+  name: 'Pedestrian Type',
+  description: `One of "foot", "wheelchair", "blind". If set to blind, enables additional route instructions, especially useful for blind users: Announcing crossed streets, the stairs, bridges, tunnels, gates and bollards, which need to be passed on route; information about traffic signals on crosswalks; route numbers not announced for named routes. If set to wheelchair, changes the defaults for max_distance, walking_speed, and step_penalty to be better aligned to the needs of wheelchair users.`,
+  param: 'type',
+  enums: [
+    {
+      key: 'Foot',
+      text: 'Foot',
+      value: 'Foot',
+    },
+    {
+      key: 'Wheelchair',
+      text: 'Wheelchair',
+      value: 'Wheelchair',
+    },
+    {
+      key: 'Blind',
+      text: 'Blind',
+      value: 'Blind',
+    },
+  ],
+};
+
 const cyclingSpeed = {
   name: 'Cycling Speed',
   param: 'cycling_speed',
@@ -826,6 +875,8 @@ export const settingsInit = {
   use_living_streets: 0.5,
   use_tracks: 0,
   private_access_penalty: 450,
+  destination_only_penalty: 300,
+  elevator_penalty: 120,
   ignore_closures: false,
   ignore_restrictions: false,
   ignore_access: false,
@@ -836,6 +887,7 @@ export const settingsInit = {
   shortest: false,
   exclude_cash_only_tolls: false,
   bicycle_type: 'Hybrid' as BicycleType,
+  type: 'Foot' as PedestrianType,
   cycling_speed: 20,
   use_roads: 0.5,
   use_hills: 0.5,
@@ -891,6 +943,7 @@ const commonVehicleProfileNumeric = [
   topSpeed,
   fixedSpeed,
   privateAccessPenalty,
+  destinationOnlyPenalty,
   closureFactor,
   ...serviceSettings,
   ...gateSettings,
@@ -964,10 +1017,14 @@ export const profileSettings: Record<SettingsProfile, SettingsGroup> = {
       sidewalkFactor,
       alleyFactor,
       drivewayFactor,
+      privateAccessPenalty,
+      destinationOnlyPenalty,
+      elevatorPenalty,
       stepPenalty,
       maxHikingDifficulty,
     ],
-    [shortest]
+    [shortest],
+    [pedestrianType]
   ),
 
   motor_scooter: createSettings(
