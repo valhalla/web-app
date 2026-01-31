@@ -104,19 +104,44 @@ describe('TilesProperty', () => {
     });
   });
 
-  describe('access properties', () => {
-    it('should show check icon for truthy access values', () => {
-      const { container } = render(
-        <TilesProperty propertyKey="access:car" value={true} />
-      );
-      expect(container.querySelector('.text-emerald-600')).toBeInTheDocument();
+  describe('access bitmask properties', () => {
+    it('should decode access:fwd bitmask to badges', () => {
+      // 1 (Auto) + 2 (Pedestrian) + 4 (Bicycle) = 7
+      render(<TilesProperty propertyKey="access:fwd" value={7} />);
+      expect(screen.getByText('Auto')).toBeInTheDocument();
+      expect(screen.getByText('Pedestrian')).toBeInTheDocument();
+      expect(screen.getByText('Bicycle')).toBeInTheDocument();
     });
 
-    it('should show X icon for falsy access values', () => {
+    it('should decode access:bwd bitmask to badges', () => {
+      // 8 (Truck) + 64 (Bus) = 72
+      render(<TilesProperty propertyKey="access:bwd" value={72} />);
+      expect(screen.getByText('Truck')).toBeInTheDocument();
+      expect(screen.getByText('Bus')).toBeInTheDocument();
+      expect(screen.queryByText('Auto')).not.toBeInTheDocument();
+    });
+
+    it('should show all access types for full bitmask', () => {
+      // All flags: 1+2+4+8+16+32+64+128+256+512+1024 = 2047
+      render(<TilesProperty propertyKey="access:fwd" value={2047} />);
+      expect(screen.getByText('Auto')).toBeInTheDocument();
+      expect(screen.getByText('Pedestrian')).toBeInTheDocument();
+      expect(screen.getByText('Bicycle')).toBeInTheDocument();
+      expect(screen.getByText('Truck')).toBeInTheDocument();
+      expect(screen.getByText('Emergency')).toBeInTheDocument();
+      expect(screen.getByText('Taxi')).toBeInTheDocument();
+      expect(screen.getByText('Bus')).toBeInTheDocument();
+      expect(screen.getByText('HOV')).toBeInTheDocument();
+      expect(screen.getByText('Wheelchair')).toBeInTheDocument();
+      expect(screen.getByText('Moped')).toBeInTheDocument();
+      expect(screen.getByText('Motorcycle')).toBeInTheDocument();
+    });
+
+    it('should render empty for zero bitmask', () => {
       const { container } = render(
-        <TilesProperty propertyKey="access:car" value={false} />
+        <TilesProperty propertyKey="access:fwd" value={0} />
       );
-      expect(container.querySelector('.text-red-600')).toBeInTheDocument();
+      expect(container.querySelector('.inline-flex')).toBeEmptyDOMElement();
     });
   });
 

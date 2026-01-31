@@ -110,3 +110,23 @@ export const propertyNameMappings: Record<string, Record<number, string>> = {
   node_type: nodeTypeNames,
   intersection_type: intersectionTypeNames,
 };
+
+export const accessFlagNames: Record<number, string> = {
+  1: 'Auto',
+  2: 'Pedestrian',
+  4: 'Bicycle',
+  8: 'Truck',
+  16: 'Emergency',
+  32: 'Taxi',
+  64: 'Bus',
+  128: 'HOV',
+  256: 'Wheelchair',
+  512: 'Moped',
+  1024: 'Motorcycle',
+};
+
+export const bitmaskPropertyMappings: Record<string, Record<number, string>> = {
+  'access:fwd': accessFlagNames,
+  'access:bwd': accessFlagNames,
+  access: accessFlagNames,
+};
