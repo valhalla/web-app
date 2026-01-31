@@ -137,11 +137,33 @@ describe('TilesProperty', () => {
       expect(screen.getByText('Motorcycle')).toBeInTheDocument();
     });
 
-    it('should render empty for zero bitmask', () => {
-      const { container } = render(
-        <TilesProperty propertyKey="access:fwd" value={0} />
-      );
-      expect(container.querySelector('.inline-flex')).toBeEmptyDOMElement();
+    it('should show None for zero bitmask', () => {
+      render(<TilesProperty propertyKey="access:fwd" value={0} />);
+      expect(screen.getByText('None')).toBeInTheDocument();
+    });
+  });
+
+  describe('bike_network bitmask properties', () => {
+    it('should decode bike_network bitmask to badges', () => {
+      // 1 (National) + 4 (Local) = 5
+      render(<TilesProperty propertyKey="bike_network" value={5} />);
+      expect(screen.getByText('National')).toBeInTheDocument();
+      expect(screen.getByText('Local')).toBeInTheDocument();
+      expect(screen.queryByText('Regional')).not.toBeInTheDocument();
+    });
+
+    it('should show all bike network types for full bitmask', () => {
+      // All flags: 1+2+4+8 = 15
+      render(<TilesProperty propertyKey="bike_network" value={15} />);
+      expect(screen.getByText('National')).toBeInTheDocument();
+      expect(screen.getByText('Regional')).toBeInTheDocument();
+      expect(screen.getByText('Local')).toBeInTheDocument();
+      expect(screen.getByText('Mountain')).toBeInTheDocument();
+    });
+
+    it('should show None for zero bike_network', () => {
+      render(<TilesProperty propertyKey="bike_network" value={0} />);
+      expect(screen.getByText('None')).toBeInTheDocument();
     });
   });
 

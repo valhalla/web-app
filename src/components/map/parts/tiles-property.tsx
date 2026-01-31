@@ -12,6 +12,9 @@ function decodeBitmask(
   value: number,
   mapping: Record<number, string>
 ): string[] {
+  if (value === 0) {
+    return [mapping[0]!];
+  }
   return Object.entries(mapping)
     .filter(([mask]) => value & Number(mask))
     .map(([, label]) => label);
@@ -60,16 +63,13 @@ export function TilesProperty({
   if (bitmaskMapping && typeof value === 'number') {
     const decodedValues = decodeBitmask(value, bitmaskMapping);
     return (
-      <span className="inline-flex flex-col items-end gap-0.5">
+      <span className="inline-flex flex-col items-end gap-1.5">
         {decodedValues.map((label) => (
-          <Badge
-            key={label}
-            variant="outline"
-            className="px-1 py-0 text-[10px] h-4 font-normal"
-          >
+          <Badge variant="outline" key={label}>
             {label}
           </Badge>
         ))}
+        <span>({value})</span>
       </span>
     );
   }

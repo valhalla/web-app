@@ -112,6 +112,7 @@ export const propertyNameMappings: Record<string, Record<number, string>> = {
 };
 
 export const accessFlagNames: Record<number, string> = {
+  0: 'None',
   1: 'Auto',
   2: 'Pedestrian',
   4: 'Bicycle',
@@ -125,8 +126,17 @@ export const accessFlagNames: Record<number, string> = {
   1024: 'Motorcycle',
 };
 
+export const bikeNetworkFlagNames: Record<number, string> = {
+  0: 'None',
+  1: 'National',
+  2: 'Regional',
+  4: 'Local',
+  8: 'Mountain',
+};
+
 export const bitmaskPropertyMappings: Record<string, Record<number, string>> = {
   'access:fwd': accessFlagNames,
   'access:bwd': accessFlagNames,
   access: accessFlagNames,
+  bike_network: bikeNetworkFlagNames,
 };
