@@ -3,6 +3,7 @@ import { X, Route, MapPin } from 'lucide-react';
 import type { MapGeoJSONFeature } from 'maplibre-gl';
 
 import { TilesProperty } from './tiles-property';
+import { shouldHideProperty } from './tiles-constants';
 
 interface TilesInfoPopupProps {
   features: MapGeoJSONFeature[];
@@ -51,21 +52,23 @@ export function TilesInfoPopup({ features, onClose }: TilesInfoPopupProps) {
               <div className="rounded-md border border-border overflow-hidden">
                 <table className="w-full text-xs">
                   <tbody>
-                    {Object.entries(properties).map(([key, value], idx) => (
-                      <tr
-                        key={key}
-                        className={
-                          idx % 2 === 0 ? 'bg-muted/30' : 'bg-transparent'
-                        }
-                      >
-                        <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap font-bold">
-                          {key}
-                        </td>
-                        <td className="py-1.5 px-2 text-right font-medium">
-                          <TilesProperty propertyKey={key} value={value} />
-                        </td>
-                      </tr>
-                    ))}
+                    {Object.entries(properties)
+                      .filter(([key, value]) => !shouldHideProperty(key, value))
+                      .map(([key, value], idx) => (
+                        <tr
+                          key={key}
+                          className={
+                            idx % 2 === 0 ? 'bg-muted/30' : 'bg-transparent'
+                          }
+                        >
+                          <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap font-bold">
+                            {key}
+                          </td>
+                          <td className="py-1.5 px-2 text-right font-medium">
+                            <TilesProperty propertyKey={key} value={value} />
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
