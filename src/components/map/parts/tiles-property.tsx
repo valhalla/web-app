@@ -1,9 +1,24 @@
 import type { ReactNode } from 'react';
 import { ExternalLink, Check, X as XIcon } from 'lucide-react';
 
-import { propertyNameMappings } from './tiles-constants';
+import {
+  bitmaskPropertyMappings,
+  propertyNameMappings,
+} from './tiles-constants';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+
+function decodeBitmask(
+  value: number,
+  mapping: Record<number, string>
+): string[] {
+  if (value === 0) {
+    return [mapping[0]!];
+  }
+  return Object.entries(mapping)
+    .filter(([mask]) => value & Number(mask))
+    .map(([, label]) => label);
+}
 
 interface TilesPropertyProps {
   propertyKey: string;
@@ -33,9 +48,9 @@ export function TilesProperty({
     );
   }
 
-  const mapping = propertyNameMappings[propertyKey];
-  if (mapping && typeof value === 'number') {
-    const name = mapping[value] || 'Unknown';
+  const propNamemapping = propertyNameMappings[propertyKey];
+  if (propNamemapping && typeof value === 'number') {
+    const name = propNamemapping[value] || 'Unknown';
     return (
       <span className="inline-flex items-center gap-1.5">
         <Badge variant="outline">{name}</Badge>
@@ -44,17 +59,17 @@ export function TilesProperty({
     );
   }
 
-  if (propertyKey.startsWith('access:')) {
+  const bitmaskMapping = bitmaskPropertyMappings[propertyKey];
+  if (bitmaskMapping && typeof value === 'number') {
+    const decodedValues = decodeBitmask(value, bitmaskMapping);
     return (
-      <span
-        className={cn(
-          'inline-flex items-center justify-center size-5 rounded-full',
-          value
-            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-            : 'bg-red-500/20 text-red-600 dark:text-red-400'
-        )}
-      >
-        {value ? <Check className="size-3" /> : <XIcon className="size-3" />}
+      <span className="inline-flex flex-col items-end gap-1.5">
+        {decodedValues.map((label) => (
+          <Badge variant="outline" key={label}>
+            {label}
+          </Badge>
+        ))}
+        <span>({value})</span>
       </span>
     );
   }

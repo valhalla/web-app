@@ -58,7 +58,7 @@ export function TilesInfoPopup({ features, onClose }: TilesInfoPopupProps) {
                           idx % 2 === 0 ? 'bg-muted/30' : 'bg-transparent'
                         }
                       >
-                        <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap">
+                        <td className="py-1.5 px-2 text-muted-foreground whitespace-nowrap font-bold">
                           {key}
                         </td>
                         <td className="py-1.5 px-2 text-right font-medium">
