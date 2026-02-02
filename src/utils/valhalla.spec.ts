@@ -199,6 +199,8 @@ describe('valhalla.ts', () => {
 
     const mockSettings: Settings = {
       costing: {
+        destination_only_penalty: 300,
+        elevator_penalty: 300,
         maneuver_penalty: 5,
         country_crossing_penalty: 0,
         country_crossing_cost: 600,
@@ -225,6 +227,7 @@ describe('valhalla.ts', () => {
         shortest: false,
         exclude_cash_only_tolls: false,
         bicycle_type: 'Hybrid',
+        type: 'Foot',
         cycling_speed: 20,
         use_roads: 0.5,
         use_hills: 0.5,
@@ -260,6 +263,8 @@ describe('valhalla.ts', () => {
         speed_types: [],
       },
       directions: {
+        destination_only_penalty: 300,
+        elevator_penalty: 300,
         maneuver_penalty: 5,
         country_crossing_penalty: 0,
         country_crossing_cost: 600,
@@ -286,6 +291,7 @@ describe('valhalla.ts', () => {
         shortest: false,
         exclude_cash_only_tolls: false,
         bicycle_type: 'Hybrid',
+        type: 'Foot',
         cycling_speed: 20,
         use_roads: 0.5,
         use_hills: 0.5,
@@ -719,6 +725,8 @@ describe('valhalla.ts', () => {
 
     const mockSettings: Settings = {
       costing: {
+        destination_only_penalty: 300,
+        elevator_penalty: 300,
         maneuver_penalty: 5,
         country_crossing_penalty: 0,
         country_crossing_cost: 600,
@@ -745,6 +753,7 @@ describe('valhalla.ts', () => {
         shortest: false,
         exclude_cash_only_tolls: false,
         bicycle_type: 'Hybrid',
+        type: 'Foot',
         cycling_speed: 20,
         use_roads: 0.5,
         use_hills: 0.5,
@@ -780,6 +789,8 @@ describe('valhalla.ts', () => {
         speed_types: [],
       },
       directions: {
+        destination_only_penalty: 300,
+        elevator_penalty: 300,
         maneuver_penalty: 5,
         country_crossing_penalty: 0,
         country_crossing_cost: 600,
@@ -806,6 +817,7 @@ describe('valhalla.ts', () => {
         shortest: false,
         exclude_cash_only_tolls: false,
         bicycle_type: 'Hybrid',
+        type: 'Foot',
         cycling_speed: 20,
         use_roads: 0.5,
         use_hills: 0.5,
