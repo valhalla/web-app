@@ -82,6 +82,8 @@ describe('valhalla-layers', () => {
     });
   });
 
+  //Shortcut is now a separate map layer.
+  //It uses the same styling as edges.
   describe('VALHALLA_SHORTCUTS_LAYER', () => {
     const shortcutsLayer = VALHALLA_SHORTCUTS_LAYER as LineLayerSpecification;
 

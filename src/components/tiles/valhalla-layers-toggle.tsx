@@ -80,8 +80,7 @@ export const ValhallaLayersToggle = () => {
         />
       </div>
       <p className="text-xs text-muted-foreground">
-        Overlay Valhalla routing graph tiles showing edges, shortcuts, and
-        nodes. Uses the{' '}
+        Overlay Valhalla routing graph tiles showing edges and nodes. Uses the{' '}
         <a
           href="https://valhalla.github.io/valhalla/api/tile/api-reference/"
           target="_blank"
