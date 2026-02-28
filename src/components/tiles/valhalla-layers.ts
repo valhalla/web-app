@@ -3,6 +3,7 @@ import { getBaseUrl, normalizeBaseUrl } from '@/utils/base-url';
 
 export const VALHALLA_SOURCE_ID = 'valhalla-tiles';
 export const VALHALLA_EDGES_LAYER_ID = 'valhalla-edges';
+export const VALHALLA_SHORTCUTS_LAYER_ID = 'valhalla-shortcuts';
 export const VALHALLA_NODES_LAYER_ID = 'valhalla-nodes';
 
 // Pre-encoded JSON: {"tile":{"z":{z},"x":{x},"y":{y}}}
@@ -67,6 +68,12 @@ export const VALHALLA_EDGES_LAYER: LayerSpecification = {
   },
 };
 
+export const VALHALLA_SHORTCUTS_LAYER: LayerSpecification = {
+  ...VALHALLA_EDGES_LAYER,
+  id: VALHALLA_SHORTCUTS_LAYER_ID,
+  'source-layer': 'shortcuts',
+};
+
 export const VALHALLA_NODES_LAYER: LayerSpecification = {
   id: VALHALLA_NODES_LAYER_ID,
   type: 'circle',
@@ -85,5 +92,6 @@ export const VALHALLA_NODES_LAYER: LayerSpecification = {
 
 export const VALHALLA_LAYERS: LayerSpecification[] = [
   VALHALLA_EDGES_LAYER,
+  VALHALLA_SHORTCUTS_LAYER,
   VALHALLA_NODES_LAYER,
 ];
