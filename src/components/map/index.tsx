@@ -87,7 +87,6 @@ export const MapComponent = () => {
   const directionsPanelOpen = useCommonStore(
     (state) => state.directionsPanelOpen
   );
-  const settingsPanelOpen = useCommonStore((state) => state.settingsPanelOpen);
   const updateSettings = useCommonStore((state) => state.updateSettings);
   const setMapReady = useCommonStore((state) => state.setMapReady);
   const { profile, style } = useSearch({ from: '/$activeTab' });
@@ -422,49 +421,81 @@ export const MapComponent = () => {
     return newMarkers;
   }, [waypoints, geocodeResults]);
 
-  // Zoom to coordinates
+  //Stores the route content
+  const lastZoomedCoordKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (coordinates && coordinates.length > 0 && mapRef.current) {
-      const firstCoord = coordinates[0];
-      if (!firstCoord || !firstCoord[0] || !firstCoord[1]) return;
-
-      const bounds: [[number, number], [number, number]] = coordinates.reduce<
-        [[number, number], [number, number]]
-      >(
-        (acc, coord) => {
-          if (!coord || !coord[0] || !coord[1]) return acc;
-          return [
-            [Math.min(acc[0][0], coord[1]), Math.min(acc[0][1], coord[0])],
-            [Math.max(acc[1][0], coord[1]), Math.max(acc[1][1], coord[0])],
-          ];
-        },
-        [
-          [firstCoord[1], firstCoord[0]],
-          [firstCoord[1], firstCoord[0]],
-        ]
-      );
-
-      const paddingTopLeft = [
-        screen.width < 550 ? 50 : directionsPanelOpen ? 420 : 50,
-        50,
-      ];
-
-      const paddingBottomRight = [
-        screen.width < 550 ? 50 : settingsPanelOpen ? 420 : 50,
-        50,
-      ];
-
-      mapRef.current.fitBounds(bounds, {
-        padding: {
-          top: paddingTopLeft[1] as number,
-          bottom: paddingBottomRight[1] as number,
-          left: paddingTopLeft[0] as number,
-          right: paddingBottomRight[0] as number,
-        },
-        maxZoom: coordinates.length === 1 ? 11 : 18,
-      });
+    //When a route is cleared resets the key to null
+    if (!coordinates || coordinates.length === 0) {
+      lastZoomedCoordKeyRef.current = null;
+      return;
     }
-  }, [coordinates, directionsPanelOpen, settingsPanelOpen]);
+
+    //If No Cordinates then return early
+    if (!mapRef.current) return;
+
+    //First Point
+    const firstCoord = coordinates[0];
+    if (!firstCoord || !firstCoord[0] || !firstCoord[1]) return;
+
+    //Last Point
+    const lastCoord = coordinates[coordinates.length - 1]!;
+
+    const coordKey =
+      coordinates.length +
+      ':' +
+      firstCoord[0] +
+      ',' +
+      firstCoord[1] +
+      ':' +
+      lastCoord[0] +
+      ',' +
+      lastCoord[1];
+    //Compare with what was last zoomed
+    if (coordKey === lastZoomedCoordKeyRef.current) return;
+    //Store thr new Key
+    lastZoomedCoordKeyRef.current = coordKey;
+
+    const bounds: [[number, number], [number, number]] = coordinates.reduce<
+      [[number, number], [number, number]]
+    >(
+      (acc, coord) => {
+        if (!coord || !coord[0] || !coord[1]) return acc;
+        return [
+          [Math.min(acc[0][0], coord[1]), Math.min(acc[0][1], coord[0])],
+          [Math.max(acc[1][0], coord[1]), Math.max(acc[1][1], coord[0])],
+        ];
+      },
+      [
+        [firstCoord[1], firstCoord[0]],
+        [firstCoord[1], firstCoord[0]],
+      ]
+    );
+
+    //Read panel from the store directly
+    //avoids re-running the effect when panels open or close
+    const state = useCommonStore.getState();
+    const dpOpen = state.directionsPanelOpen;
+    const spOpen = state.settingsPanelOpen;
+
+    const paddingTopLeft = [screen.width < 550 ? 50 : dpOpen ? 420 : 50, 50];
+    const paddingBottomRight = [
+      screen.width < 550 ? 50 : spOpen ? 420 : 50,
+      50,
+    ];
+
+    mapRef.current.fitBounds(bounds, {
+      padding: {
+        top: paddingTopLeft[1] as number,
+        bottom: paddingBottomRight[1] as number,
+        left: paddingTopLeft[0] as number,
+        right: paddingBottomRight[0] as number,
+      },
+      maxZoom: coordinates.length === 1 ? 11 : 18,
+    });
+    //only rerun when coordinates change
+    //panel change no longer rerun this
+  }, [coordinates]);
 
   const handleMapTilesClick = useCallback(
     (event: maplibregl.MapLayerMouseEvent) => {
