@@ -49,6 +49,7 @@ import { TilesInfoPopup } from './parts/tiles-info-popup';
 import {
   VALHALLA_EDGES_LAYER_ID,
   VALHALLA_NODES_LAYER_ID,
+  VALHALLA_SHORTCUTS_LAYER_ID,
 } from '@/components/tiles/valhalla-layers';
 import { MarkerIcon, type MarkerColor } from './parts/marker-icon';
 import { maxBounds } from './constants';
@@ -505,6 +506,7 @@ export const MapComponent = () => {
       const availableLayers = [
         VALHALLA_EDGES_LAYER_ID,
         VALHALLA_NODES_LAYER_ID,
+        VALHALLA_SHORTCUTS_LAYER_ID,
       ].filter((layerId) => map.getLayer(layerId));
 
       if (availableLayers.length === 0) return;
@@ -735,7 +737,8 @@ export const MapComponent = () => {
         features &&
         features.length > 0 &&
         (features[0]?.layer?.id === VALHALLA_EDGES_LAYER_ID ||
-          features[0]?.layer?.id === VALHALLA_NODES_LAYER_ID);
+          features[0]?.layer?.id === VALHALLA_NODES_LAYER_ID ||
+          features[0]?.layer?.id === VALHALLA_SHORTCUTS_LAYER_ID);
 
       if (isOverRoute) {
         onRouteLineHover(event);
@@ -789,7 +792,11 @@ export const MapComponent = () => {
       onMouseLeave={handleMouseLeave}
       interactiveLayerIds={
         activeTab === 'tiles'
-          ? [VALHALLA_EDGES_LAYER_ID, VALHALLA_NODES_LAYER_ID]
+          ? [
+              VALHALLA_EDGES_LAYER_ID,
+              VALHALLA_NODES_LAYER_ID,
+              VALHALLA_SHORTCUTS_LAYER_ID,
+            ]
           : ['routes-line']
       }
       mapStyle={resolvedMapStyle}
