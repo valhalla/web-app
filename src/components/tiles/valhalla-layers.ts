@@ -68,10 +68,48 @@ export const VALHALLA_EDGES_LAYER: LayerSpecification = {
   },
 };
 
+// Shortcuts is now a separate tile layer.
+// and It uses the same line style as edges.
 export const VALHALLA_SHORTCUTS_LAYER: LayerSpecification = {
-  ...VALHALLA_EDGES_LAYER,
   id: VALHALLA_SHORTCUTS_LAYER_ID,
+  type: 'line',
+  source: VALHALLA_SOURCE_ID,
   'source-layer': 'shortcuts',
+  minzoom: 7,
+  maxzoom: 22,
+  filter: ['all'],
+  layout: { visibility: 'visible' },
+  paint: {
+    'line-color': [
+      'match',
+      ['get', 'tile_level'],
+      0,
+      '#ff0000',
+      1,
+      '#ff8800',
+      2,
+      '#ffdd00',
+      '#ff00ff',
+    ],
+    'line-width': [
+      'interpolate',
+      ['exponential', 1.5],
+      ['zoom'],
+      12,
+      ['match', ['get', 'tile_level'], 0, 3, 1, 2, 2, 1, 2],
+      14,
+      ['match', ['get', 'tile_level'], 0, 4, 1, 3, 2, 2, 3],
+      16,
+      ['match', ['get', 'tile_level'], 0, 6, 1, 4, 2, 3, 4],
+      18,
+      ['match', ['get', 'tile_level'], 0, 8, 1, 6, 2, 4, 6],
+      20,
+      ['match', ['get', 'tile_level'], 0, 10, 1, 8, 2, 6, 8],
+      22,
+      ['match', ['get', 'tile_level'], 0, 12, 1, 10, 2, 8, 10],
+    ],
+    'line-opacity': 0.8,
+  },
 };
 
 export const VALHALLA_NODES_LAYER: LayerSpecification = {
