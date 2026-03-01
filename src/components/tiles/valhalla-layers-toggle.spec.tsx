@@ -6,8 +6,8 @@ import {
   VALHALLA_SOURCE_ID,
   VALHALLA_LAYERS,
   VALHALLA_EDGES_LAYER_ID,
-  VALHALLA_SHORTCUTS_LAYER_ID,
   VALHALLA_NODES_LAYER_ID,
+  VALHALLA_SHORTCUTS_LAYER_ID,
 } from './valhalla-layers';
 
 const createMockMap = () => {
