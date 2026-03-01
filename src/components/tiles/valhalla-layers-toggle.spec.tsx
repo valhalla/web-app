@@ -7,6 +7,7 @@ import {
   VALHALLA_LAYERS,
   VALHALLA_EDGES_LAYER_ID,
   VALHALLA_NODES_LAYER_ID,
+  VALHALLA_SHORTCUTS_LAYER_ID,
 } from './valhalla-layers';
 
 const createMockMap = () => {
@@ -151,6 +152,9 @@ describe('ValhallaLayersToggle', () => {
       await user.click(toggle);
 
       expect(mockMap.removeLayer).toHaveBeenCalledWith(VALHALLA_EDGES_LAYER_ID);
+      expect(mockMap.removeLayer).toHaveBeenCalledWith(
+        VALHALLA_SHORTCUTS_LAYER_ID
+      );
       expect(mockMap.removeLayer).toHaveBeenCalledWith(VALHALLA_NODES_LAYER_ID);
     });
 
@@ -188,7 +192,9 @@ describe('ValhallaLayersToggle', () => {
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
 
-      expect(mockMap.addLayer).toHaveBeenCalledTimes(1);
+      expect(mockMap.addLayer).toHaveBeenCalledTimes(
+        VALHALLA_LAYERS.length - 1
+      );
     });
 
     it('should update checked state when toggled', async () => {

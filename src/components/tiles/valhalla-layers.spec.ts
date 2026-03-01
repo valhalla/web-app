@@ -7,8 +7,10 @@ import type {
 import {
   VALHALLA_SOURCE_ID,
   VALHALLA_EDGES_LAYER_ID,
+  VALHALLA_SHORTCUTS_LAYER_ID,
   VALHALLA_NODES_LAYER_ID,
   VALHALLA_EDGES_LAYER,
+  VALHALLA_SHORTCUTS_LAYER,
   VALHALLA_NODES_LAYER,
   VALHALLA_LAYERS,
   getValhallaTileUrl,
@@ -32,12 +34,14 @@ describe('valhalla-layers', () => {
 
     it('should export correct layer IDs', () => {
       expect(VALHALLA_EDGES_LAYER_ID).toBe('valhalla-edges');
+      expect(VALHALLA_SHORTCUTS_LAYER_ID).toBe('valhalla-shortcuts');
       expect(VALHALLA_NODES_LAYER_ID).toBe('valhalla-nodes');
     });
 
-    it('should export VALHALLA_LAYERS array with both layers', () => {
-      expect(VALHALLA_LAYERS).toHaveLength(2);
+    it('should export VALHALLA_LAYERS array with all layers', () => {
+      expect(VALHALLA_LAYERS).toHaveLength(3);
       expect(VALHALLA_LAYERS).toContain(VALHALLA_EDGES_LAYER);
+      expect(VALHALLA_LAYERS).toContain(VALHALLA_SHORTCUTS_LAYER);
       expect(VALHALLA_LAYERS).toContain(VALHALLA_NODES_LAYER);
     });
   });
@@ -75,6 +79,33 @@ describe('valhalla-layers', () => {
       expect(edgesLayer.paint).toHaveProperty('line-color');
       expect(edgesLayer.paint).toHaveProperty('line-width');
       expect(edgesLayer.paint).toHaveProperty('line-opacity');
+    });
+  });
+
+  //Shortcut is now a separate map layer.
+  //It uses the same styling as edges.
+  describe('VALHALLA_SHORTCUTS_LAYER', () => {
+    const shortcutsLayer = VALHALLA_SHORTCUTS_LAYER as LineLayerSpecification;
+
+    it('should have correct id', () => {
+      expect(shortcutsLayer.id).toBe(VALHALLA_SHORTCUTS_LAYER_ID);
+    });
+
+    it('should be a line type layer', () => {
+      expect(shortcutsLayer.type).toBe('line');
+    });
+
+    it('should reference correct source', () => {
+      expect(shortcutsLayer.source).toBe(VALHALLA_SOURCE_ID);
+    });
+
+    it('should have shortcuts source-layer', () => {
+      expect(shortcutsLayer['source-layer']).toBe('shortcuts');
+    });
+
+    it('should clone edges paint and layout styling', () => {
+      expect(shortcutsLayer.paint).toEqual(VALHALLA_EDGES_LAYER.paint);
+      expect(shortcutsLayer.layout).toEqual(VALHALLA_EDGES_LAYER.layout);
     });
   });
 
