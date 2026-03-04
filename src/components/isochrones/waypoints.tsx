@@ -25,10 +25,23 @@ import { AccessibleIcon } from '@radix-ui/react-accessible-icon';
 import { parseUrlParams } from '@/utils/parse-url-params';
 import { useNavigate } from '@tanstack/react-router';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { ISOCHRONE_PALETTES } from '@/utils/isochrone-colors';
 
 export const Waypoints = () => {
   const params = parseUrlParams();
   const updateSettings = useIsochronesStore((state) => state.updateSettings);
+  const updateColorPalette = useIsochronesStore(
+    (state) => state.updateColorPalette
+  );
+  const updateOpacity = useIsochronesStore((state) => state.updateOpacity);
   const { refetch: refetchIsochrones } = useIsochronesQuery();
   const clearIsos = useIsochronesStore((state) => state.clearIsos);
   const updateTextInput = useIsochronesStore((state) => state.updateTextInput);
@@ -36,6 +49,8 @@ export const Waypoints = () => {
   const interval = useIsochronesStore((state) => state.interval);
   const denoise = useIsochronesStore((state) => state.denoise);
   const generalize = useIsochronesStore((state) => state.generalize);
+  const colorPalette = useIsochronesStore((state) => state.colorPalette);
+  const opacity = useIsochronesStore((state) => state.opacity);
   const navigate = useNavigate({ from: '/$activeTab' });
   const userInput = useIsochronesStore((state) => state.userInput);
   const geocodeResults = useIsochronesStore((state) => state.geocodeResults);
@@ -235,6 +250,42 @@ export const Waypoints = () => {
               const validValue = isNaN(value) ? settingsInit.generalize : value;
               updateSettings({ name: 'generalize', value: validValue });
               makeIsochronesRequestDebounced();
+            }}
+          />
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="color-palette" className="text-sm font-medium">
+              Color Palette
+            </Label>
+            <Select value={colorPalette} onValueChange={updateColorPalette}>
+              <SelectTrigger id="color-palette">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(ISOCHRONE_PALETTES).map(([key, option]) => (
+                  <SelectItem key={key} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <SliderSetting
+            id="opacity"
+            label="Opacity"
+            description="The opacity of the isochrone visualization (0 = transparent, 1 = fully opaque)"
+            min={0}
+            max={1}
+            step={0.1}
+            value={opacity}
+            onValueChange={(values) => {
+              const value = values[0] ?? 0.4;
+              updateOpacity(value);
+            }}
+            onInputChange={(values) => {
+              const value = values[0] ?? 0.4;
+              updateOpacity(value);
             }}
           />
         </CollapsibleContent>

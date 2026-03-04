@@ -5,6 +5,7 @@ import type {
   ActiveWaypoint,
   ValhallaIsochroneResponse,
 } from '@/components/types';
+import type { IsochronePalette } from '@/utils/isochrone-colors';
 
 interface IsochroneResult {
   data: ValhallaIsochroneResponse | null;
@@ -20,6 +21,8 @@ interface IsochroneState {
   interval: number;
   denoise: number;
   generalize: number;
+  colorPalette: IsochronePalette;
+  opacity: number;
   results: IsochroneResult;
 }
 
@@ -34,6 +37,8 @@ interface IsochroneActions {
     name: 'maxRange' | 'interval' | 'denoise' | 'generalize';
     value: number;
   }) => void;
+  updateColorPalette: (palette: IsochronePalette) => void;
+  updateOpacity: (opacity: number) => void;
   receiveGeocodeResults: (addresses: ActiveWaypoint[]) => void;
 }
 
@@ -50,6 +55,8 @@ export const useIsochronesStore = create<IsochroneStore>()(
       interval: 10,
       denoise: 0.1,
       generalize: 0,
+      colorPalette: 'current' as IsochronePalette,
+      opacity: 0.4,
       results: { data: null, show: true },
 
       clearIsos: () =>
@@ -101,6 +108,24 @@ export const useIsochronesStore = create<IsochroneStore>()(
           },
           undefined,
           'updateSettings'
+        ),
+
+      updateColorPalette: (palette) =>
+        set(
+          (state) => {
+            state.colorPalette = palette;
+          },
+          undefined,
+          'updateColorPalette'
+        ),
+
+      updateOpacity: (opacity) =>
+        set(
+          (state) => {
+            state.opacity = Math.max(0, Math.min(1, opacity));
+          },
+          undefined,
+          'updateOpacity'
         ),
 
       receiveGeocodeResults: (addresses) =>

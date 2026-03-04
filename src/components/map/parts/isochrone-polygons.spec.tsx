@@ -42,13 +42,16 @@ const createMockState = (overrides = {}) => ({
               ],
             ],
           },
-          properties: { fill: '#ff0000' },
+          properties: { fill: '#ff0000', contour: 10 },
         },
       ],
     },
     show: true,
   },
   successful: true,
+    colorPalette: 'current',
+    opacity: 0.4,
+    maxRange: 10,
   ...overrides,
 });
 
@@ -130,7 +133,7 @@ describe('IsochronePolygons', () => {
       expect.objectContaining({
         id: 'isochrones-fill',
         type: 'fill',
-        paint: { 'fill-color': ['get', 'fill'], 'fill-opacity': 0.4 },
+        paint: { 'fill-color': ['get', 'fillColor'], 'fill-opacity': 0.4 },
       })
     );
   });
@@ -162,7 +165,7 @@ describe('IsochronePolygons', () => {
               {
                 type: 'Feature',
                 geometry: { type: 'Polygon', coordinates: [] },
-                properties: { fill: '#ff0000' },
+                properties: { fill: '#ff0000', contour: 10 },
               },
               {
                 type: 'Feature',
@@ -174,6 +177,9 @@ describe('IsochronePolygons', () => {
           show: true,
         },
         successful: true,
+        colorPalette: 'current',
+        opacity: 0.4,
+        maxRange: 10,
       };
       return selector(state);
     });

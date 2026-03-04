@@ -2,10 +2,14 @@ import { useMemo } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
 import { useIsochronesStore } from '@/stores/isochrones-store';
 import type { Feature, FeatureCollection } from 'geojson';
+import { getIsochroneColor } from '@/utils/isochrone-colors';
 
 export function IsochronePolygons() {
   const isoResults = useIsochronesStore((state) => state.results);
   const isoSuccessful = useIsochronesStore((state) => state.successful);
+  const colorPalette = useIsochronesStore((state) => state.colorPalette);
+  const opacity = useIsochronesStore((state) => state.opacity);
+  const maxRange = useIsochronesStore((state) => state.maxRange);
 
   const data = useMemo(() => {
     if (!isoResults || !isoSuccessful) return null;
@@ -18,11 +22,22 @@ export function IsochronePolygons() {
 
     for (const feature of isoResults.data.features) {
       if (['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
+        const contourValue = feature.properties?.contour || maxRange;
+        let fillColor: string;
+        
+        if (colorPalette === 'current') {
+          fillColor = feature.properties?.fill || '#6200ea';
+        } else {
+          const normalizedValue = contourValue / maxRange;
+          fillColor = getIsochroneColor(normalizedValue, colorPalette);
+        }
+
         features.push({
           ...feature,
           properties: {
             ...feature.properties,
-            fillColor: feature.properties?.fill || '#6200ea',
+            fillColor,
+            contourValue,
           },
         });
       }
@@ -32,7 +47,7 @@ export function IsochronePolygons() {
       type: 'FeatureCollection',
       features,
     } as FeatureCollection;
-  }, [isoResults, isoSuccessful]);
+  }, [isoResults, isoSuccessful, colorPalette, maxRange]);
 
   if (!data) return null;
 
@@ -42,8 +57,8 @@ export function IsochronePolygons() {
         id="isochrones-fill"
         type="fill"
         paint={{
-          'fill-color': ['get', 'fill'],
-          'fill-opacity': 0.4,
+          'fill-color': ['get', 'fillColor'],
+          'fill-opacity': opacity,
         }}
       />
       <Layer
