@@ -56,6 +56,18 @@ async function fetchDirections() {
     }
   );
 
+  // Display routing warnings if present
+  if (data.warnings && data.warnings.length > 0) {
+    data.warnings.forEach((warning) => {
+      toast.warning('Routing warning', {
+        description: warning.message,
+        position: 'bottom-center',
+        duration: 5000,
+        closeButton: true,
+      });
+    });
+  }
+
   // Parse geometry for main route
   (data as ParsedDirectionsGeometry).decodedGeometry =
     parseDirectionsGeometry(data);

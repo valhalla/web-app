@@ -51,6 +51,18 @@ async function fetchIsochrones() {
     }
   );
 
+  // Display routing warnings if present
+  if (data.warnings && data.warnings.length > 0) {
+    data.warnings.forEach((warning) => {
+      toast.warning('Isochrone warning', {
+        description: warning.message,
+        position: 'bottom-center',
+        duration: 5000,
+        closeButton: true,
+      });
+    });
+  }
+
   // Calculate area for each feature
   data.features.forEach((feature) => {
     if (feature.properties) {

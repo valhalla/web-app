@@ -55,6 +55,18 @@ export function useOptimizedRouteQuery() {
         { params: { json: JSON.stringify(request.json) } }
       );
 
+      // Display routing warnings if present
+      if (data.warnings && data.warnings.length > 0) {
+        data.warnings.forEach((warning) => {
+          toast.warning('Optimization warning', {
+            description: warning.message,
+            position: 'bottom-center',
+            duration: 5000,
+            closeButton: true,
+          });
+        });
+      }
+
       const processedData = {
         ...data,
         id: data.id ?? 'valhalla_optimized_route',
