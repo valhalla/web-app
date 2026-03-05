@@ -9,6 +9,8 @@ const mockUpdateTextInput = vi.fn();
 const mockReceiveGeocodeResults = vi.fn();
 const mockRefetchIsochrones = vi.fn();
 const mockNavigate = vi.fn();
+const mockUpdateColorPalette = vi.fn();
+const mockUpdateOpacity = vi.fn();
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: vi.fn(() => mockNavigate),
@@ -28,6 +30,10 @@ vi.mock('@/stores/isochrones-store', () => ({
       interval: 10,
       denoise: 1,
       generalize: 200,
+      colorPalette: 'current',
+      opacity: 0.4,
+      updateColorPalette: mockUpdateColorPalette,
+      updateOpacity: mockUpdateOpacity,
       userInput: 'Berlin',
       geocodeResults: [],
       receiveGeocodeResults: mockReceiveGeocodeResults,

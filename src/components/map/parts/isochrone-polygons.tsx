@@ -22,7 +22,7 @@ export function IsochronePolygons() {
 
     for (const feature of isoResults.data.features) {
       if (['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
-        const contourValue = feature.properties?.contour || maxRange;
+        const contourValue = feature.properties?.contour ?? maxRange;
         let fillColor: string;
         
         if (colorPalette === 'current') {

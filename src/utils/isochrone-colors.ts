@@ -1,5 +1,3 @@
-type ColorPalette = 'viridis' | 'current' | 'magma';
-
 interface RGBColor {
   r: number;
   g: number;
@@ -7,15 +5,14 @@ interface RGBColor {
 }
 
 function getViridisColor(value: number): string {
-  //to keep value between 0 annd 1
   const v = Math.max(0, Math.min(1, value));
 
-  // Simplifying viridis palette with 5 key stops
+ //5 key stops
   const colors: [number, string][] = [
     [0.0, '#440154'], // dark purple
     [0.25, '#31688e'], // blue
     [0.5, '#35b779'], // green
-    [0.75, '#fde724'], // yellow
+    [0.75, '#90d743'], // yellow-green
     [1.0, '#fde724'], // yellow
   ];
 
@@ -83,14 +80,10 @@ function getCurrentColor(value: number): string {
   return rgbToHex(r, g, b);
 }
 
-/**
- * Magma color palette - perceptually uniform, colorblind friendly
- * Maps value 0-1 to colors: yellow -> orange -> pink -> purple -> dark
- */
+
 function getMagmaColor(value: number): string {
   const v = Math.max(0, Math.min(1, value));
 
-  // Magma palette: yellow -> orange -> pink -> purple -> almost black
   const colors: [number, string][] = [
     [0.0, '#fcfdbf'], // light yellow
     [0.25, '#fc8961'], // orange
@@ -133,7 +126,7 @@ function getMagmaColor(value: number): string {
  */
 export function getIsochroneColor(
   value: number,
-  palette: ColorPalette = 'current'
+  palette: IsochronePalette = 'current'
 ): string {
   switch (palette) {
     case 'viridis':
@@ -147,9 +140,6 @@ export function getIsochroneColor(
   }
 }
 
-/**
- * Convert hex color to RGB
- */
 function hexToRgb(hex: string): RGBColor {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return {
@@ -159,9 +149,7 @@ function hexToRgb(hex: string): RGBColor {
   };
 }
 
-/**
- * Convert RGB to hex color
- */
+
 function rgbToHex(r: number, g: number, b: number): string {
   return (
     '#' +
