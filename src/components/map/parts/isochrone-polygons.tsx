@@ -5,7 +5,6 @@ import type { Feature, FeatureCollection } from 'geojson';
 import {
   ISOCHRONE_PALETTES,
   getPaletteColor,
-  DEFAULT_FILL,
 } from '@/utils/isochrone-palettes';
 
 export function IsochronePolygons() {
@@ -31,28 +30,33 @@ export function IsochronePolygons() {
       ['Polygon', 'MultiPolygon'].includes(f.geometry.type)
     );
 
-    // Ensure consistent color assignment based on contour order
-    const sorted = [...polygonFeatures].sort(
-      (a, b) => (a.properties?.contour ?? 0) - (b.properties?.contour ?? 0)
-    );
-    const total = sorted.length;
-
-    const features: Feature[] = sorted.map((feature, index) => {
-      const fillColor =
-        selectedPaletteColors !== null
-          ? getPaletteColor(selectedPaletteColors, index, total)
-          : (feature.properties?.fill ?? DEFAULT_FILL);
-
+    // default palette: return API features as-is, no modifications
+    if (selectedPaletteColors === null) {
       return {
-        ...feature,
-        properties: {
-          ...feature.properties,
-          fill: fillColor,
-        },
-      };
-    });
+        type: 'FeatureCollection',
+        features: polygonFeatures,
+      } as FeatureCollection;
+    }
 
-    // Reverse order so inner rings are not hidden by outer polygons
+    // largest contour in the response, used to normalize t into [0, 1]
+    const actualMax = polygonFeatures.reduce(
+      (m, f) => Math.max(m, f.properties?.contour ?? 0),
+      0
+    );
+
+    // custom palette: compute a color for each polygon based on its contour position
+    const features: Feature[] = polygonFeatures.map((feature) => ({
+      ...feature,
+      properties: {
+        ...feature.properties,
+        fill: getPaletteColor(
+          selectedPaletteColors,
+          actualMax > 0 ? (feature.properties?.contour ?? 0) / actualMax : 1
+        ),
+      },
+    }));
+
+    // reverse so inner rings are not hidden by outer polygons
     features.reverse();
 
     return {

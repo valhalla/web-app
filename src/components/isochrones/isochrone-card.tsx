@@ -27,7 +27,7 @@ interface IsochronesCardProps {
   data: ValhallaIsochroneResponse;
   showOnMap: boolean;
 }
-//Palette list
+// Palette list
 const paletteOptions = ISOCHRONE_PALETTES.map((p) => ({
   key: p.id,
   value: p.id,

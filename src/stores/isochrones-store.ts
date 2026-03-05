@@ -117,7 +117,8 @@ export const useIsochronesStore = create<IsochroneStore>()(
         set(
           (state) => {
             if (colorPalette !== undefined) state.colorPalette = colorPalette;
-            if (opacity !== undefined) state.opacity = opacity;
+            if (opacity !== undefined)
+              state.opacity = Math.min(1, Math.max(0, opacity));
           },
           undefined,
           'updateVisualization'
