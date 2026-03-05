@@ -20,7 +20,6 @@ export function IsochronePolygons() {
     const hasNoFeatures = Object.keys(isoResults.data).length === 0;
     if (hasNoFeatures) return null;
 
-    // Fallback to the first palette (Default) if the stored id is unrecognised
     const palette =
       ISOCHRONE_PALETTES.find((p) => p.id === colorPalette) ??
       ISOCHRONE_PALETTES[0];
@@ -30,7 +29,6 @@ export function IsochronePolygons() {
       ['Polygon', 'MultiPolygon'].includes(f.geometry.type)
     );
 
-    // default palette: return API features as-is, no modifications
     if (selectedPaletteColors === null) {
       return {
         type: 'FeatureCollection',
@@ -38,13 +36,11 @@ export function IsochronePolygons() {
       } as FeatureCollection;
     }
 
-    // largest contour in the response, used to normalize t into [0, 1]
     const actualMax = polygonFeatures.reduce(
       (m, f) => Math.max(m, f.properties?.contour ?? 0),
       0
     );
 
-    // custom palette: compute a color for each polygon based on its contour position
     const features: Feature[] = polygonFeatures.map((feature) => ({
       ...feature,
       properties: {
@@ -56,14 +52,12 @@ export function IsochronePolygons() {
       },
     }));
 
-    // reverse so inner rings are not hidden by outer polygons
     features.reverse();
 
     return {
       type: 'FeatureCollection',
       features,
     } as FeatureCollection;
-    // only re-run when the data or palette changes, not on every opacity drag
   }, [isoResults, isoSuccessful, colorPalette]);
 
   if (!data) return null;

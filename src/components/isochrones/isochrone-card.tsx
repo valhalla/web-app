@@ -27,7 +27,7 @@ interface IsochronesCardProps {
   data: ValhallaIsochroneResponse;
   showOnMap: boolean;
 }
-// Palette list
+
 const paletteOptions = ISOCHRONE_PALETTES.map((p) => ({
   key: p.id,
   value: p.id,
@@ -73,7 +73,6 @@ export const IsochroneCard = ({ data, showOnMap }: IsochronesCardProps) => {
               value={colorPalette}
               options={paletteOptions}
               onValueChange={(value) => {
-                // This ensures that the value is a valid PaletteId
                 if (isPaletteId(value)) {
                   updateVisualization({ colorPalette: value });
                 }

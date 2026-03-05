@@ -1,15 +1,12 @@
 export type PaletteId = 'default' | 'viridis' | 'plasma' | 'blues';
 
-// Fallback fill color when the Valhalla API provides no color for a feature.
 export const DEFAULT_FILL = '#6200ea';
 
-// Default opacity for isochrone fill polygons.
 export const DEFAULT_OPACITY = 0.4;
 
 export interface IsochronePalette {
   id: PaletteId;
   label: string;
-  // Ordered from smallest to largest contour. null = use API-provided colors.
   colors: string[] | null;
 }
 
@@ -36,7 +33,6 @@ export const ISOCHRONE_PALETTES: IsochronePalette[] = [
   },
 ];
 
-// Type guard - returns true if value is a valid PaletteId.
 export function isPaletteId(value: string): value is PaletteId {
   return ISOCHRONE_PALETTES.some((p) => p.id === value);
 }
@@ -54,7 +50,6 @@ function interpolateHex(c1: string, c2: string, t: number): string {
   return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
 
-// This returns a palette color for t = contourValue / maxRange (0 = smallest, 1 = largest).
 export function getPaletteColor(colors: string[], t: number): string {
   if (colors.length === 0) return DEFAULT_FILL;
   if (colors.length === 1) return colors[0]!;
