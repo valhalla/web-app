@@ -27,10 +27,11 @@ export const useCustomLayersStore = create<CustomLayersStore>()(
 
       addLayer: (layer) =>
         set(
-          (state) => {
+          (draft: unknown) => {
+            const state = draft as CustomLayersState;
             if (!state.layers.some((e) => e.layer.id === layer.id)) {
               state.layers.push({
-                layer: layer as LayerSpecification,
+                layer,
                 visible: true,
               });
             }
@@ -41,7 +42,8 @@ export const useCustomLayersStore = create<CustomLayersStore>()(
 
       removeLayer: (id) =>
         set(
-          (state) => {
+          (draft: unknown) => {
+            const state = draft as CustomLayersState;
             state.layers = state.layers.filter(
               (entry) => entry.layer.id !== id
             );
@@ -52,7 +54,8 @@ export const useCustomLayersStore = create<CustomLayersStore>()(
 
       setLayerVisibility: (id, visible) =>
         set(
-          (state) => {
+          (draft: unknown) => {
+            const state = draft as CustomLayersState;
             const entry = state.layers.find((e) => e.layer.id === id);
             if (entry) entry.visible = visible;
           },
