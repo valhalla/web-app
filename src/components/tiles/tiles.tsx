@@ -1,18 +1,21 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
 import { useCommonStore } from '@/stores/common-store';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ValhallaLayersToggle } from './valhalla-layers-toggle';
 import { VALHALLA_SOURCE_ID } from './valhalla-layers';
+import { CustomLayerEditor } from './custom-layer-editor';
+import { useCustomLayersStore } from '@/stores/custom-layers-store';
 
 interface LayerInfo {
   id: string;
@@ -35,12 +38,39 @@ export const TilesControl = () => {
   >({});
   const [styleVersion, setStyleVersion] = useState(0);
 
+  const customLayers = useCustomLayersStore((state) => state.layers);
+  const removeCustomLayer = useCustomLayersStore((state) => state.removeLayer);
+  const setCustomLayerVisibility = useCustomLayersStore(
+    (state) => state.setLayerVisibility
+  );
+
+  // Keep a ref so the styledata handler always sees the latest custom layers
+  // without needing to re-register on every layer change.
+  const customLayersRef = useRef(customLayers);
+  useEffect(() => {
+    customLayersRef.current = customLayers;
+  }, [customLayers]);
+
   useEffect(() => {
     if (!mainMap) return;
 
     const map = mainMap.getMap();
 
     const handleStyleData = () => {
+      // Re-apply custom layers whose source is already on the map.
+      for (const entry of customLayersRef.current) {
+        if (!map.getLayer(entry.layer.id)) {
+          try {
+            map.addLayer(entry.layer);
+            if (!entry.visible) {
+              map.setLayoutProperty(entry.layer.id, 'visibility', 'none');
+            }
+          } catch {
+            // Source not available yet so skip.
+          }
+        }
+      }
+
       setStyleVersion((v) => v + 1);
       setVisibilityOverrides({});
       setExpandedGroups(new Set());
@@ -60,10 +90,13 @@ export const TilesControl = () => {
     const style = map.getStyle();
     if (!style?.layers) return [];
 
+    const customLayerIds = new Set(customLayers.map((e) => e.layer.id));
+
     return style.layers
       .filter((layer) => {
         if (layer.id.startsWith('maplibregl-inspect-')) return false;
         if (layer.id.startsWith('td-')) return false;
+        if (customLayerIds.has(layer.id)) return false;
         return true;
       })
       .map((layer) => ({
@@ -74,7 +107,7 @@ export const TilesControl = () => {
         source: 'source' in layer ? (layer.source as string) : undefined,
       }));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- styleVersion is used to invalidate cache on style changes
-  }, [mapReady, mainMap, styleVersion]);
+  }, [mapReady, mainMap, styleVersion, customLayers]);
 
   const getLayerVisibility = useCallback(
     (layerId: string): boolean => {
@@ -171,6 +204,25 @@ export const TilesControl = () => {
   const isValhallaGroup = (sourceLayer: string) => {
     const layersInGroup = groupedLayers.grouped[sourceLayer] || [];
     return layersInGroup.some((layer) => layer.source === VALHALLA_SOURCE_ID);
+  };
+
+  const handleRemoveCustomLayer = (id: string) => {
+    if (!mainMap) return;
+    const map = mainMap.getMap();
+    if (map.getLayer(id)) {
+      map.removeLayer(id);
+    }
+    removeCustomLayer(id);
+    setStyleVersion((v) => v + 1);
+  };
+
+  const handleToggleCustomLayer = (id: string, visible: boolean) => {
+    if (!mainMap) return;
+    const map = mainMap.getMap();
+    if (map.getLayer(id)) {
+      map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
+    }
+    setCustomLayerVisibility(id, visible);
   };
 
   return (
@@ -277,12 +329,56 @@ export const TilesControl = () => {
           </div>
         ))}
 
-        {filteredLayers.length === 0 && (
+        {filteredLayers.length === 0 && customLayers.length === 0 && (
           <div className="text-center text-muted-foreground py-4">
             No layers found
           </div>
         )}
+
+        {customLayers.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1 pt-2">
+              Custom Layers
+            </p>
+            {customLayers.map(({ layer, visible }) => (
+              <div
+                key={layer.id}
+                className="flex items-center justify-between p-2 rounded-md hover:bg-muted/30 border-l-2 border-l-blue-500"
+              >
+                <Label
+                  htmlFor={`custom-${layer.id}`}
+                  className="text-sm cursor-pointer flex-1 truncate min-w-0 mr-2"
+                >
+                  {layer.id}
+                  <span className="text-xs text-muted-foreground ml-2">
+                    ({layer.type})
+                  </span>
+                </Label>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Switch
+                    id={`custom-${layer.id}`}
+                    checked={visible}
+                    onCheckedChange={(checked) =>
+                      handleToggleCustomLayer(layer.id, checked)
+                    }
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => handleRemoveCustomLayer(layer.id)}
+                    className="text-destructive hover:text-destructive"
+                    aria-label={`Remove ${layer.id} layer`}
+                  >
+                    <Trash2 className="size-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      <CustomLayerEditor />
     </div>
   );
 };

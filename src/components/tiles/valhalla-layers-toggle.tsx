@@ -8,6 +8,7 @@ import {
   VALHALLA_LAYERS,
   getValhallaSourceSpec,
 } from './valhalla-layers';
+import { useCustomLayersStore } from '@/stores/custom-layers-store';
 
 export const ValhallaLayersToggle = () => {
   const { mainMap } = useMap();
@@ -44,6 +45,24 @@ export const ValhallaLayersToggle = () => {
       for (const layer of VALHALLA_LAYERS) {
         if (!map.getLayer(layer.id)) {
           map.addLayer(layer);
+        }
+      }
+      const { layers: customLayers } = useCustomLayersStore.getState();
+      for (const entry of customLayers) {
+        const layerSource =
+          'source' in entry.layer ? entry.layer.source : undefined;
+        if (
+          layerSource === VALHALLA_SOURCE_ID &&
+          !map.getLayer(entry.layer.id)
+        ) {
+          try {
+            map.addLayer(entry.layer);
+            if (!entry.visible) {
+              map.setLayoutProperty(entry.layer.id, 'visibility', 'none');
+            }
+          } catch {
+            // skip
+          }
         }
       }
     } else {
