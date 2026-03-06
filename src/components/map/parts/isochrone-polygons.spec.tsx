@@ -49,6 +49,9 @@ const createMockState = (overrides = {}) => ({
     show: true,
   },
   successful: true,
+  colorPalette: 'default',
+  opacity: 0.4,
+  maxRange: 30,
   ...overrides,
 });
 
