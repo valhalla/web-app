@@ -239,7 +239,7 @@ const HeightGraph: React.FC<HeightGraphProps> = ({
     return () => {
       tooltip.remove();
     };
-  }, [data, dimensions, onHighlight]);
+  }, [data, dimensions, onHighlight, isExpanded]);
 
   const [prevProps, setPrevProps] = useState({ width, height });
   if (prevProps.width !== width || prevProps.height !== height) {
