@@ -60,13 +60,15 @@ export const WaypointSearch = ({
     isSuccess,
   } = useMutation({
     mutationFn: async () => {
+      const trimmedValue = internalValue.trim();
+
       if (use_geocoding) {
-        const response = await forward_geocode(internalValue);
+        const response = await forward_geocode(trimmedValue);
         return { type: 'forward' as const, data: response.data };
       }
 
       // coordinate parsing
-      const coords = internalValue.split(/[\s,;]+/);
+      const coords = trimmedValue.split(/[\s,;]+/);
       if (coords.length === 2) {
         const lat = coords[1];
         const lng = coords[0];
@@ -82,7 +84,7 @@ export const WaypointSearch = ({
       if (result.type === 'coordinates') {
         const addresses: ActiveWaypoint[] = [
           {
-            title: internalValue,
+            title: internalValue.trim(),
             description: '',
             selected: false,
             addresslnglat: result.lngLat,
@@ -111,7 +113,7 @@ export const WaypointSearch = ({
   });
 
   const fetchGeocodeResults = useCallback(() => {
-    if (internalValue.length === 0) return;
+    if (internalValue.trim().length === 0) return;
     geocodeMutate();
   }, [internalValue, geocodeMutate]);
 
@@ -157,7 +159,7 @@ export const WaypointSearch = ({
                 setInternalValue(value);
               }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && internalValue.length > 0) {
+                if (e.key === 'Enter' && internalValue.trim().length > 0) {
                   fetchGeocodeResults();
                 }
               }}
