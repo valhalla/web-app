@@ -1,14 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { CoordinateRow } from '@/components/ui/coordinate-row';
-import {
-  X,
-  Locate,
-  Globe,
-  Compass,
-  Cog,
-  MapPin,
-  ArrowUpDown,
-} from 'lucide-react';
+import { X, Locate, Globe, Compass, MapPin, ArrowUpDown } from 'lucide-react';
 import { convertDDToDMS } from '../utils';
 
 interface MapInfoPopupProps {
@@ -25,9 +17,6 @@ export function MapInfoPopup({
   popupLngLat,
   elevation,
   isHeightLoading,
-  isLocateLoading,
-  locate,
-  onLocate,
   onClose,
 }: MapInfoPopupProps) {
   const lngLatStr = `${popupLngLat.lng.toFixed(6)}, ${popupLngLat.lat.toFixed(6)}`;
@@ -43,7 +32,7 @@ export function MapInfoPopup({
   );
 
   return (
-    <div className="flex flex-col gap-2 p-2">
+    <div className="flex flex-col gap-2 px-4 py-6">
       <Button
         variant="ghost"
         size="icon-xs"
@@ -78,18 +67,7 @@ export function MapInfoPopup({
       />
 
       <CoordinateRow
-        label="Calls Valhalla's Locate API"
-        value="Locate Point"
-        copyText={JSON.stringify(locate)}
-        icon={<Cog className="size-3.5" />}
-        onClick={() => onLocate(popupLngLat.lng, popupLngLat.lat)}
-        isLoading={isLocateLoading}
-        copyDisabled={locate.length === 0}
-        testId="locate-point"
-      />
-
-      <CoordinateRow
-        label="Copies a Valhalla location object to clipboard for API requests"
+        label="Valhalla location object for API requests"
         value="Valhalla Location JSON"
         copyText={valhallaJson}
         icon={<MapPin className="size-3.5" />}

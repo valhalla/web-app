@@ -1,13 +1,12 @@
 import { type ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ButtonGroup } from '@/components/ui/button-group';
 import { CopyButton } from '@/components/ui/copy-button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 interface CoordinateRowProps {
   /** Tooltip content describing the button */
@@ -33,37 +32,38 @@ function CoordinateRow({
   value,
   copyText,
   icon,
-  onClick,
   isLoading,
   copyDisabled,
   testId,
 }: CoordinateRowProps) {
   return (
-    <ButtonGroup>
+    <div
+      className={cn(
+        'flex items-center border rounded-lg gap-1.5',
+        copyText ? 'justify-between' : 'self-start'
+      )}
+    >
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onClick}
-            disabled={isLoading}
-            className="gap-1.5"
+          <div
+            className="flex items-center gap-1.5 px-2 py-1"
             data-testid={testId ? `${testId}-button` : undefined}
           >
             {isLoading ? <Loader2 className="size-3.5 animate-spin" /> : icon}
             {value}
-          </Button>
+          </div>
         </TooltipTrigger>
         <TooltipContent side="top">{label}</TooltipContent>
       </Tooltip>
       {copyText && (
         <CopyButton
+          variant="ghost"
           value={copyText}
           disabled={copyDisabled}
           data-testid={testId ? `${testId}-copy-button` : undefined}
         />
       )}
-    </ButtonGroup>
+    </div>
   );
 }
 
