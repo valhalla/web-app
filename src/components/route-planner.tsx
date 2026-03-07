@@ -15,10 +15,9 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, Route, Layers, Share2, Map as MapIcon } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useParams, useNavigate } from '@tanstack/react-router';
 import { ProfilePicker } from './profile-picker';
@@ -93,13 +92,58 @@ export const RoutePlanner = () => {
     }
   };
 
+  const handleTabClick = (tab: string) => {
+    if (activeTab !== tab) {
+      navigate({ params: { activeTab: tab } });
+    }
+    if (!directionsPanelOpen) {
+      toggleDirections();
+    }
+  };
+
   return (
-    <Sheet open={directionsPanelOpen} modal={false}>
-      <SheetTrigger className="absolute top-4 left-4 z-10" asChild>
-        <Button onClick={toggleDirections} data-testid="open-directions-button">
-          {tabConfig.title}
+    <>
+      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+        <Button
+          variant={
+            activeTab === 'directions' && directionsPanelOpen
+              ? 'default'
+              : 'outline'
+          }
+          size="icon"
+          className="h-12 w-12 shadow-md"
+          onClick={() => handleTabClick('directions')}
+          title="Directions"
+        >
+          <Route className="size-6" />
         </Button>
-      </SheetTrigger>
+        <Button
+          variant={
+            activeTab === 'isochrones' && directionsPanelOpen
+              ? 'default'
+              : 'outline'
+          }
+          size="icon"
+          className="h-12 w-12 shadow-md"
+          onClick={() => handleTabClick('isochrones')}
+          title="Isochrones"
+        >
+          <Share2 className="size-6" />
+        </Button>
+        <Button
+          variant={
+            activeTab === 'tiles' && directionsPanelOpen ? 'default' : 'outline'
+          }
+          size="icon"
+          className="h-12 w-12 shadow-md"
+          onClick={() => handleTabClick('tiles')}
+          title="Tiles"
+        >
+          <Layers className="size-6" />
+        </Button>
+        
+      </div>
+      <Sheet open={directionsPanelOpen} modal={false}>
       <Tabs
         value={activeTab}
         className="w-[400px]"
@@ -188,5 +232,6 @@ export const RoutePlanner = () => {
         </SheetContent>
       </Tabs>
     </Sheet>
+    </>
   );
 };

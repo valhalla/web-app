@@ -913,11 +913,18 @@ export const MapComponent = () => {
       <BrandLogos />
 
       <Button
-        className="absolute bottom-10 right-3 z-10"
+        variant="outline"
+        size="icon"
+        className="absolute bottom-20 right-3 z-10 h-12 w-12 shadow-md"
         id="osm-button"
         onClick={handleOpenOSM}
+        title="Open OSM"
       >
-        Open OSM
+        <img
+          src="https://www.openstreetmap.org/assets/osm_logo-4b074077c29e100f40ee64f5177886e36b570d4cc3ab10c7b263003d09642e3f.svg"
+          alt="Open OSM"
+          className="size-12"
+        />
       </Button>
 
       {directionsSuccessful && (
