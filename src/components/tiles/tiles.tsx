@@ -193,33 +193,18 @@ export const TilesControl = () => {
     <div className="flex flex-col gap-3 flex-1 overflow-hidden min-h-0">
       <ValhallaLayersToggle />
 
-      <div className="flex flex-col gap-2 p-3 bg-muted/50 rounded-md">
-        <div className="flex items-center justify-between gap-3">
-          <Label
-            htmlFor="mvt-debug-toggle"
-            className="text-sm font-medium cursor-pointer"
-          >
-            MVT Debug
-          </Label>
-          <Switch
-            id="mvt-debug-toggle"
-            checked={showTileBoundaries}
-            onCheckedChange={handleToggleTileBoundaries}
-          />
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Display tile grid overlay with coordinates and file sizes. Uses
-          MapLibre&apos;s{' '}
-          <a
-            href="https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#showtileboundaries"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary underline hover:no-underline"
-          >
-            debug mode
-          </a>{' '}
-          for inspecting map tiles.
-        </p>
+      <div className="flex items-center justify-between gap-3 p-3 bg-muted/50 rounded-md">
+        <Label
+          htmlFor="mvt-debug-toggle"
+          className="text-sm font-medium cursor-pointer"
+        >
+          MVT Debug
+        </Label>
+        <Switch
+          id="mvt-debug-toggle"
+          checked={showTileBoundaries}
+          onCheckedChange={handleToggleTileBoundaries}
+        />
       </div>
 
       <Input
