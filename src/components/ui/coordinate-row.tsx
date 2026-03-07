@@ -9,17 +9,15 @@ import {
 import { cn } from '@/lib/utils';
 
 interface CoordinateRowProps {
-  /** Tooltip content describing the button */
+  /** Tooltip content describing the label */
   label: string;
-  /** Display value/label shown in the button */
+  /** Display value/label shown */
   value: string;
   /** Text to copy to clipboard. If omitted, no copy button is shown */
   copyText?: string;
   /** Optional icon to show before the value */
   icon?: ReactNode;
-  /** Click handler for the main button */
-  onClick?: () => void;
-  /** Shows loading spinner and disables button */
+  /** Shows loading spinner */
   isLoading?: boolean;
   /** Disables the copy button */
   copyDisabled?: boolean;

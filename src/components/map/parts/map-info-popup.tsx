@@ -7,9 +7,6 @@ interface MapInfoPopupProps {
   popupLngLat: { lng: number; lat: number };
   elevation: string;
   isHeightLoading: boolean;
-  isLocateLoading: boolean;
-  locate: unknown[];
-  onLocate: (lng: number, lat: number) => void;
   onClose: () => void;
 }
 
@@ -32,12 +29,13 @@ export function MapInfoPopup({
   );
 
   return (
-    <div className="flex flex-col gap-2 px-4 py-6">
+    <div className="flex flex-col gap-2 px-4 py-6" data-testid="map-info-popup">
       <Button
         variant="ghost"
         size="icon-xs"
         onClick={onClose}
         className="absolute right-1 top-1"
+        aria-label="Close"
       >
         <X className="size-4" />
       </Button>
