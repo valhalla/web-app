@@ -83,33 +83,19 @@ export const ValhallaLayersToggle = () => {
   }
 
   return (
-    <div className="flex flex-col gap-2 p-3 bg-muted/50 rounded-md">
-      <div className="flex items-center justify-between gap-3">
-        <Label
-          htmlFor="valhalla-layers-toggle"
-          className="text-sm font-medium cursor-pointer"
-        >
-          Append Valhalla layers
-        </Label>
-        <Switch
-          id="valhalla-layers-toggle"
-          checked={enabled}
-          onCheckedChange={handleToggle}
-          className="data-[state=checked]:bg-green-600"
-        />
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Overlay Valhalla routing graph tiles showing edges and nodes. Uses the{' '}
-        <a
-          href="https://valhalla.github.io/valhalla/api/tile/api-reference/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary underline hover:no-underline"
-        >
-          Tile API
-        </a>{' '}
-        to visualize the routing network with color-coded tile levels.
-      </p>
+    <div className="flex items-center justify-between gap-3 p-3 bg-muted/50 rounded-md">
+      <Label
+        htmlFor="valhalla-layers-toggle"
+        className="text-sm font-medium cursor-pointer"
+      >
+        Append Valhalla layers
+      </Label>
+      <Switch
+        id="valhalla-layers-toggle"
+        checked={enabled}
+        onCheckedChange={handleToggle}
+        className="data-[state=checked]:bg-green-600"
+      />
     </div>
   );
 };

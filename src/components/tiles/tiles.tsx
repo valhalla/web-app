@@ -37,6 +37,7 @@ export const TilesControl = () => {
     Record<string, boolean>
   >({});
   const [styleVersion, setStyleVersion] = useState(0);
+  const [showTileBoundaries, setShowTileBoundaries] = useState(false);
 
   const customLayers = useCustomLayersStore((state) => state.layers);
   const removeCustomLayer = useCustomLayersStore((state) => state.removeLayer);
@@ -81,6 +82,13 @@ export const TilesControl = () => {
     return () => {
       map.off('styledata', handleStyleData);
     };
+  }, [mainMap]);
+
+  useEffect(() => {
+    if (!mainMap) return;
+
+    const map = mainMap.getMap();
+    setShowTileBoundaries(map.showTileBoundaries || false);
   }, [mainMap]);
 
   const layers = useMemo(() => {
@@ -176,6 +184,14 @@ export const TilesControl = () => {
     setVisibilityOverrides((prev) => ({ ...prev, ...updates }));
   };
 
+  const handleToggleTileBoundaries = (checked: boolean) => {
+    if (!mainMap) return;
+
+    const map = mainMap.getMap();
+    map.showTileBoundaries = checked;
+    setShowTileBoundaries(checked);
+  };
+
   const toggleExpanded = (sourceLayer: string) => {
     setExpandedGroups((prev) => {
       const next = new Set(prev);
@@ -228,6 +244,20 @@ export const TilesControl = () => {
   return (
     <div className="flex flex-col gap-3 flex-1 overflow-hidden min-h-0">
       <ValhallaLayersToggle />
+
+      <div className="flex items-center justify-between gap-3 p-3 bg-muted/50 rounded-md">
+        <Label
+          htmlFor="mvt-debug-toggle"
+          className="text-sm font-medium cursor-pointer"
+        >
+          MVT Debug
+        </Label>
+        <Switch
+          id="mvt-debug-toggle"
+          checked={showTileBoundaries}
+          onCheckedChange={handleToggleTileBoundaries}
+        />
+      </div>
 
       <Input
         type="text"

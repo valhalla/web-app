@@ -93,26 +93,6 @@ describe('ValhallaLayersToggle', () => {
       expect(screen.getByText('Append Valhalla layers')).toBeInTheDocument();
     });
 
-    it('should render description text', () => {
-      render(<ValhallaLayersToggle />);
-
-      expect(
-        screen.getByText(/Overlay Valhalla routing graph tiles/)
-      ).toBeInTheDocument();
-    });
-
-    it('should render Tile API link', () => {
-      render(<ValhallaLayersToggle />);
-
-      const link = screen.getByRole('link', { name: 'Tile API' });
-      expect(link).toHaveAttribute(
-        'href',
-        'https://valhalla.github.io/valhalla/api/tile/api-reference/'
-      );
-      expect(link).toHaveAttribute('target', '_blank');
-      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
-    });
-
     it('should render switch in unchecked state by default', () => {
       render(<ValhallaLayersToggle />);
 
