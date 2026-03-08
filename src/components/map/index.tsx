@@ -446,10 +446,10 @@ export const MapComponent = () => {
     const dpOpen = state.directionsPanelOpen;
     const spOpen = state.settingsPanelOpen;
 
-    const paddingTopLeft = [screen.width < 550 ? 50 : dpOpen ? 420 : 50, 50];
+    const paddingTopLeft = [screen.width < 550 ? 80 : dpOpen ? 450 : 80, 80];
     const paddingBottomRight = [
-      screen.width < 550 ? 50 : spOpen ? 420 : 50,
-      50,
+      screen.width < 550 ? 80 : spOpen ? 450 : 80,
+      80,
     ];
 
     mapRef.current.fitBounds(bounds, {
