@@ -13,6 +13,7 @@ import { router } from '@/routes';
 import type { ValhallaOptimizedRouteResponse } from '@/components/types';
 import type { Waypoint } from '@/stores/directions-store';
 import { getDirectionsLanguage } from '@/utils/directions-language';
+import { handleValhallaWarnings } from '@/utils/handle-valhalla-warnings';
 
 export function useOptimizedRouteQuery() {
   const waypoints = useDirectionsStore((state) => state.waypoints);
@@ -56,16 +57,7 @@ export function useOptimizedRouteQuery() {
       );
 
       // Display routing warnings if present
-      if (data.warnings && data.warnings.length > 0) {
-        data.warnings.forEach((warning) => {
-          toast.warning('Optimization warning', {
-            description: warning.message,
-            position: 'bottom-center',
-            duration: 5000,
-            closeButton: true,
-          });
-        });
-      }
+      handleValhallaWarnings(data.warnings);
 
       const processedData = {
         ...data,

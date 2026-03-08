@@ -22,6 +22,7 @@ import { getDirectionsLanguage } from '@/utils/directions-language';
 import { useCommonStore } from '@/stores/common-store';
 import { useDirectionsStore, type Waypoint } from '@/stores/directions-store';
 import { router } from '@/routes';
+import { handleValhallaWarnings } from '@/utils/handle-valhalla-warnings';
 
 const getActiveWaypoints = (waypoints: Waypoint[]): ActiveWaypoint[] =>
   waypoints.flatMap((wp) => wp.geocodeResults.filter((r) => r.selected));
@@ -57,16 +58,7 @@ async function fetchDirections() {
   );
 
   // Display routing warnings if present
-  if (data.warnings && data.warnings.length > 0) {
-    data.warnings.forEach((warning) => {
-      toast.warning('Routing warning', {
-        description: warning.message,
-        position: 'bottom-center',
-        duration: 5000,
-        closeButton: true,
-      });
-    });
-  }
+  handleValhallaWarnings(data.warnings);
 
   // Parse geometry for main route
   (data as ParsedDirectionsGeometry).decodedGeometry =

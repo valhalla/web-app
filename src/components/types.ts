@@ -213,22 +213,21 @@ export interface Address {
   country_code: string;
 }
 
+export interface ValhallaWarning {
+  code: number;
+  message: string;
+}
+
 export interface ValhallaRouteResponse {
   id: 'valhalla_directions';
   trip: Trip;
   alternates?: ValhallaRouteResponse[];
-  warnings?: {
-    code: number;
-    message: string;
-  }[];
+  warnings?: ValhallaWarning[];
 }
 
 export interface ValhallaIsochroneResponse extends GeoJSON.FeatureCollection {
   id: string;
-  warnings?: {
-    code: number;
-    message: string;
-  }[];
+  warnings?: ValhallaWarning[];
 }
 
 export interface FetchGeocodeObject {
@@ -249,8 +248,5 @@ export interface OptimizedLocation {
 export interface ValhallaOptimizedRouteResponse {
   trip: Trip;
   id?: string;
-  warnings?: {
-    code: number;
-    message: string;
-  }[];
+  warnings?: ValhallaWarning[];
 }

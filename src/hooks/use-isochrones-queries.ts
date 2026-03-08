@@ -18,6 +18,7 @@ import { calcArea } from '@/utils/geom';
 import { useCommonStore } from '@/stores/common-store';
 import { useIsochronesStore } from '@/stores/isochrones-store';
 import { router } from '@/routes';
+import { handleValhallaWarnings } from '@/utils/handle-valhalla-warnings';
 
 async function fetchIsochrones() {
   const { geocodeResults, maxRange, interval, denoise, generalize } =
@@ -52,16 +53,7 @@ async function fetchIsochrones() {
   );
 
   // Display routing warnings if present
-  if (data.warnings && data.warnings.length > 0) {
-    data.warnings.forEach((warning) => {
-      toast.warning('Isochrone warning', {
-        description: warning.message,
-        position: 'bottom-center',
-        duration: 5000,
-        closeButton: true,
-      });
-    });
-  }
+  handleValhallaWarnings(data.warnings);
 
   // Calculate area for each feature
   data.features.forEach((feature) => {
