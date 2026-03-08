@@ -13,8 +13,10 @@ import {
   VALHALLA_SHORTCUTS_LAYER,
   VALHALLA_NODES_LAYER,
   VALHALLA_LAYERS,
+  VALHALLA_DEFAULT_STYLE_URL,
   getValhallaTileUrl,
   getValhallaSourceSpec,
+  fetchValhallaLayers,
 } from './valhalla-layers';
 
 vi.mock('@/utils/base-url', () => ({
@@ -192,6 +194,73 @@ describe('valhalla-layers', () => {
       const spec = getValhallaSourceSpec() as VectorSourceSpecification;
 
       expect(spec.scheme).toBe('xyz');
+    });
+  });
+
+  describe('VALHALLA_DEFAULT_STYLE_URL', () => {
+    it('should point to the upstream raw GitHub URL', () => {
+      expect(VALHALLA_DEFAULT_STYLE_URL).toBe(
+        'https://raw.githubusercontent.com/valhalla/valhalla/master/docs/docs/api/tile/default_style.json',
+      );
+    });
+  });
+
+  describe('fetchValhallaLayers', () => {
+    const mockRemoteLayers = [
+      { id: 'edges', type: 'line', source: 'valhalla', 'source-layer': 'edges', paint: {} },
+      { id: 'shortcuts', type: 'line', source: 'valhalla', 'source-layer': 'shortcuts', paint: {} },
+      { id: 'nodes', type: 'circle', source: 'valhalla', 'source-layer': 'nodes', paint: {} },
+    ];
+
+    beforeEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('should fetch and adapt layers from remote style', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve({ layers: mockRemoteLayers }),
+        }),
+      );
+
+      const layers = await fetchValhallaLayers();
+
+      expect(layers).toHaveLength(3);
+      expect(layers[0].id).toBe(VALHALLA_EDGES_LAYER_ID);
+      expect(layers[1].id).toBe(VALHALLA_SHORTCUTS_LAYER_ID);
+      expect(layers[2].id).toBe(VALHALLA_NODES_LAYER_ID);
+      // All layers should reference the app's source ID
+      for (const layer of layers) {
+        expect(layer.source).toBe(VALHALLA_SOURCE_ID);
+      }
+    });
+
+    it('should fall back to hardcoded layers on fetch failure', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockRejectedValue(new Error('Network error')),
+      );
+
+      const layers = await fetchValhallaLayers();
+
+      expect(layers).toHaveLength(3);
+      expect(layers[0].id).toBe(VALHALLA_EDGES_LAYER_ID);
+    });
+
+    it('should fall back when response is not ok', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+        }),
+      );
+
+      const layers = await fetchValhallaLayers();
+
+      expect(layers).toHaveLength(3);
     });
   });
 });

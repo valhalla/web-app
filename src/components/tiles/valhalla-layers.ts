@@ -6,6 +6,19 @@ export const VALHALLA_EDGES_LAYER_ID = 'valhalla-edges';
 export const VALHALLA_SHORTCUTS_LAYER_ID = 'valhalla-shortcuts';
 export const VALHALLA_NODES_LAYER_ID = 'valhalla-nodes';
 
+// URL of the upstream default style hosted in the valhalla repository.
+// The app fetches layer definitions from here so that styling stays in
+// sync with upstream instead of being hardcoded.
+export const VALHALLA_DEFAULT_STYLE_URL =
+  'https://raw.githubusercontent.com/valhalla/valhalla/master/docs/docs/api/tile/default_style.json';
+
+// Map from upstream layer IDs to the app's layer IDs
+const LAYER_ID_MAP: Record<string, string> = {
+  edges: VALHALLA_EDGES_LAYER_ID,
+  shortcuts: VALHALLA_SHORTCUTS_LAYER_ID,
+  nodes: VALHALLA_NODES_LAYER_ID,
+};
+
 // Pre-encoded JSON: {"tile":{"z":{z},"x":{x},"y":{y}}}
 // Placeholders {z}, {x}, {y} remain unencoded for MapLibre to replace
 const TILE_JSON_ENCODED =
@@ -26,7 +39,8 @@ export function getValhallaSourceSpec(): SourceSpecification {
   };
 }
 
-export const VALHALLA_EDGES_LAYER: LayerSpecification = {
+// Hardcoded fallback layers used when the remote style cannot be fetched.
+const FALLBACK_EDGES_LAYER: LayerSpecification = {
   id: VALHALLA_EDGES_LAYER_ID,
   type: 'line',
   source: VALHALLA_SOURCE_ID,
@@ -68,9 +82,7 @@ export const VALHALLA_EDGES_LAYER: LayerSpecification = {
   },
 };
 
-// Shortcuts is now a separate tile layer.
-// and It uses the same line style as edges.
-export const VALHALLA_SHORTCUTS_LAYER: LayerSpecification = {
+const FALLBACK_SHORTCUTS_LAYER: LayerSpecification = {
   id: VALHALLA_SHORTCUTS_LAYER_ID,
   type: 'line',
   source: VALHALLA_SOURCE_ID,
@@ -112,7 +124,7 @@ export const VALHALLA_SHORTCUTS_LAYER: LayerSpecification = {
   },
 };
 
-export const VALHALLA_NODES_LAYER: LayerSpecification = {
+const FALLBACK_NODES_LAYER: LayerSpecification = {
   id: VALHALLA_NODES_LAYER_ID,
   type: 'circle',
   source: VALHALLA_SOURCE_ID,
@@ -128,8 +140,55 @@ export const VALHALLA_NODES_LAYER: LayerSpecification = {
   },
 };
 
-export const VALHALLA_LAYERS: LayerSpecification[] = [
-  VALHALLA_EDGES_LAYER,
-  VALHALLA_SHORTCUTS_LAYER,
-  VALHALLA_NODES_LAYER,
+const FALLBACK_LAYERS: LayerSpecification[] = [
+  FALLBACK_EDGES_LAYER,
+  FALLBACK_SHORTCUTS_LAYER,
+  FALLBACK_NODES_LAYER,
 ];
+
+/**
+ * Adapts a layer from the remote default_style.json by remapping its
+ * ID and source to match the app's conventions.
+ */
+function adaptLayer(layer: LayerSpecification): LayerSpecification {
+  return {
+    ...layer,
+    id: LAYER_ID_MAP[layer.id] ?? layer.id,
+    source: VALHALLA_SOURCE_ID,
+  };
+}
+
+// Cache so we only fetch once per session
+let cachedLayers: LayerSpecification[] | null = null;
+
+/**
+ * Fetches layer definitions from the upstream hosted default_style.json
+ * and adapts them for use in this app. Falls back to hardcoded layers
+ * if the fetch fails.
+ */
+export async function fetchValhallaLayers(): Promise<LayerSpecification[]> {
+  if (cachedLayers) return cachedLayers;
+
+  try {
+    const response = await fetch(VALHALLA_DEFAULT_STYLE_URL);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const style = await response.json();
+
+    if (!Array.isArray(style.layers) || style.layers.length === 0) {
+      throw new Error('No layers found in remote style');
+    }
+
+    cachedLayers = style.layers.map(adaptLayer);
+    return cachedLayers;
+  } catch {
+    // Fall back to hardcoded layers if the remote style is unavailable
+    cachedLayers = FALLBACK_LAYERS;
+    return FALLBACK_LAYERS;
+  }
+}
+
+// Re-export fallback layers for backward compatibility and tests
+export const VALHALLA_EDGES_LAYER = FALLBACK_EDGES_LAYER;
+export const VALHALLA_SHORTCUTS_LAYER = FALLBACK_SHORTCUTS_LAYER;
+export const VALHALLA_NODES_LAYER = FALLBACK_NODES_LAYER;
+export const VALHALLA_LAYERS = FALLBACK_LAYERS;

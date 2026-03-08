@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
 import { useCommonStore } from '@/stores/common-store';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import type { LayerSpecification } from 'maplibre-gl';
 import {
   VALHALLA_SOURCE_ID,
-  VALHALLA_LAYERS,
+  fetchValhallaLayers,
   getValhallaSourceSpec,
 } from './valhalla-layers';
 
@@ -13,6 +14,7 @@ export const ValhallaLayersToggle = () => {
   const { mainMap } = useMap();
   const mapReady = useCommonStore((state) => state.mapReady);
   const [enabled, setEnabled] = useState(false);
+  const layersRef = useRef<LayerSpecification[]>([]);
 
   useEffect(() => {
     if (!mainMap) return;
@@ -31,23 +33,26 @@ export const ValhallaLayersToggle = () => {
     };
   }, [mainMap]);
 
-  const handleToggle = (checked: boolean) => {
+  const handleToggle = async (checked: boolean) => {
     if (!mainMap || !mapReady) return;
 
     const map = mainMap.getMap();
     setEnabled(checked);
 
     if (checked) {
+      const layers = await fetchValhallaLayers();
+      layersRef.current = layers;
+
       if (!map.getSource(VALHALLA_SOURCE_ID)) {
         map.addSource(VALHALLA_SOURCE_ID, getValhallaSourceSpec());
       }
-      for (const layer of VALHALLA_LAYERS) {
+      for (const layer of layers) {
         if (!map.getLayer(layer.id)) {
           map.addLayer(layer);
         }
       }
     } else {
-      for (const layer of VALHALLA_LAYERS) {
+      for (const layer of layersRef.current) {
         if (map.getLayer(layer.id)) {
           map.removeLayer(layer.id);
         }

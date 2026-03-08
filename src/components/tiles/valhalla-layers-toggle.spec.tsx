@@ -55,6 +55,14 @@ vi.mock('@/stores/common-store', () => ({
   ),
 }));
 
+vi.mock('./valhalla-layers', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./valhalla-layers')>();
+  return {
+    ...actual,
+    fetchValhallaLayers: vi.fn(() => Promise.resolve(actual.VALHALLA_LAYERS)),
+  };
+});
+
 describe('ValhallaLayersToggle', () => {
   beforeEach(() => {
     mockMap = createMockMap();
@@ -101,13 +109,15 @@ describe('ValhallaLayersToggle', () => {
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
 
-      expect(mockMap.addSource).toHaveBeenCalledWith(
-        VALHALLA_SOURCE_ID,
-        expect.objectContaining({
-          type: 'vector',
-          tiles: expect.any(Array),
-        })
-      );
+      await waitFor(() => {
+        expect(mockMap.addSource).toHaveBeenCalledWith(
+          VALHALLA_SOURCE_ID,
+          expect.objectContaining({
+            type: 'vector',
+            tiles: expect.any(Array),
+          })
+        );
+      });
     });
 
     it('should add all layers when toggled on', async () => {
@@ -117,10 +127,12 @@ describe('ValhallaLayersToggle', () => {
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
 
-      expect(mockMap.addLayer).toHaveBeenCalledTimes(VALHALLA_LAYERS.length);
-      for (const layer of VALHALLA_LAYERS) {
-        expect(mockMap.addLayer).toHaveBeenCalledWith(layer);
-      }
+      await waitFor(() => {
+        expect(mockMap.addLayer).toHaveBeenCalledTimes(VALHALLA_LAYERS.length);
+        for (const layer of VALHALLA_LAYERS) {
+          expect(mockMap.addLayer).toHaveBeenCalledWith(layer);
+        }
+      });
     });
 
     it('should remove all layers when toggled off', async () => {
@@ -129,13 +141,20 @@ describe('ValhallaLayersToggle', () => {
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
+
+      await waitFor(() => {
+        expect(mockMap.addLayer).toHaveBeenCalled();
+      });
+
       await user.click(toggle);
 
-      expect(mockMap.removeLayer).toHaveBeenCalledWith(VALHALLA_EDGES_LAYER_ID);
-      expect(mockMap.removeLayer).toHaveBeenCalledWith(
-        VALHALLA_SHORTCUTS_LAYER_ID
-      );
-      expect(mockMap.removeLayer).toHaveBeenCalledWith(VALHALLA_NODES_LAYER_ID);
+      await waitFor(() => {
+        expect(mockMap.removeLayer).toHaveBeenCalledWith(VALHALLA_EDGES_LAYER_ID);
+        expect(mockMap.removeLayer).toHaveBeenCalledWith(
+          VALHALLA_SHORTCUTS_LAYER_ID
+        );
+        expect(mockMap.removeLayer).toHaveBeenCalledWith(VALHALLA_NODES_LAYER_ID);
+      });
     });
 
     it('should remove source when toggled off', async () => {
@@ -144,9 +163,16 @@ describe('ValhallaLayersToggle', () => {
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
+
+      await waitFor(() => {
+        expect(mockMap.addSource).toHaveBeenCalled();
+      });
+
       await user.click(toggle);
 
-      expect(mockMap.removeSource).toHaveBeenCalledWith(VALHALLA_SOURCE_ID);
+      await waitFor(() => {
+        expect(mockMap.removeSource).toHaveBeenCalledWith(VALHALLA_SOURCE_ID);
+      });
     });
 
     it('should not add source if already exists', async () => {
@@ -157,6 +183,10 @@ describe('ValhallaLayersToggle', () => {
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
+
+      await waitFor(() => {
+        expect(mockMap.addLayer).toHaveBeenCalled();
+      });
 
       expect(mockMap.addSource).not.toHaveBeenCalled();
     });
@@ -172,9 +202,11 @@ describe('ValhallaLayersToggle', () => {
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
 
-      expect(mockMap.addLayer).toHaveBeenCalledTimes(
-        VALHALLA_LAYERS.length - 1
-      );
+      await waitFor(() => {
+        expect(mockMap.addLayer).toHaveBeenCalledTimes(
+          VALHALLA_LAYERS.length - 1
+        );
+      });
     });
 
     it('should update checked state when toggled', async () => {
