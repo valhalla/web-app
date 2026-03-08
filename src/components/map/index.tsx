@@ -16,11 +16,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 import axios from 'axios';
 import { throttle } from 'throttle-debounce';
-import {
-  getValhallaUrl,
-  buildHeightRequest,
-  buildLocateRequest,
-} from '@/utils/valhalla';
+import { getValhallaUrl, buildHeightRequest } from '@/utils/valhalla';
 import { buildHeightgraphData } from '@/utils/heightgraph';
 import HeightGraph from '@/components/heightgraph';
 import { DrawControl } from './draw-control';
@@ -89,12 +85,10 @@ export const MapComponent = () => {
   );
   const updateSettings = useCommonStore((state) => state.updateSettings);
   const setMapReady = useCommonStore((state) => state.setMapReady);
-  const { profile, style } = useSearch({ from: '/$activeTab' });
+  const { style } = useSearch({ from: '/$activeTab' });
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [showContextPopup, setShowContextPopup] = useState(false);
-  const [isLocateLoading, setIsLocateLoading] = useState(false);
   const [isHeightLoading, setIsHeightLoading] = useState(false);
-  const [locate, setLocate] = useState([]);
   const [popupLngLat, setPopupLngLat] = useState<{
     lng: number;
     lat: number;
@@ -291,32 +285,6 @@ export const MapComponent = () => {
         setIsHeightLoading(false);
       });
   }, []);
-
-  const getLocate = useCallback(
-    (lng: number, lat: number) => {
-      setIsLocateLoading(true);
-      axios
-        .post(
-          getValhallaUrl() + '/locate',
-          buildLocateRequest({ lng, lat }, profile || 'bicycle'),
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        )
-        .then(({ data }) => {
-          setLocate(data);
-        })
-        .catch(({ response }) => {
-          console.log(response);
-        })
-        .finally(() => {
-          setIsLocateLoading(false);
-        });
-    },
-    [profile]
-  );
 
   const handleAddWaypoint = useCallback(
     (index: number) => {
@@ -876,12 +844,8 @@ export const MapComponent = () => {
             popupLngLat={popupLngLat}
             elevation={elevation}
             isHeightLoading={isHeightLoading}
-            isLocateLoading={isLocateLoading}
-            locate={locate}
-            onLocate={getLocate}
             onClose={() => {
               setShowInfoPopup(false);
-              setLocate([]);
             }}
           />
         </Popup>
