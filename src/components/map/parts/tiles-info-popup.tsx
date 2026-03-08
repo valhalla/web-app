@@ -25,9 +25,13 @@ export function TilesInfoPopup({ features, onClose }: TilesInfoPopupProps) {
 
       {features.map((feature, index) => {
         const isEdge = feature.sourceLayer === 'edges';
-        const layerType = isEdge ? 'Edge' : 'Node';
+        const isShortcut = feature.sourceLayer === 'shortcuts';
+        const isEdgeLike = isEdge || isShortcut;
+        let layerType = 'Node';
+        if (isEdge) layerType = 'Edge';
+        else if (isShortcut) layerType = 'Shortcut';
         const properties = feature.properties || {};
-        const Icon = isEdge ? Route : MapPin;
+        const Icon = isEdgeLike ? Route : MapPin;
 
         return (
           <div

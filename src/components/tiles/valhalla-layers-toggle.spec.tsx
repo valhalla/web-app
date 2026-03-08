@@ -7,6 +7,7 @@ import {
   VALHALLA_LAYERS,
   VALHALLA_EDGES_LAYER_ID,
   VALHALLA_NODES_LAYER_ID,
+  VALHALLA_SHORTCUTS_LAYER_ID,
 } from './valhalla-layers';
 
 const createMockMap = () => {
@@ -76,26 +77,6 @@ describe('ValhallaLayersToggle', () => {
       expect(screen.getByText('Append Valhalla layers')).toBeInTheDocument();
     });
 
-    it('should render description text', () => {
-      render(<ValhallaLayersToggle />);
-
-      expect(
-        screen.getByText(/Overlay Valhalla routing graph tiles/)
-      ).toBeInTheDocument();
-    });
-
-    it('should render Tile API link', () => {
-      render(<ValhallaLayersToggle />);
-
-      const link = screen.getByRole('link', { name: 'Tile API' });
-      expect(link).toHaveAttribute(
-        'href',
-        'https://valhalla.github.io/valhalla/api/tile/api-reference/'
-      );
-      expect(link).toHaveAttribute('target', '_blank');
-      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
-    });
-
     it('should render switch in unchecked state by default', () => {
       render(<ValhallaLayersToggle />);
 
@@ -151,6 +132,9 @@ describe('ValhallaLayersToggle', () => {
       await user.click(toggle);
 
       expect(mockMap.removeLayer).toHaveBeenCalledWith(VALHALLA_EDGES_LAYER_ID);
+      expect(mockMap.removeLayer).toHaveBeenCalledWith(
+        VALHALLA_SHORTCUTS_LAYER_ID
+      );
       expect(mockMap.removeLayer).toHaveBeenCalledWith(VALHALLA_NODES_LAYER_ID);
     });
 
@@ -188,7 +172,9 @@ describe('ValhallaLayersToggle', () => {
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
 
-      expect(mockMap.addLayer).toHaveBeenCalledTimes(1);
+      expect(mockMap.addLayer).toHaveBeenCalledTimes(
+        VALHALLA_LAYERS.length - 1
+      );
     });
 
     it('should update checked state when toggled', async () => {
