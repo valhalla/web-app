@@ -2,7 +2,6 @@ import { test, expect } from '@playwright/test';
 import {
   BERLIN_COORDINATES,
   setupHeightMock,
-  setupLocateMock,
   setupNominatimMock,
   setupRouteMock,
   setupSearchMock,
@@ -481,6 +480,9 @@ test.describe('Map interactions with left context menu', () => {
       button: 'left',
     });
 
+    // Wait for popup to appear (has 200ms delay)
+    await expect(page.getByTestId('map-info-popup')).toBeVisible();
+
     await expect(page.getByTestId('dd-button')).toContainText(
       '13.393707, 52.518310'
     );
@@ -496,14 +498,9 @@ test.describe('Map interactions with left context menu', () => {
     );
     await expect(page.getByTestId('dms-copy-button')).toBeVisible();
 
-    await expect(
-      page.getByRole('button', { name: 'Locate Point' })
-    ).toBeVisible();
-    await expect(page.getByTestId('locate-point-copy-button')).toBeVisible();
-
-    await expect(
-      page.getByRole('button', { name: 'Valhalla Location JSON' })
-    ).toBeVisible();
+    await expect(page.getByTestId('location-json-button')).toContainText(
+      'Valhalla Location JSON'
+    );
     await expect(page.getByTestId('location-json-copy-button')).toBeVisible();
 
     await expect(page.getByTestId('elevation-button')).toContainText('34 m');
@@ -516,35 +513,10 @@ test.describe('Map interactions with left context menu', () => {
       button: 'left',
     });
 
+    // Wait for popup to appear (has 200ms delay)
+    await expect(page.getByTestId('map-info-popup')).toBeVisible();
+
     await expect(page.getByTestId('elevation-button')).toContainText('34 m');
-  });
-
-  test('should call locate', async ({ page }) => {
-    await setupHeightMock(page);
-    const locateRequests = await setupLocateMock(page);
-
-    await page.getByRole('region', { name: 'Map' }).click({
-      button: 'left',
-    });
-
-    await expect(
-      page.getByRole('button', { name: 'Locate Point' })
-    ).toBeVisible();
-
-    await page.getByRole('button', { name: 'Locate Point' }).click();
-
-    expect(locateRequests.length).toBeGreaterThan(0);
-
-    const locateRequest = locateRequests[0] as RouteApiRequest;
-    expect(locateRequest.method).toBe('POST');
-    expect(locateRequest.url).toMatch(
-      /https:\/\/valhalla1\.openstreetmap\.de\/locate/
-    );
-    expect(locateRequest.body).toBeDefined();
-    expect(locateRequest.body?.costing).toBe('bicycle');
-    expect(locateRequest.body?.locations).toStrictEqual([
-      { lat: 52.51830999999976, lon: 13.393706999999239 },
-    ]);
   });
 
   test('should copy text to clipboard', async ({ page }) => {
@@ -553,6 +525,9 @@ test.describe('Map interactions with left context menu', () => {
     await page.getByRole('region', { name: 'Map' }).click({
       button: 'left',
     });
+
+    // Wait for popup to appear (has 200ms delay)
+    await expect(page.getByTestId('map-info-popup')).toBeVisible();
 
     await page.getByTestId('dd-copy-button').click();
 
