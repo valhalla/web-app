@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
+import type { LayerSpecification } from 'maplibre-gl';
 import { useCommonStore } from '@/stores/common-store';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -8,9 +9,14 @@ import {
   VALHALLA_LAYERS,
   getValhallaSourceSpec,
 } from './valhalla-layers';
-import { useCustomLayersStore } from '@/stores/custom-layers-store';
 
-export const ValhallaLayersToggle = () => {
+interface ValhallaLayersToggleProps {
+  customLayers: { layer: LayerSpecification; visible: boolean }[];
+}
+
+export const ValhallaLayersToggle = ({
+  customLayers,
+}: ValhallaLayersToggleProps) => {
   const { mainMap } = useMap();
   const mapReady = useCommonStore((state) => state.mapReady);
   const [enabled, setEnabled] = useState(false);
@@ -47,7 +53,6 @@ export const ValhallaLayersToggle = () => {
           map.addLayer(layer);
         }
       }
-      const { layers: customLayers } = useCustomLayersStore.getState();
       for (const entry of customLayers) {
         const layerSource =
           'source' in entry.layer ? entry.layer.source : undefined;

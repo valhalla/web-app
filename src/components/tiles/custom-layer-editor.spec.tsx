@@ -7,8 +7,8 @@ import {
   within,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { LayerSpecification } from 'maplibre-gl';
 import { CustomLayerEditor } from './custom-layer-editor';
-import { useCustomLayersStore } from '@/stores/custom-layers-store';
 
 const createMockMap = () => {
   const layers: Record<string, unknown> = {};
@@ -44,6 +44,9 @@ const VALID_LAYER_JSON = JSON.stringify({
   paint: { 'line-color': '#ff0000' },
 });
 
+const noCustomLayers: { layer: LayerSpecification; visible: boolean }[] = [];
+const mockOnLayerAdded = vi.fn();
+
 const openDialog = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(screen.getByRole('button', { name: /add custom layer/i }));
   await waitFor(() => {
@@ -54,7 +57,7 @@ const openDialog = async (user: ReturnType<typeof userEvent.setup>) => {
 describe('CustomLayerEditor', () => {
   beforeEach(() => {
     mockMap = createMockMap();
-    useCustomLayersStore.setState({ layers: [] });
+    mockOnLayerAdded.mockClear();
     vi.clearAllMocks();
   });
 
@@ -64,7 +67,12 @@ describe('CustomLayerEditor', () => {
 
   describe('trigger button', () => {
     it('should render the Add Custom Layer button', () => {
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
       expect(
         screen.getByRole('button', { name: /add custom layer/i })
       ).toBeInTheDocument();
@@ -72,7 +80,12 @@ describe('CustomLayerEditor', () => {
 
     it('should open the dialog when the button is clicked', async () => {
       const user = userEvent.setup();
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
 
@@ -81,7 +94,12 @@ describe('CustomLayerEditor', () => {
 
     it('should show the dialog title', async () => {
       const user = userEvent.setup();
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
 
@@ -92,7 +110,12 @@ describe('CustomLayerEditor', () => {
 
     it('should show the textarea for JSON input', async () => {
       const user = userEvent.setup();
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
 
@@ -103,7 +126,12 @@ describe('CustomLayerEditor', () => {
   describe('validation', () => {
     it('should show error for invalid JSON', async () => {
       const user = userEvent.setup();
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
       // userEvent.type interprets {} as keyboard shortcuts; fireEvent bypasses that.
@@ -121,7 +149,12 @@ describe('CustomLayerEditor', () => {
 
     it('should show error when layer is missing an id field', async () => {
       const user = userEvent.setup();
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
       fireEvent.change(screen.getByRole('textbox'), {
@@ -142,7 +175,12 @@ describe('CustomLayerEditor', () => {
       const user = userEvent.setup();
       mockMap._layers['custom-dead-ends'] = { id: 'custom-dead-ends' };
 
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
       fireEvent.change(screen.getByRole('textbox'), {
@@ -159,16 +197,26 @@ describe('CustomLayerEditor', () => {
       });
     });
 
-    it('should show error when layer id is already tracked in the store', async () => {
+    it('should show error when layer id is already tracked', async () => {
       const user = userEvent.setup();
-      useCustomLayersStore.getState().addLayer({
-        id: 'custom-dead-ends',
-        type: 'line',
-        source: 'valhalla-tiles',
-        'source-layer': 'edges',
-      });
+      const existingLayers = [
+        {
+          layer: {
+            id: 'custom-dead-ends',
+            type: 'line',
+            source: 'valhalla-tiles',
+            'source-layer': 'edges',
+          } as LayerSpecification,
+          visible: true,
+        },
+      ];
 
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={existingLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
       fireEvent.change(screen.getByRole('textbox'), {
@@ -191,7 +239,12 @@ describe('CustomLayerEditor', () => {
         throw new Error('Source "valhalla-tiles" does not exist.');
       });
 
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
       fireEvent.change(screen.getByRole('textbox'), {
@@ -208,7 +261,12 @@ describe('CustomLayerEditor', () => {
 
     it('should clear error when user edits the textarea', async () => {
       const user = userEvent.setup();
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
       fireEvent.change(screen.getByRole('textbox'), {
@@ -237,7 +295,12 @@ describe('CustomLayerEditor', () => {
   describe('successful layer addition', () => {
     it('should call map.addLayer with parsed layer on valid input', async () => {
       const user = userEvent.setup();
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
       fireEvent.change(screen.getByRole('textbox'), {
@@ -252,9 +315,14 @@ describe('CustomLayerEditor', () => {
       });
     });
 
-    it('should add the layer to the store on success', async () => {
+    it('should call onLayerAdded with the parsed layer on success', async () => {
       const user = userEvent.setup();
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
       fireEvent.change(screen.getByRole('textbox'), {
@@ -263,16 +331,20 @@ describe('CustomLayerEditor', () => {
       await user.click(screen.getByRole('button', { name: /^add layer$/i }));
 
       await waitFor(() => {
-        const { layers } = useCustomLayersStore.getState();
-        expect(layers).toHaveLength(1);
-        expect(layers[0]!.layer.id).toBe('custom-dead-ends');
-        expect(layers[0]!.visible).toBe(true);
+        expect(mockOnLayerAdded).toHaveBeenCalledWith(
+          expect.objectContaining({ id: 'custom-dead-ends' })
+        );
       });
     });
 
     it('should close the dialog on successful submission', async () => {
       const user = userEvent.setup();
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
       fireEvent.change(screen.getByRole('textbox'), {
@@ -289,7 +361,12 @@ describe('CustomLayerEditor', () => {
   describe('cancel behaviour', () => {
     it('should close the dialog when Cancel is clicked', async () => {
       const user = userEvent.setup();
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
       await user.click(screen.getByRole('button', { name: /cancel/i }));
@@ -301,7 +378,12 @@ describe('CustomLayerEditor', () => {
 
     it('should clear the error when the dialog is closed and reopened', async () => {
       const user = userEvent.setup();
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
       fireEvent.change(screen.getByRole('textbox'), {
@@ -329,7 +411,12 @@ describe('CustomLayerEditor', () => {
 
     it('should disable the Add Layer button when textarea is empty', async () => {
       const user = userEvent.setup();
-      render(<CustomLayerEditor />);
+      render(
+        <CustomLayerEditor
+          customLayers={noCustomLayers}
+          onLayerAdded={mockOnLayerAdded}
+        />
+      );
 
       await openDialog(user);
 

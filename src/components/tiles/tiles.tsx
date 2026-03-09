@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
+import type { LayerSpecification } from 'maplibre-gl';
 import { useCommonStore } from '@/stores/common-store';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -15,7 +16,6 @@ import { cn } from '@/lib/utils';
 import { ValhallaLayersToggle } from './valhalla-layers-toggle';
 import { VALHALLA_SOURCE_ID } from './valhalla-layers';
 import { CustomLayerEditor } from './custom-layer-editor';
-import { useCustomLayersStore } from '@/stores/custom-layers-store';
 
 interface LayerInfo {
   id: string;
@@ -38,15 +38,10 @@ export const TilesControl = () => {
   >({});
   const [styleVersion, setStyleVersion] = useState(0);
   const [showTileBoundaries, setShowTileBoundaries] = useState(false);
+  const [customLayers, setCustomLayers] = useState<
+    { layer: LayerSpecification; visible: boolean }[]
+  >([]);
 
-  const customLayers = useCustomLayersStore((state) => state.layers);
-  const removeCustomLayer = useCustomLayersStore((state) => state.removeLayer);
-  const setCustomLayerVisibility = useCustomLayersStore(
-    (state) => state.setLayerVisibility
-  );
-
-  // Keep a ref so the styledata handler always sees the latest custom layers
-  // without needing to re-register on every layer change.
   const customLayersRef = useRef(customLayers);
   useEffect(() => {
     customLayersRef.current = customLayers;
@@ -58,7 +53,6 @@ export const TilesControl = () => {
     const map = mainMap.getMap();
 
     const handleStyleData = () => {
-      // Re-apply custom layers whose source is already on the map.
       for (const entry of customLayersRef.current) {
         if (!map.getLayer(entry.layer.id)) {
           try {
@@ -228,7 +222,7 @@ export const TilesControl = () => {
     if (map.getLayer(id)) {
       map.removeLayer(id);
     }
-    removeCustomLayer(id);
+    setCustomLayers((prev) => prev.filter((e) => e.layer.id !== id));
     setStyleVersion((v) => v + 1);
   };
 
@@ -238,12 +232,14 @@ export const TilesControl = () => {
     if (map.getLayer(id)) {
       map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
     }
-    setCustomLayerVisibility(id, visible);
+    setCustomLayers((prev) =>
+      prev.map((e) => (e.layer.id === id ? { ...e, visible } : e))
+    );
   };
 
   return (
     <div className="flex flex-col gap-3 flex-1 overflow-hidden min-h-0">
-      <ValhallaLayersToggle />
+      <ValhallaLayersToggle customLayers={customLayers} />
 
       <div className="flex items-center justify-between gap-3 p-3 bg-muted/50 rounded-md">
         <Label
@@ -408,7 +404,12 @@ export const TilesControl = () => {
         )}
       </div>
 
-      <CustomLayerEditor />
+      <CustomLayerEditor
+        customLayers={customLayers}
+        onLayerAdded={(layer) =>
+          setCustomLayers((prev) => [...prev, { layer, visible: true }])
+        }
+      />
     </div>
   );
 };

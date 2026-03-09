@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { LayerSpecification } from 'maplibre-gl';
 import { ValhallaLayersToggle } from './valhalla-layers-toggle';
 import {
   VALHALLA_SOURCE_ID,
@@ -56,25 +57,12 @@ vi.mock('@/stores/common-store', () => ({
   ),
 }));
 
-let mockCustomLayersState = {
-  layers: [] as {
-    layer: { id: string; type: string; source?: string };
-    visible: boolean;
-  }[],
-};
-
-vi.mock('@/stores/custom-layers-store', () => ({
-  useCustomLayersStore: Object.assign(
-    vi.fn((selector) => selector(mockCustomLayersState)),
-    { getState: () => mockCustomLayersState }
-  ),
-}));
+const noCustomLayers: { layer: LayerSpecification; visible: boolean }[] = [];
 
 describe('ValhallaLayersToggle', () => {
   beforeEach(() => {
     mockMap = createMockMap();
     mockMapReady = true;
-    mockCustomLayersState = { layers: [] };
     vi.clearAllMocks();
   });
 
@@ -84,17 +72,19 @@ describe('ValhallaLayersToggle', () => {
 
   describe('rendering', () => {
     it('should render without crashing', () => {
-      expect(() => render(<ValhallaLayersToggle />)).not.toThrow();
+      expect(() =>
+        render(<ValhallaLayersToggle customLayers={noCustomLayers} />)
+      ).not.toThrow();
     });
 
     it('should render toggle label', () => {
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={noCustomLayers} />);
 
       expect(screen.getByText('Append Valhalla layers')).toBeInTheDocument();
     });
 
     it('should render switch in unchecked state by default', () => {
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={noCustomLayers} />);
 
       const toggle = screen.getByRole('switch');
       expect(toggle).not.toBeChecked();
@@ -103,7 +93,9 @@ describe('ValhallaLayersToggle', () => {
     it('should not render when map is not ready', () => {
       mockMapReady = false;
 
-      const { container } = render(<ValhallaLayersToggle />);
+      const { container } = render(
+        <ValhallaLayersToggle customLayers={noCustomLayers} />
+      );
 
       expect(container).toBeEmptyDOMElement();
     });
@@ -112,7 +104,7 @@ describe('ValhallaLayersToggle', () => {
   describe('toggle functionality', () => {
     it('should add source when toggled on', async () => {
       const user = userEvent.setup();
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={noCustomLayers} />);
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
@@ -128,7 +120,7 @@ describe('ValhallaLayersToggle', () => {
 
     it('should add all layers when toggled on', async () => {
       const user = userEvent.setup();
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={noCustomLayers} />);
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
@@ -141,7 +133,7 @@ describe('ValhallaLayersToggle', () => {
 
     it('should remove all layers when toggled off', async () => {
       const user = userEvent.setup();
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={noCustomLayers} />);
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
@@ -156,7 +148,7 @@ describe('ValhallaLayersToggle', () => {
 
     it('should remove source when toggled off', async () => {
       const user = userEvent.setup();
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={noCustomLayers} />);
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
@@ -169,7 +161,7 @@ describe('ValhallaLayersToggle', () => {
       const user = userEvent.setup();
       mockMap._sources[VALHALLA_SOURCE_ID] = { type: 'vector' };
 
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={noCustomLayers} />);
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
@@ -183,7 +175,7 @@ describe('ValhallaLayersToggle', () => {
         id: VALHALLA_EDGES_LAYER_ID,
       };
 
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={noCustomLayers} />);
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
@@ -195,7 +187,7 @@ describe('ValhallaLayersToggle', () => {
 
     it('should update checked state when toggled', async () => {
       const user = userEvent.setup();
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={noCustomLayers} />);
 
       const toggle = screen.getByRole('switch');
       expect(toggle).not.toBeChecked();
@@ -208,7 +200,7 @@ describe('ValhallaLayersToggle', () => {
 
   describe('style change handling', () => {
     it('should register styledata event listener', () => {
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={noCustomLayers} />);
 
       expect(mockMap.on).toHaveBeenCalledWith(
         'styledata',
@@ -217,7 +209,9 @@ describe('ValhallaLayersToggle', () => {
     });
 
     it('should unregister styledata event listener on unmount', () => {
-      const { unmount } = render(<ValhallaLayersToggle />);
+      const { unmount } = render(
+        <ValhallaLayersToggle customLayers={noCustomLayers} />
+      );
 
       unmount();
 
@@ -228,7 +222,7 @@ describe('ValhallaLayersToggle', () => {
     });
 
     it('should sync enabled state with source existence on style change', async () => {
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={noCustomLayers} />);
 
       const styleDataHandler = mockMap.on.mock.calls.find(
         (call) => call[0] === 'styledata'
@@ -247,7 +241,7 @@ describe('ValhallaLayersToggle', () => {
 
     it('should set enabled to false when source is removed on style change', async () => {
       const user = userEvent.setup();
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={noCustomLayers} />);
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
@@ -273,18 +267,18 @@ describe('ValhallaLayersToggle', () => {
   describe('custom layer re-application on enable', () => {
     it('should re-add a custom layer referencing valhalla-tiles when toggled on', async () => {
       const user = userEvent.setup();
-      mockCustomLayersState.layers = [
+      const customLayers = [
         {
           layer: {
             id: 'custom-valhalla-layer',
             type: 'line',
             source: VALHALLA_SOURCE_ID,
-          },
+          } as LayerSpecification,
           visible: true,
         },
       ];
 
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={customLayers} />);
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
@@ -296,18 +290,18 @@ describe('ValhallaLayersToggle', () => {
 
     it('should set visibility none for an invisible custom valhalla layer when re-added', async () => {
       const user = userEvent.setup();
-      mockCustomLayersState.layers = [
+      const customLayers = [
         {
           layer: {
             id: 'custom-hidden-layer',
             type: 'line',
             source: VALHALLA_SOURCE_ID,
-          },
+          } as LayerSpecification,
           visible: false,
         },
       ];
 
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={customLayers} />);
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
@@ -321,18 +315,18 @@ describe('ValhallaLayersToggle', () => {
 
     it('should not re-add a custom layer that uses a different source', async () => {
       const user = userEvent.setup();
-      mockCustomLayersState.layers = [
+      const customLayers = [
         {
           layer: {
             id: 'custom-other-source',
             type: 'line',
             source: 'some-other-source',
-          },
+          } as LayerSpecification,
           visible: true,
         },
       ];
 
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={customLayers} />);
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
@@ -345,13 +339,13 @@ describe('ValhallaLayersToggle', () => {
 
     it('should not re-add a custom valhalla layer that is already on the map', async () => {
       const user = userEvent.setup();
-      mockCustomLayersState.layers = [
+      const customLayers = [
         {
           layer: {
             id: 'already-present-custom',
             type: 'line',
             source: VALHALLA_SOURCE_ID,
-          },
+          } as LayerSpecification,
           visible: true,
         },
       ];
@@ -359,7 +353,7 @@ describe('ValhallaLayersToggle', () => {
         id: 'already-present-custom',
       };
 
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={customLayers} />);
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
@@ -372,18 +366,18 @@ describe('ValhallaLayersToggle', () => {
 
     it('should not call map.removeLayer for custom layers when Valhalla is toggled off', async () => {
       const user = userEvent.setup();
-      mockCustomLayersState.layers = [
+      const customLayers = [
         {
           layer: {
             id: 'custom-valhalla-layer',
             type: 'line',
             source: VALHALLA_SOURCE_ID,
-          },
+          } as LayerSpecification,
           visible: true,
         },
       ];
 
-      render(<ValhallaLayersToggle />);
+      render(<ValhallaLayersToggle customLayers={customLayers} />);
 
       const toggle = screen.getByRole('switch');
       await user.click(toggle);

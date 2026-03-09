@@ -13,7 +13,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { useCustomLayersStore } from '@/stores/custom-layers-store';
 import { VALHALLA_SOURCE_ID } from './valhalla-layers';
 
 const EXAMPLE_LAYER = JSON.stringify(
@@ -36,10 +35,16 @@ const EXAMPLE_LAYER = JSON.stringify(
   2
 );
 
-export const CustomLayerEditor = () => {
+interface CustomLayerEditorProps {
+  customLayers: { layer: LayerSpecification; visible: boolean }[];
+  onLayerAdded: (layer: LayerSpecification) => void;
+}
+
+export const CustomLayerEditor = ({
+  customLayers,
+  onLayerAdded,
+}: CustomLayerEditorProps) => {
   const { mainMap } = useMap();
-  const addLayer = useCustomLayersStore((state) => state.addLayer);
-  const layers = useCustomLayersStore((state) => state.layers);
   const [open, setOpen] = useState(false);
   const [jsonValue, setJsonValue] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -83,7 +88,7 @@ export const CustomLayerEditor = () => {
       return;
     }
 
-    if (layers.some((e) => e.layer.id === parsed.id)) {
+    if (customLayers.some((e) => e.layer.id === parsed.id)) {
       setError(`A custom layer with id "${parsed.id}" is already tracked.`);
       return;
     }
@@ -97,7 +102,7 @@ export const CustomLayerEditor = () => {
       return;
     }
 
-    addLayer(parsed);
+    onLayerAdded(parsed);
     setJsonValue('');
     setError(null);
     setOpen(false);
