@@ -26,7 +26,8 @@ import HeightGraph from '@/components/heightgraph';
 import { DrawControl } from './draw-control';
 import type { Summary } from '@/components/types';
 import type { FeatureCollection } from 'geojson';
-import { Navigation, Radar, Grid3X3, ExternalLink } from 'lucide-react';
+import { Route, Share2, Layers2 } from 'lucide-react';
+import OSMIcon from '@/images/256px-Openstreetmap_logo.png';
 import { ToolButton } from './parts/tool-button';
 
 import { MapStyleControl } from './map-style-control';
@@ -928,9 +929,11 @@ export const MapComponent = () => {
 
         <ToolButton
           title="Open in OpenStreetMap"
-          icon={<ExternalLink size={24} />}
+          icon={
+            <img src={OSMIcon} width={29} height={29} alt="OpenStreetMap" />
+          }
           onClick={handleOpenOSM}
-          className="absolute bottom-10 right-3 z-10"
+          className="absolute bottom-10 right-4 z-10 !bg-transparent !shadow-none !rounded-none !border-none !w-auto !h-auto !p-0"
           data-testid="osm-button"
         />
 
@@ -954,24 +957,24 @@ export const MapComponent = () => {
       </Map>
 
       <div
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-2"
+        className="absolute top-4 left-4 z-10 flex flex-col gap-2"
         aria-label="Panel shortcuts"
       >
         <ToolButton
           title="Directions"
-          icon={<Navigation size={24} />}
+          icon={<Route size={24} />}
           onClick={() => handleNavigateToTab('directions')}
           data-testid="tab-directions-button"
         />
         <ToolButton
           title="Isochrones"
-          icon={<Radar size={24} />}
+          icon={<Share2 size={24} />}
           onClick={() => handleNavigateToTab('isochrones')}
           data-testid="tab-isochrones-button"
         />
         <ToolButton
           title="Tiles"
-          icon={<Grid3X3 size={24} />}
+          icon={<Layers2 size={24} />}
           onClick={() => handleNavigateToTab('tiles')}
           data-testid="tab-tiles-button"
         />
