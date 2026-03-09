@@ -15,6 +15,7 @@ export const ValhallaLayersToggle = () => {
   const mapReady = useCommonStore((state) => state.mapReady);
   const [enabled, setEnabled] = useState(false);
   const layersRef = useRef<LayerSpecification[]>([]);
+  const toggleIdRef = useRef(0);
 
   useEffect(() => {
     if (!mainMap) return;
@@ -37,10 +38,15 @@ export const ValhallaLayersToggle = () => {
     if (!mainMap || !mapReady) return;
 
     const map = mainMap.getMap();
+    const currentToggleId = ++toggleIdRef.current;
     setEnabled(checked);
 
     if (checked) {
       const layers = await fetchValhallaLayers();
+
+      // If the toggle was flipped again while we were fetching, bail out.
+      if (toggleIdRef.current !== currentToggleId) return;
+
       layersRef.current = layers;
 
       if (!map.getSource(VALHALLA_SOURCE_ID)) {

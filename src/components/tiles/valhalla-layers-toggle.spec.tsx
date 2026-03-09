@@ -149,11 +149,15 @@ describe('ValhallaLayersToggle', () => {
       await user.click(toggle);
 
       await waitFor(() => {
-        expect(mockMap.removeLayer).toHaveBeenCalledWith(VALHALLA_EDGES_LAYER_ID);
+        expect(mockMap.removeLayer).toHaveBeenCalledWith(
+          VALHALLA_EDGES_LAYER_ID
+        );
         expect(mockMap.removeLayer).toHaveBeenCalledWith(
           VALHALLA_SHORTCUTS_LAYER_ID
         );
-        expect(mockMap.removeLayer).toHaveBeenCalledWith(VALHALLA_NODES_LAYER_ID);
+        expect(mockMap.removeLayer).toHaveBeenCalledWith(
+          VALHALLA_NODES_LAYER_ID
+        );
       });
     });
 

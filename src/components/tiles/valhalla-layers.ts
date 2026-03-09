@@ -10,6 +10,7 @@ export const VALHALLA_NODES_LAYER_ID = 'valhalla-nodes';
 // The app fetches layer definitions from here so that styling stays in
 // sync with upstream instead of being hardcoded.
 export const VALHALLA_DEFAULT_STYLE_URL =
+  import.meta.env.VITE_VALHALLA_DEFAULT_STYLE_URL ||
   'https://raw.githubusercontent.com/valhalla/valhalla/master/docs/docs/api/tile/default_style.json';
 
 // Map from upstream layer IDs to the app's layer IDs
@@ -155,7 +156,7 @@ function adaptLayer(layer: LayerSpecification): LayerSpecification {
     ...layer,
     id: LAYER_ID_MAP[layer.id] ?? layer.id,
     source: VALHALLA_SOURCE_ID,
-  };
+  } as LayerSpecification;
 }
 
 // Cache so we only fetch once per session
@@ -179,12 +180,18 @@ export async function fetchValhallaLayers(): Promise<LayerSpecification[]> {
     }
 
     cachedLayers = style.layers.map(adaptLayer);
-    return cachedLayers;
+    return cachedLayers!;
   } catch {
-    // Fall back to hardcoded layers if the remote style is unavailable
-    cachedLayers = FALLBACK_LAYERS;
+    // Fall back to hardcoded layers if the remote style is unavailable.
+    // Do NOT cache the fallback so a subsequent call can retry the fetch
+    // once the transient error has resolved.
     return FALLBACK_LAYERS;
   }
+}
+
+/** Reset the internal layer cache — intended for tests only. */
+export function _resetLayerCache(): void {
+  cachedLayers = null;
 }
 
 // Re-export fallback layers for backward compatibility and tests
