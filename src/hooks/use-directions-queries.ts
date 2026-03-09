@@ -150,7 +150,11 @@ export function useReverseGeocodeDirections() {
     options?: { isPermalink?: boolean }
   ) => {
     // For permalink loading, add waypoint if needed
-    if (options?.isPermalink && index > 1) {
+    if (
+      options?.isPermalink &&
+      index > 1 &&
+      useDirectionsStore.getState().waypoints.length <= index
+    ) {
       addEmptyWaypointToEnd();
     }
 
