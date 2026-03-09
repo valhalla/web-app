@@ -536,6 +536,38 @@ test.describe('Map interactions with left context menu', () => {
     );
     expect(clipboardContent).toBe('13.393707,52.518310');
   });
+
+  test('should show routing warning toast when API returns warnings', async ({
+    page,
+  }) => {
+    await setupNominatimMock(page);
+
+    const mockResponse = JSON.parse(JSON.stringify(customRouteResponse));
+    mockResponse.warnings = [{ code: 1, message: 'Test routing warning' }];
+
+    await setupRouteMock(page, mockResponse);
+
+    await page
+      .getByRole('region', { name: 'Map' })
+      .click({ button: 'right', position: { x: 800, y: 100 }, force: true });
+
+    await page.getByRole('button', { name: 'Directions from here' }).click();
+
+    await expect(
+      page.getByLabel('Map marker 1').getByRole('img')
+    ).toBeVisible();
+
+    await page
+      .getByRole('region', { name: 'Map' })
+      .click({ button: 'right', position: { x: 800, y: 300 }, force: true });
+
+    await page.getByRole('button', { name: 'Directions to here' }).click();
+
+    await expect(page.getByText('Test routing warning')).toBeVisible();
+
+    // Reset page state so other tests are not affected
+    await page.reload();
+  });
 });
 
 test.describe('Map interactions with URL parameters', () => {
