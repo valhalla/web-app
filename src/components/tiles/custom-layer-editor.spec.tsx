@@ -17,6 +17,11 @@ const createMockMap = () => {
     addLayer: vi.fn((layer: { id: string }) => {
       layers[layer.id] = layer;
     }),
+    on: vi.fn((event: string, handler: () => void) => {
+      if (event === 'styledata') handler();
+    }),
+    off: vi.fn(),
+    getSource: vi.fn(() => ({ type: 'vector' })),
     _layers: layers,
   };
 };

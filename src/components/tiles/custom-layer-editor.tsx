@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
 import type { LayerSpecification } from 'maplibre-gl';
 import { Plus } from 'lucide-react';
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useCustomLayersStore } from '@/stores/custom-layers-store';
+import { VALHALLA_SOURCE_ID } from './valhalla-layers';
 
 const EXAMPLE_LAYER = JSON.stringify(
   {
@@ -40,8 +41,25 @@ export const CustomLayerEditor = () => {
   const addLayer = useCustomLayersStore((state) => state.addLayer);
   const layers = useCustomLayersStore((state) => state.layers);
   const [open, setOpen] = useState(false);
-  const [json, setJson] = useState('');
+  const [jsonValue, setJsonValue] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [valhallaEnabled, setValhallaEnabled] = useState(false);
+
+  useEffect(() => {
+    if (!mainMap) return;
+
+    const map = mainMap.getMap();
+
+    const handleStyleData = () => {
+      setValhallaEnabled(!!map.getSource(VALHALLA_SOURCE_ID));
+    };
+
+    map.on('styledata', handleStyleData);
+
+    return () => {
+      map.off('styledata', handleStyleData);
+    };
+  }, [mainMap]);
 
   const handleSubmit = () => {
     if (!mainMap) return;
@@ -49,7 +67,7 @@ export const CustomLayerEditor = () => {
 
     let parsed: LayerSpecification;
     try {
-      parsed = JSON.parse(json) as LayerSpecification;
+      parsed = JSON.parse(jsonValue) as LayerSpecification;
     } catch {
       setError('Invalid JSON. Please check your input.');
       return;
@@ -80,7 +98,7 @@ export const CustomLayerEditor = () => {
     }
 
     addLayer(parsed);
-    setJson('');
+    setJsonValue('');
     setError(null);
     setOpen(false);
   };
@@ -93,58 +111,61 @@ export const CustomLayerEditor = () => {
   };
 
   return (
-    <div className="pb-1">
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="w-full gap-2">
-            <Plus className="size-4" />
-            Add Custom Layer
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full gap-2"
+          disabled={!valhallaEnabled}
+        >
+          <Plus className="size-4" />
+          Add Custom Layer
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Add Custom Layer</DialogTitle>
+          <DialogDescription>
+            Paste a{' '}
+            <a
+              href="https://maplibre.org/maplibre-style-spec/layers/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline hover:no-underline"
+            >
+              MapLibre layer definition
+            </a>{' '}
+            as JSON. Use{' '}
+            <code className="text-xs bg-muted px-1 rounded">
+              valhalla-tiles
+            </code>{' '}
+            as the source to visualize Valhalla tile attributes.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Textarea
+          className="font-mono text-xs min-h-40 flex-1 resize-none overflow-y-auto"
+          placeholder={EXAMPLE_LAYER}
+          value={jsonValue}
+          onChange={(e) => {
+            setJsonValue(e.target.value);
+            setError(null);
+          }}
+          spellCheck={false}
+        />
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+            Cancel
           </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Add Custom Layer</DialogTitle>
-            <DialogDescription>
-              Paste a{' '}
-              <a
-                href="https://maplibre.org/maplibre-style-spec/layers/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary underline hover:no-underline"
-              >
-                MapLibre layer definition
-              </a>{' '}
-              as JSON. Use{' '}
-              <code className="text-xs bg-muted px-1 rounded">
-                valhalla-tiles
-              </code>{' '}
-              as the source to visualize Valhalla tile attributes.
-            </DialogDescription>
-          </DialogHeader>
-
-          <Textarea
-            className="font-mono text-xs min-h-40 flex-1 resize-none overflow-y-auto"
-            placeholder={EXAMPLE_LAYER}
-            value={json}
-            onChange={(e) => {
-              setJson(e.target.value);
-              setError(null);
-            }}
-            spellCheck={false}
-          />
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => handleOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={!json.trim()}>
-              Add Layer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+          <Button onClick={handleSubmit} disabled={!jsonValue.trim()}>
+            Add Layer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
