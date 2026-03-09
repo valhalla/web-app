@@ -70,6 +70,7 @@ export const RouteCard = ({ data, index }: RouteCardProps) => {
           title={`${index === -1 ? 'Main Route' : 'Alternate Route #' + (index + 1)}`}
           summary={data.trip.summary}
           index={index}
+          routeCoordinates={data.decodedGeometry ?? []}
         />
         <Collapsible open={showManeuvers} onOpenChange={setShowManeuvers}>
           <div className="flex justify-between">
