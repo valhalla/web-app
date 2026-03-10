@@ -58,6 +58,28 @@ export const ProfilePicker = ({
     { value: 'motorcycle', label: 'Motorcycle' },
   ];
 
+  const handleKeyDown = (event: React.KeyboardEvent, index: number) => {
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      const next = (index + 1) % profiles.length;
+      const nextProfile = profiles[next];
+
+      if (nextProfile) {
+        handleUpdateProfile(nextProfile.value as Profile);
+      }
+    }
+
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      const prev = (index - 1 + profiles.length) % profiles.length;
+      const prevProfile = profiles[prev];
+
+      if (prevProfile) {
+        handleUpdateProfile(prevProfile.value as Profile);
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col gap-2">
       <TooltipProvider>
@@ -79,6 +101,7 @@ export const ProfilePicker = ({
                   aria-label={`Select ${profile.label} profile`}
                   data-testid={`profile-button-` + profile.value}
                   data-state={profile.value === activeProfile ? 'on' : 'off'}
+                  onKeyDown={(e) => handleKeyDown(e, i)}
                 >
                   {profile.value === activeProfile && loading ? (
                     <Loader2 className="size-4 animate-spin" />
