@@ -125,7 +125,7 @@ export const SettingsPanel = () => {
     <Sheet open={settingsPanelOpen} modal={false}>
       <SheetContent
         side="right"
-        className="w-[350px] sm:max-w-[unset] max-h-screen overflow-y-scroll"
+        className="w-[350px] pb-6 sm:max-w-[unset] max-h-screen overflow-y-scroll"
       >
         <SheetHeader className="justify-between">
           <SheetTitle>Settings</SheetTitle>
