@@ -5,6 +5,7 @@ import type { ExternalToast } from 'sonner';
 /**
  * Displays toast notifications for warnings returned by the Valhalla API
  * @param warnings - Optional warnings array from Valhalla API response
+ * warning object structure: { code: number, description: string }
  */
 
 const TOAST_CONFIG: ExternalToast = {
@@ -18,7 +19,7 @@ export const handleValhallaWarnings = (warnings?: ValhallaWarning[]): void => {
 
   warnings?.forEach((warning) => {
     toast.warning('Routing warning', {
-      description: warning.message,
+      description: warning.description,
       ...TOAST_CONFIG,
     });
   });

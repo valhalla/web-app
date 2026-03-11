@@ -15,8 +15,8 @@ describe('handleValhallaWarnings', () => {
 
   it('should display toast for each warning', () => {
     const warnings = [
-      { code: 1, message: 'Warning one' },
-      { code: 2, message: 'Warning two' },
+      { code: 1, description: 'Warning one' },
+      { code: 2, description: 'Warning two' },
     ];
 
     handleValhallaWarnings(warnings);

@@ -543,10 +543,11 @@ test.describe('Map interactions with left context menu', () => {
     await setupNominatimMock(page);
 
     const mockResponse = JSON.parse(JSON.stringify(customRouteResponse));
-    mockResponse.warnings = [{ code: 1, message: 'Test routing warning' }];
+    mockResponse.warnings = [{ code: 1, description: 'Test routing warning' }];
 
     await setupRouteMock(page, mockResponse);
 
+    // Add "from" waypoint
     await page
       .getByRole('region', { name: 'Map' })
       .click({ button: 'right', position: { x: 800, y: 100 }, force: true });
@@ -557,6 +558,7 @@ test.describe('Map interactions with left context menu', () => {
       page.getByLabel('Map marker 1').getByRole('img')
     ).toBeVisible();
 
+    // Add "to" waypoint
     await page
       .getByRole('region', { name: 'Map' })
       .click({ button: 'right', position: { x: 800, y: 300 }, force: true });
