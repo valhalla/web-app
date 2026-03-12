@@ -32,12 +32,12 @@ vi.mock('react-map-gl/maplibre', () => ({
 }));
 
 vi.mock('@/stores/common-store', () => ({
-  useCommonStore: {
-    getState: vi.fn(() => ({
+  useCommonStore: vi.fn((selector) =>
+    selector({
       directionsPanelOpen: true,
       settingsPanelOpen: false,
-    })),
-  },
+    })
+  ),
 }));
 
 const mockRouteCoordinates: number[][] = [

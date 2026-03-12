@@ -42,6 +42,9 @@ export const Summary = ({
   );
   const toggleShowOnMap = useDirectionsStore((state) => state.toggleShowOnMap);
   const successful = useDirectionsStore((state) => state.successful);
+  const isSettingsPanelOpen = useCommonStore(
+    (state) => state.settingsPanelOpen
+  );
 
   const { mainMap } = useMap();
 
@@ -70,22 +73,12 @@ export const Summary = ({
         ]
       );
 
-    const state = useCommonStore.getState();
-    const dpOpen = state.directionsPanelOpen;
-    const spOpen = state.settingsPanelOpen;
-
-    const paddingTopLeft = [screen.width < 550 ? 50 : dpOpen ? 420 : 50, 50];
-    const paddingBottomRight = [
-      screen.width < 550 ? 50 : spOpen ? 420 : 50,
-      50,
-    ];
-
     mainMap.fitBounds(bounds, {
       padding: {
-        top: paddingTopLeft[1] as number,
-        bottom: paddingBottomRight[1] as number,
-        left: paddingTopLeft[0] as number,
-        right: paddingBottomRight[0] as number,
+        top: 50,
+        bottom: 50,
+        left: 420,
+        right: isSettingsPanelOpen ? 420 : 50,
       },
       maxZoom: routeCoordinates.length === 1 ? 11 : 18,
       duration: 800,
