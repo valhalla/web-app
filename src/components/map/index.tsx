@@ -23,7 +23,7 @@ import { DrawControl } from './draw-control';
 import type { Summary } from '@/components/types';
 import type { FeatureCollection } from 'geojson';
 import { Route, Share2, Layers2 } from 'lucide-react';
-import OSMIcon from '@/images/256px-Openstreetmap_logo.png';
+import OSMIcon from '@/images/Openstreetmap_logo.png';
 import { ToolButton } from './parts/tool-button';
 
 import { MapStyleControl } from './map-style-control';
@@ -862,12 +862,8 @@ export const MapComponent = () => {
               popupLngLat={popupLngLat}
               elevation={elevation}
               isHeightLoading={isHeightLoading}
-              isLocateLoading={isLocateLoading}
-              locate={locate}
-              onLocate={getLocate}
               onClose={() => {
                 setShowInfoPopup(false);
-                setLocate([]);
               }}
             />
           </Popup>
@@ -899,9 +895,9 @@ export const MapComponent = () => {
         <BrandLogos />
 
         <ToolButton
-          title="Open in OpenStreetMap"
+          title="https://openstreetmap.org"
           icon={
-            <img src={OSMIcon} width={29} height={29} alt="OpenStreetMap" />
+            <img src={OSMIcon} width={24} height={24} alt="OpenStreetMap" />
           }
           onClick={handleOpenOSM}
           className="absolute bottom-10 right-4 z-10 !bg-transparent !shadow-none !rounded-none !border-none !w-auto !h-auto !p-0"
