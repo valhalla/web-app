@@ -364,7 +364,7 @@ describe('ValhallaLayersToggle', () => {
       expect(addLayerIds).not.toContain('already-present-custom');
     });
 
-    it('should not call map.removeLayer for custom layers when Valhalla is toggled off', async () => {
+    it('should call map.removeLayer for custom valhalla layers when Valhalla is toggled off', async () => {
       const user = userEvent.setup();
       const customLayers = [
         {
@@ -389,7 +389,7 @@ describe('ValhallaLayersToggle', () => {
       const removeLayerIds = mockMap.removeLayer.mock.calls.map(
         (call: [string]) => call[0]
       );
-      expect(removeLayerIds).not.toContain('custom-valhalla-layer');
+      expect(removeLayerIds).toContain('custom-valhalla-layer');
     });
   });
 });

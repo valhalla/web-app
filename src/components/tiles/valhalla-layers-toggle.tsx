@@ -77,6 +77,17 @@ export const ValhallaLayersToggle = ({
         }
       }
 
+      for (const entry of customLayers) {
+        const layerSource =
+          'source' in entry.layer ? entry.layer.source : undefined;
+        if (
+          layerSource === VALHALLA_SOURCE_ID &&
+          map.getLayer(entry.layer.id)
+        ) {
+          map.removeLayer(entry.layer.id);
+        }
+      }
+
       if (map.getSource(VALHALLA_SOURCE_ID)) {
         map.removeSource(VALHALLA_SOURCE_ID);
       }
