@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMap } from 'react-map-gl/maplibre';
+import type { LayerSpecification } from 'maplibre-gl';
 import { useCommonStore } from '@/stores/common-store';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -9,7 +10,13 @@ import {
   getValhallaSourceSpec,
 } from './valhalla-layers';
 
-export const ValhallaLayersToggle = () => {
+interface ValhallaLayersToggleProps {
+  customLayers: { layer: LayerSpecification; visible: boolean }[];
+}
+
+export const ValhallaLayersToggle = ({
+  customLayers,
+}: ValhallaLayersToggleProps) => {
   const { mainMap } = useMap();
   const mapReady = useCommonStore((state) => state.mapReady);
   const [enabled, setEnabled] = useState(false);
@@ -46,10 +53,38 @@ export const ValhallaLayersToggle = () => {
           map.addLayer(layer);
         }
       }
+      for (const entry of customLayers) {
+        const layerSource =
+          'source' in entry.layer ? entry.layer.source : undefined;
+        if (
+          layerSource === VALHALLA_SOURCE_ID &&
+          !map.getLayer(entry.layer.id)
+        ) {
+          try {
+            map.addLayer(entry.layer);
+            if (!entry.visible) {
+              map.setLayoutProperty(entry.layer.id, 'visibility', 'none');
+            }
+          } catch {
+            // skip
+          }
+        }
+      }
     } else {
       for (const layer of VALHALLA_LAYERS) {
         if (map.getLayer(layer.id)) {
           map.removeLayer(layer.id);
+        }
+      }
+
+      for (const entry of customLayers) {
+        const layerSource =
+          'source' in entry.layer ? entry.layer.source : undefined;
+        if (
+          layerSource === VALHALLA_SOURCE_ID &&
+          map.getLayer(entry.layer.id)
+        ) {
+          map.removeLayer(entry.layer.id);
         }
       }
 
