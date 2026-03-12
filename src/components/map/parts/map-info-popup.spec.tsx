@@ -11,9 +11,6 @@ const defaultProps = {
   popupLngLat: { lng: 10.123456, lat: 50.654321 },
   elevation: '250 m',
   isHeightLoading: false,
-  isLocateLoading: false,
-  locate: [],
-  onLocate: vi.fn(),
   onClose: vi.fn(),
 };
 
@@ -68,38 +65,12 @@ describe('MapInfoPopup', () => {
     expect(screen.getByTestId('elevation-button')).toHaveTextContent('500 m');
   });
 
-  it('should display Locate Point button', () => {
-    render(<MapInfoPopup {...defaultProps} />);
-
-    expect(screen.getByTestId('locate-point-button')).toHaveTextContent(
-      'Locate Point'
-    );
-  });
-
-  it('should display Valhalla Location JSON button', () => {
+  it('should display Valhalla Location JSON label', () => {
     render(<MapInfoPopup {...defaultProps} />);
 
     expect(screen.getByTestId('location-json-button')).toHaveTextContent(
       'Valhalla Location JSON'
     );
-  });
-
-  it('should call onLocate when Locate Point is clicked', async () => {
-    const user = userEvent.setup();
-    const onLocate = vi.fn();
-    const popupLngLat = { lng: 10.5, lat: 50.5 };
-
-    render(
-      <MapInfoPopup
-        {...defaultProps}
-        onLocate={onLocate}
-        popupLngLat={popupLngLat}
-      />
-    );
-
-    await user.click(screen.getByTestId('locate-point-button'));
-
-    expect(onLocate).toHaveBeenCalledWith(10.5, 50.5);
   });
 
   it('should format coordinates to 6 decimal places', () => {
@@ -115,12 +86,20 @@ describe('MapInfoPopup', () => {
     );
   });
 
-  it('should have copy buttons for coordinate rows', () => {
+  it('should have copy buttons for coordinate rows with copyable values', () => {
     render(<MapInfoPopup {...defaultProps} />);
 
     expect(screen.getByTestId('dd-copy-button')).toBeInTheDocument();
     expect(screen.getByTestId('latlng-copy-button')).toBeInTheDocument();
     expect(screen.getByTestId('dms-copy-button')).toBeInTheDocument();
     expect(screen.getByTestId('location-json-copy-button')).toBeInTheDocument();
+  });
+
+  it('should not have copy button for elevation (non-copyable value)', () => {
+    render(<MapInfoPopup {...defaultProps} />);
+
+    expect(
+      screen.queryByTestId('elevation-copy-button')
+    ).not.toBeInTheDocument();
   });
 });
