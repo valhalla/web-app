@@ -5,7 +5,7 @@ import type { Summary as SummaryType } from '@/components/types';
 import {
   ArrowUp,
   Clock,
-  Crosshair,
+  Search,
   DollarSign,
   Milestone,
   MoveHorizontal,
@@ -159,12 +159,12 @@ export const Summary = ({
                   variant="outline"
                   size="icon-sm"
                   onClick={handleRecenter}
-                  aria-label="Recenter route"
+                  aria-label="Zoom to route"
                 >
-                  <Crosshair className="size-4" />
+                  <Search className="size-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Recenter route</TooltipContent>
+              <TooltipContent>Zoom to route</TooltipContent>
             </Tooltip>
           )}
         </div>

@@ -335,7 +335,7 @@ describe('Summary', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: /recenter route/i })
+      screen.getByRole('button', { name: /zoom to route/i })
     ).toBeInTheDocument();
   });
 
@@ -362,7 +362,7 @@ describe('Summary', () => {
     );
 
     expect(
-      screen.queryByRole('button', { name: /recenter route/i })
+      screen.queryByRole('button', { name: /zoom to route/i })
     ).not.toBeInTheDocument();
   });
 
@@ -378,7 +378,7 @@ describe('Summary', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /recenter route/i }));
+    await user.click(screen.getByRole('button', { name: /zoom to route/i }));
 
     expect(mockFitBounds).toHaveBeenCalledWith(
       [
@@ -408,7 +408,7 @@ describe('Summary', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: /recenter route/i })
+      screen.getByRole('button', { name: /zoom to route/i })
     ).toBeInTheDocument();
 
     vi.mocked(useDirectionsStore).mockImplementation(
@@ -432,7 +432,7 @@ describe('Summary', () => {
     );
 
     expect(
-      screen.queryByRole('button', { name: /recenter route/i })
+      screen.queryByRole('button', { name: /zoom to route/i })
     ).not.toBeInTheDocument();
   });
 });
