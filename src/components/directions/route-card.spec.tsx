@@ -28,6 +28,7 @@ vi.mock('./summary', () => ({
     summary: unknown;
     title: string;
     index: number;
+    routeCoordinates: number[][];
   }) => <div data-testid={`mock-summary-${index}`}>Summary: {title}</div>,
 }));
 
