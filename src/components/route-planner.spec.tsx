@@ -89,18 +89,6 @@ describe('RoutePlanner', () => {
     expect(() => render(<RoutePlanner />)).not.toThrow();
   });
 
-  it('should render open directions button', () => {
-    render(<RoutePlanner />);
-    expect(screen.getByTestId('open-directions-button')).toBeInTheDocument();
-  });
-
-  it('should display Directions text on trigger when on directions tab', () => {
-    render(<RoutePlanner />);
-    expect(screen.getByTestId('open-directions-button')).toHaveTextContent(
-      'Directions'
-    );
-  });
-
   it('should render tab buttons', () => {
     render(<RoutePlanner />);
     expect(screen.getByTestId('directions-tab-button')).toBeInTheDocument();
@@ -118,15 +106,6 @@ describe('RoutePlanner', () => {
     render(<RoutePlanner />);
 
     await user.click(screen.getByTestId('close-directions-button'));
-
-    expect(mockToggleDirections).toHaveBeenCalled();
-  });
-
-  it('should call toggleDirections when open button is clicked', async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<RoutePlanner />);
-
-    await user.click(screen.getByTestId('open-directions-button'));
 
     expect(mockToggleDirections).toHaveBeenCalled();
   });
@@ -206,13 +185,6 @@ describe('RoutePlanner', () => {
     beforeEach(async () => {
       const router = await import('@tanstack/react-router');
       vi.mocked(router.useParams).mockReturnValue({ activeTab: 'tiles' });
-    });
-
-    it('should display Tiles text on trigger button', () => {
-      render(<RoutePlanner />);
-      expect(screen.getByTestId('open-directions-button')).toHaveTextContent(
-        'Tiles'
-      );
     });
 
     it('should not render ProfilePicker on tiles tab', () => {

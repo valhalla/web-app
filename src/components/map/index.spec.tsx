@@ -130,6 +130,7 @@ const mockUseParams = vi.hoisted(() =>
 vi.mock('@tanstack/react-router', () => ({
   useParams: mockUseParams,
   useSearch: vi.fn(() => ({ profile: 'bicycle', style: undefined })),
+  useNavigate: vi.fn(() => vi.fn()),
 }));
 
 vi.mock('@/stores/common-store', () => ({
@@ -223,6 +224,14 @@ vi.mock('./parts/heightgraph-hover-marker', () => ({
 
 vi.mock('./parts/brand-logos', () => ({
   BrandLogos: vi.fn(() => <div data-testid="brand-logos">Logos</div>),
+}));
+
+vi.mock('./parts/tool-button', () => ({
+  ToolButton: vi.fn(({ title, onClick, 'data-testid': testId }) => (
+    <button aria-label={title} onClick={onClick} data-testid={testId}>
+      {title}
+    </button>
+  )),
 }));
 
 vi.mock('./parts/map-info-popup', () => ({
@@ -344,21 +353,53 @@ describe('MapComponent', () => {
     expect(screen.getByTestId('heightgraph-hover-marker')).toBeInTheDocument();
   });
 
-  it('should render Open OSM button', () => {
+  it('should render Open in OpenStreetMap button', () => {
     render(<MapComponent />);
     expect(
-      screen.getByRole('button', { name: 'Open OSM' })
+      screen.getByRole('button', { name: 'https://openstreetmap.org' })
     ).toBeInTheDocument();
   });
 
-  it('should have Open OSM button that can be clicked', async () => {
+  it('should have Open in OpenStreetMap button that can be clicked', async () => {
     const user = userEvent.setup();
     render(<MapComponent />);
 
-    const osmButton = screen.getByRole('button', { name: 'Open OSM' });
+    const osmButton = screen.getByRole('button', {
+      name: 'https://openstreetmap.org',
+    });
     expect(osmButton).toBeInTheDocument();
 
     await user.click(osmButton);
+  });
+
+  it('should render left-side Directions shortcut button', () => {
+    render(<MapComponent />);
+    expect(screen.getByTestId('tab-directions-button')).toBeInTheDocument();
+  });
+
+  it('should render left-side Isochrones shortcut button', () => {
+    render(<MapComponent />);
+    expect(screen.getByTestId('tab-isochrones-button')).toBeInTheDocument();
+  });
+
+  it('should render left-side Tiles shortcut button', () => {
+    render(<MapComponent />);
+    expect(screen.getByTestId('tab-tiles-button')).toBeInTheDocument();
+  });
+
+  it('should call navigate when Directions shortcut button is clicked', async () => {
+    const mockNavigate = vi.fn();
+    const router = await import('@tanstack/react-router');
+    vi.mocked(router.useNavigate).mockReturnValue(mockNavigate);
+
+    const user = userEvent.setup();
+    render(<MapComponent />);
+
+    await user.click(screen.getByTestId('tab-directions-button'));
+
+    expect(mockNavigate).toHaveBeenCalledWith({
+      params: { activeTab: 'directions' },
+    });
   });
 
   it('should show info popup on map click after delay', async () => {
