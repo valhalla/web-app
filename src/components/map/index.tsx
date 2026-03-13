@@ -22,7 +22,9 @@ import HeightGraph from '@/components/heightgraph';
 import { DrawControl } from './draw-control';
 import type { Summary } from '@/components/types';
 import type { FeatureCollection } from 'geojson';
-import { Route, Share2, Layers2 } from 'lucide-react';
+import RoutingIcon from '@/images/routing_icon_minimal_bw.svg?url';
+import IsochronesIcon from '@/images/isochrones_icon_minimal_bw.svg?url';
+import MvtIcon from '@/images/mvt_icon_minimal_bw.svg?url';
 import OSMIcon from '@/images/Openstreetmap_logo.png';
 import { ToolButton } from './parts/tool-button';
 
@@ -900,7 +902,7 @@ export const MapComponent = () => {
             <img src={OSMIcon} width={24} height={24} alt="OpenStreetMap" />
           }
           onClick={handleOpenOSM}
-          className="absolute bottom-10 right-4 z-10 !bg-transparent !shadow-none !rounded-none !border-none !w-auto !h-auto !p-0"
+          className="absolute bottom-10 right-4 z-10"
           data-testid="osm-button"
         />
 
@@ -929,19 +931,23 @@ export const MapComponent = () => {
       >
         <ToolButton
           title="Directions"
-          icon={<Route size={24} />}
+          icon={
+            <img src={RoutingIcon} width={48} height={48} alt="Directions" />
+          }
           onClick={() => handleNavigateToTab('directions')}
           data-testid="tab-directions-button"
         />
         <ToolButton
           title="Isochrones"
-          icon={<Share2 size={24} />}
+          icon={
+            <img src={IsochronesIcon} width={48} height={48} alt="Isochrones" />
+          }
           onClick={() => handleNavigateToTab('isochrones')}
           data-testid="tab-isochrones-button"
         />
         <ToolButton
           title="Tiles"
-          icon={<Layers2 size={24} />}
+          icon={<img src={MvtIcon} width={48} height={48} alt="Tiles" />}
           onClick={() => handleNavigateToTab('tiles')}
           data-testid="tab-tiles-button"
         />
