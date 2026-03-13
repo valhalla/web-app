@@ -347,6 +347,10 @@ export const MapComponent = () => {
     }
   }, [directionResults, heightPayload, updateInclineDecline]);
 
+  useEffect(() => {
+    getHeightData();
+  }, [getHeightData]);
+
   // Update markers when waypoints or isochrone centers change
   const geocodeResults = useIsochronesStore((state) => state.geocodeResults);
   const markers = useMemo(() => {
