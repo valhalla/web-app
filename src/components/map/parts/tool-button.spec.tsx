@@ -88,4 +88,33 @@ describe('ToolButton', () => {
     );
     expect(screen.getByRole('button', { name: 'Test' })).toBeInTheDocument();
   });
+
+  it('should be disabled when disabled prop is true', () => {
+    render(
+      <ToolButton
+        title="Test"
+        icon={<span>icon</span>}
+        onClick={vi.fn()}
+        disabled={true}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Test' })).toBeDisabled();
+  });
+
+  it('should not call onClick when disabled', async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    render(
+      <ToolButton
+        title="Test"
+        icon={<span>icon</span>}
+        onClick={onClick}
+        disabled={true}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Test' }));
+
+    expect(onClick).not.toHaveBeenCalled();
+  });
 });
