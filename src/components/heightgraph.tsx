@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { colorMappings } from '@/utils/heightgraph';
 import makeResizable from '@/utils/resizable';
 import { ToolButton } from '@/components/map/parts/tool-button';
+import elevationIcon from '@/images/elevation.png';
 import type { FeatureCollection, GeoJsonProperties, Geometry } from 'geojson';
 
 interface HeightGraphProps {
@@ -304,7 +305,15 @@ const HeightGraph: React.FC<HeightGraphProps> = ({
       <ToolButton
         title="Height Graph"
         icon={
-          <span style={{ fontSize: '18px' }}>{isExpanded ? '−' : '▲'}</span>
+          isExpanded ? (
+            <span style={{ fontSize: '18px' }}>−</span>
+          ) : (
+            <img
+              src={elevationIcon}
+              alt="Height Graph"
+              style={{ width: '24px', height: '24px' }}
+            />
+          )
         }
         onClick={handleToggleExpand}
         disabled={disabled}

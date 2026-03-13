@@ -75,7 +75,7 @@ describe('HeightGraph', () => {
 
   it('should show expand icon when collapsed', () => {
     render(<HeightGraph data={createMockData()} width={400} />);
-    expect(screen.getByText('▲')).toBeInTheDocument();
+    expect(screen.getByAltText('Height Graph')).toBeInTheDocument();
   });
 
   it('should not display chart container when collapsed', () => {
@@ -243,7 +243,7 @@ describe('HeightGraph', () => {
     await user.click(screen.getByTitle('Height Graph'));
 
     expect(onExpand).not.toHaveBeenCalled();
-    expect(screen.getByText('▲')).toBeInTheDocument();
+    expect(screen.getByAltText('Height Graph')).toBeInTheDocument();
   });
 
   it('should auto-collapse when becoming disabled', () => {
@@ -270,6 +270,6 @@ describe('HeightGraph', () => {
     );
 
     // Should remain collapsed (was never expanded)
-    expect(screen.getByText('▲')).toBeInTheDocument();
+    expect(screen.getByAltText('Height Graph')).toBeInTheDocument();
   });
 });
