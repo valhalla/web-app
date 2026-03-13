@@ -896,24 +896,10 @@ export const MapComponent = () => {
 
         <BrandLogos />
 
-        <ToolButton
-          title="Open on osm.org"
-          icon={
-            <img
-              src={OSMIcon}
-              width={28}
-              height={28}
-              alt="openstreetmap.org link"
-            />
-          }
-          onClick={handleOpenOSM}
-          className="absolute bottom-10 right-4 z-10"
-          data-testid="osm-button"
-        />
-
-        {directionsSuccessful && (
+        <div className="absolute bottom-10 right-4 z-10 flex flex-col gap-2">
           <HeightGraph
             data={heightgraphData}
+            disabled={!directionsSuccessful}
             width={
               directionsPanelOpen
                 ? window.innerWidth * 0.75
@@ -927,7 +913,20 @@ export const MapComponent = () => {
             }}
             onHighlight={throttledSetHeightgraphHoverDistance}
           />
-        )}
+          <ToolButton
+            title="Open on osm.org"
+            icon={
+              <img
+                src={OSMIcon}
+                width={28}
+                height={28}
+                alt="openstreetmap.org link"
+              />
+            }
+            onClick={handleOpenOSM}
+            data-testid="osm-button"
+          />
+        </div>
       </Map>
 
       <div
