@@ -25,7 +25,7 @@ import type { FeatureCollection } from 'geojson';
 import RoutingIcon from '@/images/routing_icon_minimal_bw.svg?url';
 import IsochronesIcon from '@/images/isochrones_icon_minimal_bw.svg?url';
 import MvtIcon from '@/images/mvt_icon_minimal_bw.svg?url';
-import OSMIcon from '@/images/Openstreetmap_logo.png';
+import OSMIcon from '@/images/osm_icon.png';
 import { ToolButton } from './parts/tool-button';
 
 import { MapStyleControl } from './map-style-control';
@@ -897,9 +897,14 @@ export const MapComponent = () => {
         <BrandLogos />
 
         <ToolButton
-          title="https://openstreetmap.org"
+          title="Open on osm.org"
           icon={
-            <img src={OSMIcon} width={24} height={24} alt="OpenStreetMap" />
+            <img
+              src={OSMIcon}
+              width={28}
+              height={28}
+              alt="openstreetmap.org link"
+            />
           }
           onClick={handleOpenOSM}
           className="absolute bottom-10 right-4 z-10"
@@ -932,7 +937,7 @@ export const MapComponent = () => {
         <ToolButton
           title="Directions"
           icon={
-            <img src={RoutingIcon} width={48} height={48} alt="Directions" />
+            <img src={RoutingIcon} width={42} height={42} alt="Directions" />
           }
           onClick={() => handleNavigateToTab('directions')}
           data-testid="tab-directions-button"
@@ -940,14 +945,14 @@ export const MapComponent = () => {
         <ToolButton
           title="Isochrones"
           icon={
-            <img src={IsochronesIcon} width={48} height={48} alt="Isochrones" />
+            <img src={IsochronesIcon} width={42} height={42} alt="Isochrones" />
           }
           onClick={() => handleNavigateToTab('isochrones')}
           data-testid="tab-isochrones-button"
         />
         <ToolButton
           title="Tiles"
-          icon={<img src={MvtIcon} width={48} height={48} alt="Tiles" />}
+          icon={<img src={MvtIcon} width={42} height={42} alt="Tiles" />}
           onClick={() => handleNavigateToTab('tiles')}
           data-testid="tab-tiles-button"
         />

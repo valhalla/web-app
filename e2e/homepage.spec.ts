@@ -97,6 +97,6 @@ test('has default elements in the page', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Select' })).toBeVisible();
 
   await expect(
-    page.getByRole('button', { name: 'https://openstreetmap.org' })
+    page.getByRole('button', { name: 'Open on osm.org' })
   ).toBeVisible();
 });
