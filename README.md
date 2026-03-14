@@ -26,20 +26,35 @@ Your app is ready to be deployed!
 
 This project includes end-to-end tests using [Playwright](https://playwright.dev/) to ensure the application works correctly across different scenarios.
 
-### Running Tests
-
-First install the `playwright` browsers:
+### Unit Tests
 
 ```bash
+npm test
+```
+
+### End-to-End Tests
+
+First install the browser(s) you want to use:
+
+```bash
+# Install all browsers
 npx playwright install
+
+# Or install only what you need
+npx playwright install chromium
+npx playwright install firefox
 ```
 
 ```bash
-# Run all e2e tests in headless mode
+# Run all e2e tests (both chromium and firefox)
 npm run test:e2e
 
+# Run tests for a specific browser
+npm run test:e2e -- --project=chromium
+npm run test:e2e -- --project=firefox
+
 # Run tests with visible browser (useful for debugging)
-npm run test:e2e:headed
+npm run test:e2e:headed -- --project=firefox
 
 # Open Playwright Test UI for interactive testing
 npm run test:e2e:ui

@@ -24,8 +24,8 @@ export function ToolButton({
       data-testid={testId}
       className={className}
       style={{
-        width: '48px',
-        height: '48px',
+        width: '42px',
+        height: '42px',
         backgroundColor: '#ffffff',
         borderRadius: '4px',
         boxShadow: '0 0 0 2px rgba(0,0,0,0.1)',

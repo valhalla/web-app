@@ -356,7 +356,7 @@ describe('MapComponent', () => {
   it('should render Open in OpenStreetMap button', () => {
     render(<MapComponent />);
     expect(
-      screen.getByRole('button', { name: 'https://openstreetmap.org' })
+      screen.getByRole('button', { name: 'Open on osm.org' })
     ).toBeInTheDocument();
   });
 
@@ -365,7 +365,7 @@ describe('MapComponent', () => {
     render(<MapComponent />);
 
     const osmButton = screen.getByRole('button', {
-      name: 'https://openstreetmap.org',
+      name: 'Open on osm.org',
     });
     expect(osmButton).toBeInTheDocument();
 
