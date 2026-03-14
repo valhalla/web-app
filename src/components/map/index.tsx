@@ -903,7 +903,7 @@ export const MapComponent = () => {
               src={OSMIcon}
               width={28}
               height={28}
-              alt="openstreetmap.org link"
+              alt="openstreetmap.org logo"
             />
           }
           onClick={handleOpenOSM}
