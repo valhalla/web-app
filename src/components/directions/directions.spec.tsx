@@ -180,22 +180,9 @@ describe('DirectionsControl', () => {
         geocodeResults: [
           { selected: true, sourcelnglat: [13.4, 52.5] },
         ] as never[],
-        userInput: 'A',
+        userInput: 'Berlin',
       },
-      {
-        id: '1',
-        geocodeResults: [
-          { selected: true, sourcelnglat: [18.9, 60.6] },
-        ] as never[],
-        userInput: 'B',
-      },
-      {
-        id: '2',
-        geocodeResults: [
-          { selected: true, sourcelnglat: [15.2, 37.3] },
-        ] as never[],
-        userInput: 'C',
-      }
+     { id: '1', geocodeResults: [], userInput: '' }
     );
 
     render(<DirectionsControl />);
@@ -276,7 +263,7 @@ describe('DirectionsControl', () => {
       {
         id: '0',
         geocodeResults: [
-          { selected: true, sourcelnglat: [13.4, 52.5] }
+          { selected: true, sourcelnglat: [13.4, 52.5] },
         ] as never[],
         userInput: 'Berlin',
       },
