@@ -182,7 +182,7 @@ describe('DirectionsControl', () => {
         ] as never[],
         userInput: 'Berlin',
       },
-     { id: '1', geocodeResults: [], userInput: '' }
+      { id: '1', geocodeResults: [], userInput: '' }
     );
 
     render(<DirectionsControl />);
