@@ -35,7 +35,7 @@ vi.mock('@/stores/directions-store', () => ({
           id: 'wp-1',
           userInput: 'Berlin',
           geocodeResults: [
-            { selected: true, sourcelnglat: [13.4, 52.5] } ,
+            { selected: true, sourcelnglat: [89.2, 23.0] } ,
           ],
         },
         {
