@@ -116,9 +116,8 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
                   refetchDirections();
                 }}
                 data-testid="remove-waypoint-button"
-                disabled={
-                  JSON.stringify(waypoints) === JSON.stringify(defaultWaypoints)
-                }
+                disabled={         
+                  !geocodeResults?.some((r) => r.selected)}
               >
                 <Trash className="size-3" />
               </Button>
