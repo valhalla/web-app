@@ -276,7 +276,7 @@ describe('DirectionsControl', () => {
       {
         id: '0',
         geocodeResults: [
-          { selected: true, sourcelnglat: [13.4, 52.5] },
+          { selected: true, sourcelnglat: [13.4, 52.5] }
         ] as never[],
         userInput: 'Berlin',
       },
