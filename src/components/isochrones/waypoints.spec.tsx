@@ -29,7 +29,11 @@ vi.mock('@/stores/isochrones-store', () => ({
       denoise: 1,
       generalize: 200,
       userInput: 'Berlin',
-      geocodeResults: [],
+      geocodeResults: [
+        { selected: true, sourcelnglat: [13.4, 52.5] } ,
+        { selected: true, sourcelnglat: [20.6, 39.1] } ,
+        { selected: true, sourcelnglat: [29.7, 41.2] } ,
+      ],
       receiveGeocodeResults: mockReceiveGeocodeResults,
     })
   ),

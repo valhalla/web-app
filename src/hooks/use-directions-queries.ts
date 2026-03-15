@@ -150,10 +150,16 @@ export function useReverseGeocodeDirections() {
     options?: { isPermalink?: boolean }
   ) => {
     // For permalink loading, add waypoint if needed
-    if (options?.isPermalink && index > 1) {
-      addEmptyWaypointToEnd();
-    }
-
+    if (options?.isPermalink) {
+  const currentLen = useDirectionsStore.getState().waypoints.length;
+  if (index >= currentLen) {
+    const toAdd = index - currentLen + 1;
+    for (let i = 0; i < toAdd; i++) 
+      {
+        addEmptyWaypointToEnd();
+      }
+  }
+}
     // Set placeholder immediately
     updatePlaceholderAddressAtIndex(index, lng, lat);
 
