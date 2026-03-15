@@ -5,6 +5,7 @@ interface ToolButtonProps {
   icon: ReactNode;
   onClick: () => void;
   className?: string;
+  disabled?: boolean;
   'data-testid'?: string;
 }
 
@@ -13,6 +14,7 @@ export function ToolButton({
   icon,
   onClick,
   className,
+  disabled = false,
   'data-testid': testId,
 }: ToolButtonProps) {
   return (
@@ -21,6 +23,7 @@ export function ToolButton({
       aria-label={title}
       title={title}
       onClick={onClick}
+      disabled={disabled}
       data-testid={testId}
       className={className}
       style={{
@@ -30,11 +33,12 @@ export function ToolButton({
         borderRadius: '4px',
         boxShadow: '0 0 0 2px rgba(0,0,0,0.1)',
         border: 'none',
-        cursor: 'pointer',
+        cursor: disabled ? 'default' : 'pointer',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: 0,
+        opacity: disabled ? 0.4 : 1,
       }}
     >
       <span aria-hidden={true} style={{ display: 'flex' }}>

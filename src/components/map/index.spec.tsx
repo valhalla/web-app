@@ -227,11 +227,28 @@ vi.mock('./parts/brand-logos', () => ({
 }));
 
 vi.mock('./parts/tool-button', () => ({
-  ToolButton: vi.fn(({ title, onClick, 'data-testid': testId }) => (
-    <button aria-label={title} onClick={onClick} data-testid={testId}>
-      {title}
-    </button>
-  )),
+  ToolButton: vi.fn(
+    ({
+      title,
+      onClick,
+      disabled,
+      'data-testid': testId,
+    }: {
+      title: string;
+      onClick: () => void;
+      disabled?: boolean;
+      'data-testid'?: string;
+    }) => (
+      <button
+        aria-label={title}
+        onClick={onClick}
+        disabled={disabled}
+        data-testid={testId}
+      >
+        {title}
+      </button>
+    )
+  ),
 }));
 
 vi.mock('./parts/map-info-popup', () => ({
@@ -456,9 +473,11 @@ describe('MapComponent', () => {
     });
   });
 
-  it('should not show heightgraph when directions are not successful', () => {
+  it('should show heightgraph toggle but disabled when directions are not successful', () => {
     render(<MapComponent />);
-    expect(screen.queryByTestId('heightgraph')).not.toBeInTheDocument();
+    const toggle = screen.getByTestId('heightgraph-toggle');
+    expect(toggle).toBeInTheDocument();
+    expect(toggle).toBeDisabled();
   });
 
   it('should set initial view state from getInitialMapPosition', () => {
