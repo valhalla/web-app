@@ -10,6 +10,7 @@ test('has title', async ({ page }) => {
 });
 
 test('should retain profile when switching between tabs', async ({ page }) => {
+  await page.getByTestId('tab-directions-button').click();
   await expect(page.getByTestId('profile-button-bicycle')).toHaveAttribute(
     'data-state',
     'on'
@@ -48,6 +49,7 @@ test('has default elements in the page', async ({ page }) => {
   await setupStatusMock(page);
 
   await expect(page.getByRole('region', { name: 'Map' })).toBeVisible();
+  await page.getByTestId('tab-directions-button').click();
 
   await expect(page.getByTestId('directions-tab-button')).toBeVisible();
   await expect(page.getByTestId('isochrones-tab-button')).toBeVisible();
@@ -94,5 +96,7 @@ test('has default elements in the page', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Polygon' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Select' })).toBeVisible();
 
-  await expect(page.getByRole('button', { name: 'Open OSM' })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Open on osm.org' })
+  ).toBeVisible();
 });

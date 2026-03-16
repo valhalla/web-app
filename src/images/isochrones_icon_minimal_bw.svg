@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Minimal Isochrones App Icon</title>
+  <!-- Isochrone rings -->
+  <ellipse cx="256" cy="256" fill="none" stroke="#000000" stroke-width="25.591" rx="162.19412" ry="165.38557" />
+  <ellipse cx="256" cy="256" fill="none" stroke="#000000" stroke-width="25.591" rx="111.50846" ry="113.70258" />
+  <ellipse cx="256" cy="256" fill="none" stroke="#000000" stroke-width="25.591" rx="60.822796" ry="62.019592" />
+  <!-- Origin -->
+  <circle cx="256" cy="256" r="24" fill="black" />
+</svg>

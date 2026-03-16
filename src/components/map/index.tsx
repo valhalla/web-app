@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import type { MapGeoJSONFeature } from 'maplibre-gl';
-import { useParams, useSearch } from '@tanstack/react-router';
+import { useParams, useSearch, useNavigate } from '@tanstack/react-router';
 import {
   Map,
   Marker,
@@ -22,7 +22,11 @@ import HeightGraph from '@/components/heightgraph';
 import { DrawControl } from './draw-control';
 import type { Summary } from '@/components/types';
 import type { FeatureCollection } from 'geojson';
-import { Button } from '@/components/ui/button';
+import RoutingIcon from '@/images/routing_icon_minimal_bw.svg?url';
+import IsochronesIcon from '@/images/isochrones_icon_minimal_bw.svg?url';
+import MvtIcon from '@/images/mvt_icon_minimal_bw.svg?url';
+import OSMIcon from '@/images/osm_icon.png';
+import { ToolButton } from './parts/tool-button';
 
 import { MapStyleControl } from './map-style-control';
 import { getInitialMapStyle, getCustomStyle, getMapStyleUrl } from './utils';
@@ -79,10 +83,12 @@ interface MarkerData {
 
 export const MapComponent = () => {
   const { activeTab } = useParams({ from: '/$activeTab' });
+  const navigate = useNavigate({ from: '/$activeTab' });
   const coordinates = useCommonStore((state) => state.coordinates);
   const directionsPanelOpen = useCommonStore(
     (state) => state.directionsPanelOpen
   );
+  const toggleDirections = useCommonStore((state) => state.toggleDirections);
   const updateSettings = useCommonStore((state) => state.updateSettings);
   const setMapReady = useCommonStore((state) => state.setMapReady);
   const { style } = useSearch({ from: '/$activeTab' });
@@ -264,6 +270,16 @@ export const MapComponent = () => {
     const osmURL = `https://www.openstreetmap.org/#map=${zoom}/${lat}/${lng}`;
     window.open(osmURL, '_blank');
   }, []);
+
+  const handleNavigateToTab = useCallback(
+    (tab: string) => {
+      if (!directionsPanelOpen) {
+        toggleDirections();
+      }
+      navigate({ params: { activeTab: tab } });
+    },
+    [directionsPanelOpen, toggleDirections, navigate]
+  );
 
   const getHeight = useCallback((lng: number, lat: number) => {
     setIsHeightLoading(true);
@@ -752,162 +768,198 @@ export const MapComponent = () => {
   }, []);
 
   return (
-    <Map
-      ref={mapRef}
-      {...viewState}
-      onMove={(evt) => setViewState(evt.viewState)}
-      onMoveEnd={handleMoveEnd}
-      onLoad={() => setMapReady(true)}
-      onClick={handleMapClick}
-      onDblClick={handleMapDblClick}
-      onContextMenu={handleMapContextMenu}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      interactiveLayerIds={
-        activeTab === 'tiles'
-          ? [
-              VALHALLA_EDGES_LAYER_ID,
-              VALHALLA_NODES_LAYER_ID,
-              VALHALLA_SHORTCUTS_LAYER_ID,
-            ]
-          : ['routes-line']
-      }
-      mapStyle={resolvedMapStyle}
-      style={{ width: '100%', height: '100vh' }}
-      maxBounds={maxBounds}
-      minZoom={2}
-      maxZoom={18}
-      data-testid="map"
-      id="mainMap"
-    >
-      <NavigationControl />
-      <GeolocateControl onError={handleGeolocateError} />
-      <DrawControl onUpdate={updateExcludePolygons} controlRef={drawRef} />
-      <MapStyleControl
-        customStyleData={customStyleData}
-        onStyleChange={handleStyleChange}
-        onCustomStyleLoaded={handleCustomStyleLoaded}
-      />
-      <RouteLines />
-      <HighlightSegment />
-      <IsochronePolygons />
-      <IsochroneLocations />
-      {markers.map((marker) => (
-        <Marker
-          anchor="bottom"
-          key={marker.id}
-          longitude={marker.lng}
-          latitude={marker.lat}
-          draggable={true}
-          onDragEnd={(e) => {
-            if (marker.type === 'waypoint') {
-              updateWaypointPosition({
-                latLng: { lat: e.lngLat.lat, lng: e.lngLat.lng },
-                index: marker.index ?? 0,
-                fromDrag: true,
-              });
-            } else if (marker.type === 'isocenter') {
-              updateIsoPosition(e.lngLat.lng, e.lngLat.lat);
-            }
-          }}
-        >
-          <MarkerIcon color={marker.color!} number={marker.number} />
-        </Marker>
-      ))}
-
-      <HeightgraphHoverMarker
-        hoverDistance={heightgraphHoverDistance}
-        heightgraphData={heightgraphData}
-      />
-
-      {showContextPopup && popupLngLat && (
-        <Popup
-          longitude={popupLngLat.lng}
-          latitude={popupLngLat.lat}
-          closeButton={false}
-          closeOnClick={false}
-          maxWidth="none"
-        >
-          <MapContextMenu
-            activeTab={activeTab}
-            onAddWaypoint={handleAddWaypoint}
-            onAddIsoWaypoint={handleAddIsoWaypoint}
-            popupLocation={popupLngLat}
-          />
-        </Popup>
-      )}
-
-      {showInfoPopup && popupLngLat && (
-        <Popup
-          longitude={popupLngLat.lng}
-          latitude={popupLngLat.lat}
-          closeButton={false}
-          closeOnClick={false}
-          maxWidth="none"
-        >
-          <MapInfoPopup
-            popupLngLat={popupLngLat}
-            elevation={elevation}
-            isHeightLoading={isHeightLoading}
-            onClose={() => {
-              setShowInfoPopup(false);
-            }}
-          />
-        </Popup>
-      )}
-
-      {routeHoverPopup && (
-        <RouteHoverPopup
-          lng={routeHoverPopup.lng}
-          lat={routeHoverPopup.lat}
-          summary={routeHoverPopup.summary}
-        />
-      )}
-
-      {tilesPopup && (
-        <Popup
-          longitude={tilesPopup.lng}
-          latitude={tilesPopup.lat}
-          closeButton={false}
-          maxWidth="none"
-          onClose={() => setTilesPopup(null)}
-        >
-          <TilesInfoPopup
-            features={tilesPopup.features}
-            onClose={() => setTilesPopup(null)}
-          />
-        </Popup>
-      )}
-
-      <BrandLogos />
-
-      <Button
-        className="absolute bottom-10 right-3 z-10"
-        id="osm-button"
-        onClick={handleOpenOSM}
+    <>
+      <Map
+        ref={mapRef}
+        {...viewState}
+        onMove={(evt) => setViewState(evt.viewState)}
+        onMoveEnd={handleMoveEnd}
+        onLoad={() => setMapReady(true)}
+        onClick={handleMapClick}
+        onDblClick={handleMapDblClick}
+        onContextMenu={handleMapContextMenu}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        interactiveLayerIds={
+          activeTab === 'tiles'
+            ? [
+                VALHALLA_EDGES_LAYER_ID,
+                VALHALLA_NODES_LAYER_ID,
+                VALHALLA_SHORTCUTS_LAYER_ID,
+              ]
+            : ['routes-line']
+        }
+        mapStyle={resolvedMapStyle}
+        style={{ width: '100%', height: '100vh' }}
+        maxBounds={maxBounds}
+        minZoom={2}
+        maxZoom={18}
+        data-testid="map"
+        id="mainMap"
       >
-        Open OSM
-      </Button>
-
-      {directionsSuccessful && (
-        <HeightGraph
-          data={heightgraphData}
-          width={
-            directionsPanelOpen
-              ? window.innerWidth * 0.75
-              : window.innerWidth * 0.9
-          }
-          height={200}
-          onExpand={(expanded) => {
-            if (expanded) {
-              getHeightData();
-            }
-          }}
-          onHighlight={throttledSetHeightgraphHoverDistance}
+        <NavigationControl />
+        <GeolocateControl onError={handleGeolocateError} />
+        <DrawControl onUpdate={updateExcludePolygons} controlRef={drawRef} />
+        <MapStyleControl
+          customStyleData={customStyleData}
+          onStyleChange={handleStyleChange}
+          onCustomStyleLoaded={handleCustomStyleLoaded}
         />
-      )}
-    </Map>
+        <RouteLines />
+        <HighlightSegment />
+        <IsochronePolygons />
+        <IsochroneLocations />
+        {markers.map((marker) => (
+          <Marker
+            anchor="bottom"
+            key={marker.id}
+            longitude={marker.lng}
+            latitude={marker.lat}
+            draggable={true}
+            onDragEnd={(e) => {
+              if (marker.type === 'waypoint') {
+                updateWaypointPosition({
+                  latLng: { lat: e.lngLat.lat, lng: e.lngLat.lng },
+                  index: marker.index ?? 0,
+                  fromDrag: true,
+                });
+              } else if (marker.type === 'isocenter') {
+                updateIsoPosition(e.lngLat.lng, e.lngLat.lat);
+              }
+            }}
+          >
+            <MarkerIcon color={marker.color!} number={marker.number} />
+          </Marker>
+        ))}
+
+        <HeightgraphHoverMarker
+          hoverDistance={heightgraphHoverDistance}
+          heightgraphData={heightgraphData}
+        />
+
+        {showContextPopup && popupLngLat && (
+          <Popup
+            longitude={popupLngLat.lng}
+            latitude={popupLngLat.lat}
+            closeButton={false}
+            closeOnClick={false}
+            maxWidth="none"
+          >
+            <MapContextMenu
+              activeTab={activeTab}
+              onAddWaypoint={handleAddWaypoint}
+              onAddIsoWaypoint={handleAddIsoWaypoint}
+              popupLocation={popupLngLat}
+            />
+          </Popup>
+        )}
+
+        {showInfoPopup && popupLngLat && (
+          <Popup
+            longitude={popupLngLat.lng}
+            latitude={popupLngLat.lat}
+            closeButton={false}
+            closeOnClick={false}
+            maxWidth="none"
+          >
+            <MapInfoPopup
+              popupLngLat={popupLngLat}
+              elevation={elevation}
+              isHeightLoading={isHeightLoading}
+              onClose={() => {
+                setShowInfoPopup(false);
+              }}
+            />
+          </Popup>
+        )}
+
+        {routeHoverPopup && (
+          <RouteHoverPopup
+            lng={routeHoverPopup.lng}
+            lat={routeHoverPopup.lat}
+            summary={routeHoverPopup.summary}
+          />
+        )}
+
+        {tilesPopup && (
+          <Popup
+            longitude={tilesPopup.lng}
+            latitude={tilesPopup.lat}
+            closeButton={false}
+            maxWidth="none"
+            onClose={() => setTilesPopup(null)}
+          >
+            <TilesInfoPopup
+              features={tilesPopup.features}
+              onClose={() => setTilesPopup(null)}
+            />
+          </Popup>
+        )}
+
+        <BrandLogos />
+
+        <div className="absolute bottom-10 right-4 z-10 flex flex-col gap-2">
+          <HeightGraph
+            data={heightgraphData}
+            disabled={!directionsSuccessful}
+            width={
+              directionsPanelOpen
+                ? window.innerWidth * 0.75
+                : window.innerWidth * 0.9
+            }
+            height={200}
+            onExpand={(expanded) => {
+              if (expanded) {
+                getHeightData();
+              }
+            }}
+            onHighlight={throttledSetHeightgraphHoverDistance}
+          />
+          <ToolButton
+            title="Open on osm.org"
+            icon={
+              <img
+                src={OSMIcon}
+                width={28}
+                height={28}
+                alt="openstreetmap.org link"
+              />
+            }
+            onClick={handleOpenOSM}
+            data-testid="osm-button"
+          />
+        </div>
+      </Map>
+
+      <div
+        className="absolute top-4 left-4 z-10 flex flex-col gap-2"
+        aria-label="Panel shortcuts"
+      >
+        <ToolButton
+          title="Directions"
+          icon={
+            <img src={RoutingIcon} width={42} height={42} alt="Directions" />
+          }
+          onClick={() => handleNavigateToTab('directions')}
+          data-testid="tab-directions-button"
+        />
+        <ToolButton
+          title="Isochrones"
+          icon={
+            <img src={IsochronesIcon} width={42} height={42} alt="Isochrones" />
+          }
+          onClick={() => handleNavigateToTab('isochrones')}
+          data-testid="tab-isochrones-button"
+        />
+        <ToolButton
+          title="Tiles"
+          icon={<img src={MvtIcon} width={42} height={42} alt="Tiles" />}
+          onClick={() => handleNavigateToTab('tiles')}
+          data-testid="tab-tiles-button"
+        />
+      </div>
+    </>
   );
 };

@@ -51,7 +51,7 @@ export const useCommonStore = create<CommonStore>()(
   devtools(
     immer((set) => ({
       settingsPanelOpen: false,
-      directionsPanelOpen: true,
+      directionsPanelOpen: false,
       coordinates: [],
       loading: false,
       settings: { ...settingsInit },
