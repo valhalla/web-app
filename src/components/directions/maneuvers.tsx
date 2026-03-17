@@ -1,7 +1,8 @@
 import React from 'react';
 
 import type { Leg } from '@/components/types';
-import { Clock, MoveHorizontal, DollarSign, Ship } from 'lucide-react';
+import { Clock, DollarSign, Ship } from 'lucide-react';
+import { getTurnIcon } from '@/utils/get-direction-icon';
 import { MetricItem } from '@/components/ui/metric-item';
 import { RouteAttributes } from '@/components/ui/route-attributes';
 import { formatDuration } from '@/utils/date-time';
@@ -70,7 +71,7 @@ export const Maneuvers = ({ legs, index }: ManeuversProps) => {
                 {mnv.type !== 4 && mnv.type !== 5 && mnv.type !== 6 && (
                   <div className="flex items-center gap-2">
                     <MetricItem
-                      icon={MoveHorizontal}
+                      icon={getTurnIcon(mnv)}
                       label="Length"
                       value={getLength(mnv.length)}
                       variant="outline"
