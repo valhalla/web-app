@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Minimal Vector Tiles (MVT) Icon</title>
+  <!-- Tile grid -->
+  <rect x="128" y="128" width="256" height="256" fill="none" stroke="black" stroke-width="18" />
+  <line x1="256" y1="128" x2="256" y2="384" stroke="black" stroke-width="18" stroke-linecap="round" />
+  <line x1="128" y1="256" x2="384" y2="256" stroke="black" stroke-width="18" stroke-linecap="round" />
+</svg>

@@ -15,7 +15,6 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
@@ -95,11 +94,6 @@ export const RoutePlanner = () => {
 
   return (
     <Sheet open={directionsPanelOpen} modal={false}>
-      <SheetTrigger className="absolute top-4 left-4 z-10" asChild>
-        <Button onClick={toggleDirections} data-testid="open-directions-button">
-          {tabConfig.title}
-        </Button>
-      </SheetTrigger>
       <Tabs
         value={activeTab}
         className="w-[400px]"

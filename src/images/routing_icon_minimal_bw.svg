@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Minimal Routing App Icon</title>
+  <!-- Route path -->
+  <path
+    d="M140 350
+       C140 292 176 256 220 256
+       H288
+       C338 256 372 220 372 172"
+    stroke="black"
+    stroke-width="28"
+    stroke-linecap="round"
+    stroke-linejoin="round"/>
+  <!-- Arrow head -->
+  <path
+    d="M340 172L372 140L404 172"
+    stroke="black"
+    stroke-width="28"
+    stroke-linecap="round"
+    stroke-linejoin="round"/>
+  <!-- Start node -->
+  <circle cx="140" cy="350" r="34" fill="black"/>
+  <!-- Mid node -->
+  <circle cx="256" cy="256" r="20" fill="white" stroke="black" stroke-width="20"/>
+  <!-- Destination node -->
+  <circle cx="372" cy="172" r="34" fill="black"/>
+</svg>
