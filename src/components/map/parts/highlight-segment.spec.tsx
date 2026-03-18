@@ -38,7 +38,7 @@ const createMockState = (overrides = {}) => ({
   highlightSegment: {
     startIndex: 1,
     endIndex: 2,
-    alternate: -1,
+    alternate: 0,
   },
   ...overrides,
 });
@@ -65,7 +65,7 @@ describe('HighlightSegment', () => {
     mockUseDirectionsStore.mockImplementation((selector) => {
       const state = {
         results: { data: null },
-        highlightSegment: { startIndex: 0, endIndex: 1, alternate: -1 },
+        highlightSegment: { startIndex: 0, endIndex: 1, alternate: 0 },
       };
       return selector(state);
     });
@@ -123,7 +123,7 @@ describe('HighlightSegment', () => {
   it('should render nothing when startIndex is -1', () => {
     mockUseDirectionsStore.mockImplementation((selector) => {
       const state = createMockState({
-        highlightSegment: { startIndex: -1, endIndex: 2, alternate: -1 },
+        highlightSegment: { startIndex: -1, endIndex: 2, alternate: 0 },
       });
       return selector(state);
     });
@@ -136,7 +136,7 @@ describe('HighlightSegment', () => {
   it('should render nothing when endIndex is -1', () => {
     mockUseDirectionsStore.mockImplementation((selector) => {
       const state = createMockState({
-        highlightSegment: { startIndex: 0, endIndex: -1, alternate: -1 },
+        highlightSegment: { startIndex: 0, endIndex: -1, alternate: 0 },
       });
       return selector(state);
     });

@@ -29,7 +29,7 @@ const mockResults = {
     trip: { summary: unknown; legs: unknown[] };
     alternates?: unknown[];
   },
-  show: { '-1': true },
+  show: { '0': true },
 };
 
 const mockDateTime = { type: 0, value: '2024-01-01T12:00' };
@@ -203,7 +203,7 @@ describe('DirectionsControl', () => {
 
   it('should not render RouteCard when no results', () => {
     render(<DirectionsControl />);
-    expect(screen.queryByTestId('mock-route-card--1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('mock-route-card-0')).not.toBeInTheDocument();
     expect(screen.queryByText('Directions')).not.toBeInTheDocument();
   });
 
@@ -215,7 +215,7 @@ describe('DirectionsControl', () => {
     render(<DirectionsControl />);
 
     expect(screen.getByText('Directions')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-route-card--1')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-route-card-0')).toBeInTheDocument();
   });
 
   it('should render alternate routes when available', () => {
@@ -229,9 +229,9 @@ describe('DirectionsControl', () => {
 
     render(<DirectionsControl />);
 
-    expect(screen.getByTestId('mock-route-card--1')).toBeInTheDocument();
     expect(screen.getByTestId('mock-route-card-0')).toBeInTheDocument();
     expect(screen.getByTestId('mock-route-card-1')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-route-card-2')).toBeInTheDocument();
   });
 
   it('should call updateDateTime and refetchDirections when date type changes', async () => {

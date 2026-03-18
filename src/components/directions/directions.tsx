@@ -47,6 +47,12 @@ export const DirectionsControl = () => {
   const { reverseGeocode } = useReverseGeocodeDirections();
   const { optimizeRoute, isPending: isOptimizing } = useOptimizedRouteQuery();
   const isOptimized = useDirectionsStore((state) => state.isOptimized);
+  const activeRouteIndex = useDirectionsStore(
+    (state) => state.activeRouteIndex
+  );
+  const setActiveRouteIndex = useDirectionsStore(
+    (state) => state.setActiveRouteIndex
+  );
 
   useEffect(() => {
     if (urlParamsProcessed.current) return;
@@ -172,12 +178,19 @@ export const DirectionsControl = () => {
         <div>
           <h3 className="font-bold mb-2">Directions</h3>
           <div className="flex flex-col gap-3">
-            <RouteCard data={results.data} index={-1} />
+            <RouteCard
+              data={results.data}
+              index={0}
+              isActive={activeRouteIndex === 0}
+              onSelect={() => setActiveRouteIndex(0)}
+            />
             {results.data.alternates?.map((alternate, index) => (
               <RouteCard
                 data={alternate as ParsedDirectionsGeometry}
                 key={alternate.id}
-                index={index}
+                index={index + 1}
+                isActive={activeRouteIndex === index + 1}
+                onSelect={() => setActiveRouteIndex(index + 1)}
               />
             ))}
           </div>

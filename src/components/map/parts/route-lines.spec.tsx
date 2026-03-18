@@ -36,6 +36,7 @@ const createMockState = (overrides = {}) => ({
     show: { [-1]: true },
   },
   successful: true,
+  activeRouteIndex: -1,
   ...overrides,
 });
 
@@ -124,7 +125,7 @@ describe('RouteLines', () => {
         paint: {
           'line-color': ['get', 'color'],
           'line-width': 5,
-          'line-opacity': 1,
+          'line-opacity': ['case', ['==', ['get', 'routeIndex'], -1], 1, 0.5],
         },
       })
     );

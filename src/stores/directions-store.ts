@@ -68,6 +68,7 @@ export interface DirectionsState {
   results: RouteResult;
   inclineDeclineTotal?: InclineDeclineTotal;
   isOptimized: boolean;
+  activeRouteIndex: number;
 }
 
 interface DirectionsActions {
@@ -98,6 +99,7 @@ interface DirectionsActions {
     lat: number
   ) => void;
   setIsOptimized: (isOptimized: boolean) => void;
+  setActiveRouteIndex: (index: number) => void;
 }
 
 type DirectionsStore = DirectionsState & DirectionsActions;
@@ -110,8 +112,9 @@ export const useDirectionsStore = create<DirectionsStore>()(
       waypoints: defaultWaypoints,
       zoomObj: { index: -1, timeNow: -1 },
       selectedAddresses: '',
-      results: { data: null, show: { '-1': true } },
+      results: { data: null, show: { '0': true } },
       isOptimized: false,
+      activeRouteIndex: 0,
 
       updateInclineDecline: (inclineDeclineTotal) =>
         set(
@@ -137,6 +140,7 @@ export const useDirectionsStore = create<DirectionsStore>()(
             state.successful = false;
             state.inclineDeclineTotal = undefined;
             state.results.data = null;
+            state.activeRouteIndex = 0;
           },
           undefined,
           'clearRoutes'
@@ -145,12 +149,13 @@ export const useDirectionsStore = create<DirectionsStore>()(
       receiveRouteResults: ({ data }) =>
         set(
           (state) => {
-            const show: Record<string, boolean> = { '-1': true };
-            data.alternates?.forEach((_, i) => (show[i] = true));
+            const show: Record<string, boolean> = { '0': true };
+            data.alternates?.forEach((_, i) => (show[i + 1] = true));
 
             state.successful = true;
             state.inclineDeclineTotal = undefined;
             state.results = { data, show };
+            state.activeRouteIndex = 0;
           },
           undefined,
           'receiveRouteResults'
@@ -338,6 +343,15 @@ export const useDirectionsStore = create<DirectionsStore>()(
           },
           undefined,
           'setIsOptimized'
+        ),
+
+      setActiveRouteIndex: (index) =>
+        set(
+          (state) => {
+            state.activeRouteIndex = index;
+          },
+          undefined,
+          'setActiveRouteIndex'
         ),
     })),
     { name: 'directions-store' }
