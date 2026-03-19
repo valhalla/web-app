@@ -114,6 +114,9 @@ export const MapComponent = () => {
   const updateInclineDecline = useDirectionsStore(
     (state) => state.updateInclineDecline
   );
+  const setActiveRouteIndex = useDirectionsStore(
+    (state) => state.setActiveRouteIndex
+  );
 
   const { refetch: refetchDirections } = useDirectionsQuery();
   const { refetch: refetchIsochrones } = useIsochronesQuery();
@@ -544,6 +547,19 @@ export const MapComponent = () => {
         }
       }
 
+      // Check if click is on a route line
+      const routeFeature = event.features?.find(
+        (f) => f.layer?.id === 'routes-line'
+      );
+
+      if (
+        routeFeature &&
+        typeof routeFeature.properties?.routeIndex === 'number'
+      ) {
+        setActiveRouteIndex(routeFeature.properties.routeIndex);
+        return;
+      }
+
       const { lngLat } = event;
 
       cancelPendingClick();
@@ -574,6 +590,7 @@ export const MapComponent = () => {
       cancelPendingClick,
       activeTab,
       handleMapTilesClick,
+      setActiveRouteIndex,
     ]
   );
 

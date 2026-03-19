@@ -7,7 +7,11 @@ import type {
   Center,
   ValhallaIsochroneResponse,
 } from '@/components/types';
-import { getValhallaUrl, buildIsochronesRequest } from '@/utils/valhalla';
+import {
+  getValhallaUrl,
+  buildIsochronesRequest,
+  showValhallaWarnings,
+} from '@/utils/valhalla';
 import {
   reverse_geocode,
   forward_geocode,
@@ -57,6 +61,8 @@ async function fetchIsochrones() {
       feature.properties.area = calcArea(feature);
     }
   });
+
+  showValhallaWarnings(data.warnings);
 
   return data;
 }

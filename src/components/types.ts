@@ -108,6 +108,7 @@ export interface Trip {
   status: number;
   units: string;
   language: string;
+  warnings?: ValhallaWarning[];
 }
 
 export interface Location {
@@ -213,6 +214,11 @@ export interface Address {
   country_code: string;
 }
 
+export interface ValhallaWarning {
+  code: number;
+  text: string;
+}
+
 export interface ValhallaRouteResponse {
   id: 'valhalla_directions';
   trip: Trip;
@@ -221,6 +227,7 @@ export interface ValhallaRouteResponse {
 
 export interface ValhallaIsochroneResponse extends GeoJSON.FeatureCollection {
   id: string;
+  warnings?: ValhallaWarning[];
 }
 
 export interface FetchGeocodeObject {

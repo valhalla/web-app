@@ -1,10 +1,12 @@
 import type { Profile } from '@/stores/common-store';
 import { decode } from './polyline';
+import { toast } from 'sonner';
 import type {
   ActiveWaypoint,
   ActiveWaypoints,
   IsochronesRequestParams,
   Settings,
+  ValhallaWarning,
 } from '@/components/types';
 import { getBaseUrl } from './base-url';
 
@@ -181,3 +183,15 @@ export const makeLocations = (waypoints: ActiveWaypoint[]) => {
 
   return locations;
 };
+
+export function showValhallaWarnings(warnings?: ValhallaWarning[]) {
+  if (!warnings?.length) return;
+  for (const warning of warnings) {
+    toast.warning(`Warning (code ${warning.code})`, {
+      description: warning.text,
+      position: 'bottom-center',
+      duration: 5000,
+      closeButton: true,
+    });
+  }
+}

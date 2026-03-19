@@ -6,6 +6,7 @@ import {
   getValhallaUrl,
   buildOptimizedRouteRequest,
   parseDirectionsGeometry,
+  showValhallaWarnings,
 } from '@/utils/valhalla';
 import { filterProfileSettings } from '@/utils/filter-profile-settings';
 import { useCommonStore } from '@/stores/common-store';
@@ -60,6 +61,8 @@ export function useOptimizedRouteQuery() {
         id: data.id ?? 'valhalla_optimized_route',
         decodedGeometry: parseDirectionsGeometry(data),
       };
+
+      showValhallaWarnings(data.trip.warnings);
 
       return { data: processedData, relevantWaypoints };
     },

@@ -16,14 +16,14 @@ export function HighlightSegment() {
     const { startIndex, endIndex, alternate } = highlightSegment;
 
     let coords;
-    if (alternate == -1) {
+    if (alternate === 0) {
       coords = directionResults.data.decodedGeometry;
     } else {
-      if (!directionResults.data.alternates?.[alternate]) {
+      if (!directionResults.data.alternates?.[alternate - 1]) {
         return null;
       }
       coords = (directionResults.data.alternates?.[
-        alternate
+        alternate - 1
       ] as ParsedDirectionsGeometry)!.decodedGeometry;
     }
 

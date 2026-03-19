@@ -11,6 +11,7 @@ import {
   getValhallaUrl,
   buildDirectionsRequest,
   parseDirectionsGeometry,
+  showValhallaWarnings,
 } from '@/utils/valhalla';
 import {
   reverse_geocode,
@@ -67,6 +68,8 @@ async function fetchDirections() {
         parseDirectionsGeometry(alternate);
     }
   });
+
+  showValhallaWarnings(data.trip.warnings);
 
   return data as ParsedDirectionsGeometry;
 }

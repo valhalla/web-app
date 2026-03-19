@@ -25,9 +25,16 @@ import { getDateTimeString } from '@/utils/date-time';
 interface RouteCardProps {
   data: ParsedDirectionsGeometry;
   index: number;
+  isActive: boolean;
+  onSelect: () => void;
 }
 
-export const RouteCard = ({ data, index }: RouteCardProps) => {
+export const RouteCard = ({
+  data,
+  index,
+  isActive,
+  onSelect,
+}: RouteCardProps) => {
   const [showManeuvers, setShowManeuvers] = useState(false);
 
   const exportToGeoJson = useCallback(() => {
@@ -61,13 +68,22 @@ export const RouteCard = ({ data, index }: RouteCardProps) => {
     <>
       <div
         className={cn(
-          'flex flex-col gap-2.5 border rounded-md p-2',
+          'flex flex-col gap-2.5 border rounded-md p-2 cursor-pointer transition-colors',
           'focus-within:bg-muted/50 hover:bg-muted/50',
-          showManeuvers ? 'bg-muted/50' : 'bg-background'
+          showManeuvers ? 'bg-muted/50' : 'bg-background',
+          isActive && 'border-l-4 border-l-primary'
         )}
+        onClick={onSelect}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onSelect();
+          }
+        }}
       >
         <Summary
-          title={`${index === -1 ? 'Main Route' : 'Alternate Route #' + (index + 1)}`}
+          title={`${index === 0 ? 'Main Route' : 'Alternate Route #' + index}`}
           summary={data.trip.summary}
           index={index}
           routeCoordinates={data.decodedGeometry ?? []}

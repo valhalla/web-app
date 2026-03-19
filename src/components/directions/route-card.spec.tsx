@@ -96,7 +96,11 @@ describe('RouteCard', () => {
 
   it('should render without crashing', () => {
     const data = createMockData();
-    expect(() => render(<RouteCard data={data} index={-1} />)).not.toThrow();
+    expect(() =>
+      render(
+        <RouteCard data={data} index={0} isActive={true} onSelect={vi.fn()} />
+      )
+    ).not.toThrow();
   });
 
   it('should return null when trip is missing', () => {
@@ -104,29 +108,37 @@ describe('RouteCard', () => {
       ...createMockData(),
       trip: undefined,
     } as unknown as ParsedDirectionsGeometry;
-    const { container } = render(<RouteCard data={data} index={-1} />);
+    const { container } = render(
+      <RouteCard data={data} index={0} isActive={false} onSelect={vi.fn()} />
+    );
 
     expect(container.firstChild).toBeNull();
   });
 
   it('should render Summary component with Main Route title', () => {
     const data = createMockData();
-    render(<RouteCard data={data} index={-1} />);
+    render(
+      <RouteCard data={data} index={0} isActive={true} onSelect={vi.fn()} />
+    );
 
-    expect(screen.getByTestId('mock-summary--1')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-summary-0')).toBeInTheDocument();
     expect(screen.getByText('Summary: Main Route')).toBeInTheDocument();
   });
 
   it('should render Summary component with Alternate Route title', () => {
     const data = createMockData();
-    render(<RouteCard data={data} index={0} />);
+    render(
+      <RouteCard data={data} index={1} isActive={false} onSelect={vi.fn()} />
+    );
 
     expect(screen.getByText('Summary: Alternate Route #1')).toBeInTheDocument();
   });
 
   it('should render Show Maneuvers button', () => {
     const data = createMockData();
-    render(<RouteCard data={data} index={-1} />);
+    render(
+      <RouteCard data={data} index={0} isActive={true} onSelect={vi.fn()} />
+    );
 
     expect(
       screen.getByRole('button', { name: /show maneuvers/i })
@@ -136,20 +148,24 @@ describe('RouteCard', () => {
   it('should toggle maneuvers visibility when button is clicked', async () => {
     const user = userEvent.setup();
     const data = createMockData();
-    render(<RouteCard data={data} index={-1} />);
+    render(
+      <RouteCard data={data} index={0} isActive={true} onSelect={vi.fn()} />
+    );
 
     await user.click(screen.getByRole('button', { name: /show maneuvers/i }));
 
     expect(
       screen.getByRole('button', { name: /hide maneuvers/i })
     ).toBeInTheDocument();
-    expect(screen.getByTestId('mock-maneuvers--1')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-maneuvers-0')).toBeInTheDocument();
   });
 
   it('should hide maneuvers when Hide Maneuvers is clicked', async () => {
     const user = userEvent.setup();
     const data = createMockData();
-    render(<RouteCard data={data} index={-1} />);
+    render(
+      <RouteCard data={data} index={0} isActive={true} onSelect={vi.fn()} />
+    );
 
     await user.click(screen.getByRole('button', { name: /show maneuvers/i }));
     await user.click(screen.getByRole('button', { name: /hide maneuvers/i }));
@@ -157,12 +173,14 @@ describe('RouteCard', () => {
     expect(
       screen.getByRole('button', { name: /show maneuvers/i })
     ).toBeInTheDocument();
-    expect(screen.queryByTestId('mock-maneuvers--1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('mock-maneuvers-0')).not.toBeInTheDocument();
   });
 
   it('should render Export button', () => {
     const data = createMockData();
-    render(<RouteCard data={data} index={-1} />);
+    render(
+      <RouteCard data={data} index={0} isActive={true} onSelect={vi.fn()} />
+    );
 
     expect(screen.getByRole('button', { name: /export/i })).toBeInTheDocument();
   });
@@ -170,7 +188,9 @@ describe('RouteCard', () => {
   it('should show export dropdown menu when Export is clicked', async () => {
     const user = userEvent.setup();
     const data = createMockData();
-    render(<RouteCard data={data} index={-1} />);
+    render(
+      <RouteCard data={data} index={0} isActive={true} onSelect={vi.fn()} />
+    );
 
     await user.click(screen.getByRole('button', { name: /export/i }));
 
@@ -183,7 +203,9 @@ describe('RouteCard', () => {
   it('should call exportDataAsJson when JSON is clicked', async () => {
     const user = userEvent.setup();
     const data = createMockData();
-    render(<RouteCard data={data} index={-1} />);
+    render(
+      <RouteCard data={data} index={0} isActive={true} onSelect={vi.fn()} />
+    );
 
     await user.click(screen.getByRole('button', { name: /export/i }));
     await user.click(screen.getByRole('menuitem', { name: 'JSON' }));
@@ -197,7 +219,9 @@ describe('RouteCard', () => {
   it('should call downloadFile with GeoJSON when GeoJSON is clicked', async () => {
     const user = userEvent.setup();
     const data = createMockData();
-    render(<RouteCard data={data} index={-1} />);
+    render(
+      <RouteCard data={data} index={0} isActive={true} onSelect={vi.fn()} />
+    );
 
     await user.click(screen.getByRole('button', { name: /export/i }));
     await user.click(screen.getByRole('menuitem', { name: 'GeoJSON' }));
@@ -214,7 +238,9 @@ describe('RouteCard', () => {
     const data = createMockData({
       decodedGeometry: [[52.5, 13.4]],
     });
-    render(<RouteCard data={data} index={-1} />);
+    render(
+      <RouteCard data={data} index={0} isActive={true} onSelect={vi.fn()} />
+    );
 
     await user.click(screen.getByRole('button', { name: /export/i }));
     await user.click(screen.getByRole('menuitem', { name: 'GeoJSON' }));
@@ -230,22 +256,61 @@ describe('RouteCard', () => {
 
   it('should apply hover styles to card', () => {
     const data = createMockData();
-    render(<RouteCard data={data} index={-1} />);
+    render(
+      <RouteCard data={data} index={0} isActive={false} onSelect={vi.fn()} />
+    );
 
-    const card = screen.getByTestId('mock-summary--1').parentElement;
+    const card = screen.getByTestId('mock-summary-0').parentElement;
     expect(card).toHaveClass('hover:bg-muted/50');
   });
 
   it('should apply different background when maneuvers are shown', async () => {
     const user = userEvent.setup();
     const data = createMockData();
-    render(<RouteCard data={data} index={-1} />);
+    render(
+      <RouteCard data={data} index={0} isActive={false} onSelect={vi.fn()} />
+    );
 
-    const card = screen.getByTestId('mock-summary--1').parentElement;
+    const card = screen.getByTestId('mock-summary-0').parentElement;
     expect(card).toHaveClass('bg-background');
 
     await user.click(screen.getByRole('button', { name: /show maneuvers/i }));
 
     expect(card).toHaveClass('bg-muted/50');
+  });
+
+  it('should apply active styling when isActive is true', () => {
+    const data = createMockData();
+    render(
+      <RouteCard data={data} index={-1} isActive={true} onSelect={vi.fn()} />
+    );
+
+    const card = screen.getByTestId('mock-summary--1').parentElement;
+    expect(card).toHaveClass('border-l-4');
+    expect(card).toHaveClass('border-l-primary');
+  });
+
+  it('should not apply active styling when isActive is false', () => {
+    const data = createMockData();
+    render(
+      <RouteCard data={data} index={-1} isActive={false} onSelect={vi.fn()} />
+    );
+
+    const card = screen.getByTestId('mock-summary--1').parentElement;
+    expect(card).not.toHaveClass('border-l-4');
+  });
+
+  it('should call onSelect when card is clicked', async () => {
+    const user = userEvent.setup();
+    const data = createMockData();
+    const onSelect = vi.fn();
+    render(
+      <RouteCard data={data} index={-1} isActive={false} onSelect={onSelect} />
+    );
+
+    const card = screen.getByTestId('mock-summary--1').parentElement!;
+    await user.click(card);
+
+    expect(onSelect).toHaveBeenCalled();
   });
 });

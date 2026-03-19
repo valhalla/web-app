@@ -8,6 +8,9 @@ import type { ParsedDirectionsGeometry } from '@/components/types';
 export function RouteLines() {
   const directionResults = useDirectionsStore((state) => state.results);
   const directionsSuccessful = useDirectionsStore((state) => state.successful);
+  const activeRouteIndex = useDirectionsStore(
+    (state) => state.activeRouteIndex
+  );
 
   const data = useMemo(() => {
     if (!directionResults.data || !directionsSuccessful) return null;
@@ -21,10 +24,11 @@ export function RouteLines() {
 
     if (response.alternates) {
       response.alternates.forEach((alternate, i) => {
-        if (!showRoutes[i]) return;
+        if (!showRoutes[i + 1]) return;
         const coords = (alternate! as ParsedDirectionsGeometry)!
           .decodedGeometry;
         const summary = alternate!.trip.summary;
+        const isActive = activeRouteIndex === i + 1;
 
         features.push({
           type: 'Feature',
@@ -33,17 +37,19 @@ export function RouteLines() {
             coordinates: coords.map((c) => [c[1] ?? 0, c[0] ?? 0]),
           },
           properties: {
-            color: routeObjects.alternativeColor,
+            color: isActive ? routeObjects.color : routeObjects.inactiveColor,
             type: 'alternate',
+            routeIndex: i + 1,
             summary,
           },
         });
       });
     }
 
-    if (showRoutes[-1] !== false) {
+    if (showRoutes[0] !== false) {
       const coords = response.decodedGeometry;
       const summary = response.trip.summary;
+      const isActive = activeRouteIndex === 0;
 
       features.push({
         type: 'Feature',
@@ -52,18 +58,26 @@ export function RouteLines() {
           coordinates: coords.map((c) => [c[1] ?? 0, c[0] ?? 0]),
         },
         properties: {
-          color: routeObjects.color,
+          color: isActive ? routeObjects.color : routeObjects.inactiveColor,
           type: 'main',
+          routeIndex: 0,
           summary,
         },
       });
     }
 
+    // Sort so active route renders last (on top)
+    features.sort((a, b) => {
+      const aActive = a.properties?.routeIndex === activeRouteIndex ? 1 : 0;
+      const bActive = b.properties?.routeIndex === activeRouteIndex ? 1 : 0;
+      return aActive - bActive;
+    });
+
     return {
       type: 'FeatureCollection',
       features,
     } as FeatureCollection;
-  }, [directionResults, directionsSuccessful]);
+  }, [directionResults, directionsSuccessful, activeRouteIndex]);
 
   if (!data) return null;
 
@@ -84,7 +98,12 @@ export function RouteLines() {
         paint={{
           'line-color': ['get', 'color'],
           'line-width': 5,
-          'line-opacity': 1,
+          'line-opacity': [
+            'case',
+            ['==', ['get', 'routeIndex'], activeRouteIndex],
+            1,
+            0.5,
+          ],
         }}
       />
     </Source>

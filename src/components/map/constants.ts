@@ -11,8 +11,9 @@ export const maxBounds: [[number, number], [number, number]] | undefined =
   undefined;
 
 export const routeObjects = {
-  color: '#0066ff',
+  color: '#3b82f6',
   alternativeColor: '#66a3ff',
+  inactiveColor: '#66a3ff',
 };
 
 export const MAP_STYLE_STORAGE_KEY = 'selectedMapStyle';
