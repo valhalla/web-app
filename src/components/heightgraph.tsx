@@ -2,12 +2,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { colorMappings } from '@/utils/heightgraph';
 import makeResizable from '@/utils/resizable';
+import { ToolButton } from '@/components/map/parts/tool-button';
+import elevationIcon from '@/images/elevation.png';
 import type { FeatureCollection, GeoJsonProperties, Geometry } from 'geojson';
 
 interface HeightGraphProps {
   data: FeatureCollection<Geometry, GeoJsonProperties>[];
   width: number;
   height?: number;
+  disabled?: boolean;
   onExpand?: (expanded: boolean) => void;
   onHighlight?: (index: number | null) => void;
 }
@@ -16,6 +19,7 @@ const HeightGraph: React.FC<HeightGraphProps> = ({
   data,
   width,
   height = 200,
+  disabled = false,
   onExpand,
   onHighlight,
 }) => {
@@ -279,7 +283,18 @@ const HeightGraph: React.FC<HeightGraphProps> = ({
     };
   }, [isExpanded]);
 
+  // Auto-collapse when disabled
+  const [prevDisabled, setPrevDisabled] = useState(disabled);
+  if (disabled !== prevDisabled) {
+    setPrevDisabled(disabled);
+    if (disabled && isExpanded) {
+      setIsExpanded(false);
+      if (onExpand) onExpand(false);
+    }
+  }
+
   const handleToggleExpand = () => {
+    if (disabled) return;
     const newState = !isExpanded;
     setIsExpanded(newState);
     if (onExpand) onExpand(newState);
@@ -287,29 +302,24 @@ const HeightGraph: React.FC<HeightGraphProps> = ({
 
   return (
     <>
-      <div
-        className="heightgraph-toggle"
-        onClick={handleToggleExpand}
+      <ToolButton
         title="Height Graph"
-        style={{
-          position: 'absolute',
-          bottom: '84px',
-          right: '10px',
-          width: '36px',
-          height: '36px',
-          background: 'white',
-          border: '2px solid rgba(0,0,0,0.2)',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '18px',
-          zIndex: 1001,
-        }}
-      >
-        {isExpanded ? '−' : '▲'}
-      </div>
+        icon={
+          isExpanded ? (
+            <span style={{ fontSize: '18px' }}>−</span>
+          ) : (
+            <img
+              src={elevationIcon}
+              alt="Height Graph"
+              style={{ width: '24px', height: '24px' }}
+            />
+          )
+        }
+        onClick={handleToggleExpand}
+        disabled={disabled}
+        className="z-[1001]"
+        data-testid="heightgraph-toggle"
+      />
       <div
         ref={containerRef}
         className={`maplibre-heightgraph ${isExpanded ? 'heightgraph-expanded' : ''}`}

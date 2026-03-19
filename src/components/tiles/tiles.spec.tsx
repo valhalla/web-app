@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { LayerSpecification } from 'maplibre-gl';
 import { TilesControl } from './tiles';
 
 const createMockLayers = () => [
@@ -71,9 +72,25 @@ vi.mock('@/stores/common-store', () => ({
   ),
 }));
 
+// Capture the onLayerAdded prop so tests can seed custom layers
+let capturedOnLayerAdded: ((layer: LayerSpecification) => void) | null = null;
+
+vi.mock('./custom-layer-editor', () => ({
+  CustomLayerEditor: ({
+    onLayerAdded,
+  }: {
+    customLayers: { layer: LayerSpecification; visible: boolean }[];
+    onLayerAdded: (layer: LayerSpecification) => void;
+  }) => {
+    capturedOnLayerAdded = onLayerAdded;
+    return <div />;
+  },
+}));
+
 describe('TilesControl', () => {
   beforeEach(() => {
     mockMap = createMockMap();
+    capturedOnLayerAdded = null;
     vi.clearAllMocks();
   });
 
@@ -522,6 +539,274 @@ describe('TilesControl', () => {
       render(<TilesControl />);
 
       expect(screen.getByText('No layers found')).toBeInTheDocument();
+    });
+  });
+
+  describe('custom layers section', () => {
+    it('should not render custom layers section when there are no custom layers', () => {
+      render(<TilesControl />);
+
+      expect(screen.queryByText('Custom Layers')).not.toBeInTheDocument();
+    });
+
+    it('should render custom layers section when custom layers are present', async () => {
+      render(<TilesControl />);
+
+      await act(async () => {
+        capturedOnLayerAdded?.({
+          id: 'my-custom-layer',
+          type: 'line',
+        } as LayerSpecification);
+      });
+
+      expect(screen.getByText('Custom Layers')).toBeInTheDocument();
+    });
+
+    it('should display custom layer id and type', async () => {
+      render(<TilesControl />);
+
+      await act(async () => {
+        capturedOnLayerAdded?.({
+          id: 'dead-ends',
+          type: 'line',
+        } as LayerSpecification);
+      });
+
+      expect(screen.getByText('dead-ends')).toBeInTheDocument();
+      expect(screen.getByText('(line)')).toBeInTheDocument();
+    });
+
+    it('should render a visibility switch for each custom layer reflecting visible state', async () => {
+      render(<TilesControl />);
+
+      await act(async () => {
+        capturedOnLayerAdded?.({
+          id: 'layer-a',
+          type: 'line',
+        } as LayerSpecification);
+        capturedOnLayerAdded?.({
+          id: 'layer-b',
+          type: 'fill',
+        } as LayerSpecification);
+      });
+
+      const switches = screen.getAllByRole('switch');
+      const customSwitches = switches.slice(-2);
+      expect(customSwitches[0]).toBeChecked();
+      expect(customSwitches[1]).toBeChecked();
+    });
+
+    it('should render a remove button for each custom layer', async () => {
+      render(<TilesControl />);
+
+      await act(async () => {
+        capturedOnLayerAdded?.({
+          id: 'my-layer',
+          type: 'line',
+        } as LayerSpecification);
+      });
+
+      expect(
+        screen.getByRole('button', { name: /remove my-layer layer/i })
+      ).toBeInTheDocument();
+    });
+
+    it('should show "No layers found" only when both map layers and custom layers are empty', () => {
+      mockMap = createMockMap([]);
+
+      render(<TilesControl />);
+
+      expect(screen.getByText('No layers found')).toBeInTheDocument();
+    });
+
+    it('should NOT show "No layers found" when custom layers exist but map has no layers', async () => {
+      mockMap = createMockMap([]);
+
+      render(<TilesControl />);
+
+      await act(async () => {
+        capturedOnLayerAdded?.({
+          id: 'custom-only',
+          type: 'line',
+        } as LayerSpecification);
+      });
+
+      expect(screen.queryByText('No layers found')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('custom layer visibility toggle', () => {
+    it('should call map.setLayoutProperty when toggling a custom layer off', async () => {
+      const user = userEvent.setup();
+      render(<TilesControl />);
+
+      mockMap.addLayer({ id: 'my-toggle-layer' });
+
+      await act(async () => {
+        capturedOnLayerAdded?.({
+          id: 'my-toggle-layer',
+          type: 'line',
+        } as LayerSpecification);
+      });
+
+      const customLayerSwitch = screen.getByRole('switch', {
+        name: /my-toggle-layer/,
+      });
+      await user.click(customLayerSwitch);
+
+      expect(mockMap.setLayoutProperty).toHaveBeenCalledWith(
+        'my-toggle-layer',
+        'visibility',
+        'none'
+      );
+    });
+
+    it('should update local state when toggling custom layer visibility', async () => {
+      const user = userEvent.setup();
+      render(<TilesControl />);
+
+      await act(async () => {
+        capturedOnLayerAdded?.({
+          id: 'my-toggle-layer',
+          type: 'line',
+        } as LayerSpecification);
+      });
+
+      const customLayerSwitch = screen.getByRole('switch', {
+        name: /my-toggle-layer/,
+      });
+
+      expect(customLayerSwitch).toBeChecked();
+      await user.click(customLayerSwitch);
+      expect(customLayerSwitch).not.toBeChecked();
+    });
+  });
+
+  describe('custom layer removal', () => {
+    it('should call map.removeLayer when the remove button is clicked', async () => {
+      const user = userEvent.setup();
+      render(<TilesControl />);
+
+      mockMap.addLayer({ id: 'removable-layer' });
+
+      await act(async () => {
+        capturedOnLayerAdded?.({
+          id: 'removable-layer',
+          type: 'line',
+        } as LayerSpecification);
+      });
+
+      await user.click(
+        screen.getByRole('button', { name: /remove removable-layer layer/i })
+      );
+
+      expect(mockMap.removeLayer).toHaveBeenCalledWith('removable-layer');
+    });
+
+    it('should remove the layer from the list when the remove button is clicked', async () => {
+      const user = userEvent.setup();
+      render(<TilesControl />);
+
+      await act(async () => {
+        capturedOnLayerAdded?.({
+          id: 'removable-layer',
+          type: 'line',
+        } as LayerSpecification);
+      });
+
+      expect(screen.getByText('removable-layer')).toBeInTheDocument();
+
+      await user.click(
+        screen.getByRole('button', { name: /remove removable-layer layer/i })
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByText('removable-layer')).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('styledata re-applies custom layers', () => {
+    const getTilesStyleDataHandler = () =>
+      mockMap.on.mock.calls
+        .filter((call) => call[0] === 'styledata')
+        .at(-1)?.[1];
+
+    it('should call map.addLayer for custom layers on styledata when source exists', async () => {
+      render(<TilesControl />);
+
+      await act(async () => {
+        capturedOnLayerAdded?.({
+          id: 'persisted-layer',
+          type: 'line',
+          source: 'some-source',
+        } as LayerSpecification);
+      });
+
+      mockMap.removeLayer('persisted-layer');
+
+      await act(async () => {
+        getTilesStyleDataHandler()?.();
+      });
+
+      await waitFor(() => {
+        expect(mockMap.addLayer).toHaveBeenCalledWith(
+          expect.objectContaining({ id: 'persisted-layer' })
+        );
+      });
+    });
+
+    it('should set visibility to none when re-adding an invisible custom layer', async () => {
+      const user = userEvent.setup();
+      render(<TilesControl />);
+
+      await act(async () => {
+        capturedOnLayerAdded?.({
+          id: 'hidden-layer',
+          type: 'line',
+          source: 'some-source',
+        } as LayerSpecification);
+      });
+
+      // Toggle visibility off so the layer is invisible in local state
+      mockMap.addLayer({ id: 'hidden-layer' });
+      const customLayerSwitch = screen.getByRole('switch', {
+        name: /hidden-layer/,
+      });
+      await user.click(customLayerSwitch);
+
+      mockMap.removeLayer('hidden-layer');
+
+      await act(async () => {
+        getTilesStyleDataHandler()?.();
+      });
+
+      await waitFor(() => {
+        expect(mockMap.setLayoutProperty).toHaveBeenCalledWith(
+          'hidden-layer',
+          'visibility',
+          'none'
+        );
+      });
+    });
+
+    it('should not re-add a custom layer that is already present on the map', async () => {
+      render(<TilesControl />);
+
+      await act(async () => {
+        capturedOnLayerAdded?.({
+          id: 'already-present',
+          type: 'line',
+        } as LayerSpecification);
+      });
+
+      mockMap.addLayer({ id: 'already-present' });
+      const addLayerCallsBefore = mockMap.addLayer.mock.calls.length;
+
+      await act(async () => {
+        getTilesStyleDataHandler()?.();
+      });
+      expect(mockMap.addLayer.mock.calls.length).toBe(addLayerCallsBefore);
     });
   });
 });

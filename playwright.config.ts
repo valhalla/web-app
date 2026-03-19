@@ -1,4 +1,5 @@
 /* eslint-disable check-file/filename-naming-convention */
+/// <reference types="node" />
 import { defineConfig, devices } from '@playwright/test';
 
 /**
@@ -32,9 +33,20 @@ export default defineConfig({
     trace: 'on-first-retry',
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    permissions: ['clipboard-read', 'clipboard-write'],
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        permissions: ['clipboard-read', 'clipboard-write'],
+      },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+  ],
   webServer: {
     command: 'npm run start',
     url: 'http://localhost:3000',

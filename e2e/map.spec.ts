@@ -59,6 +59,7 @@ function validateBerlinCoordinates(
 test.describe('Map interactions with right context menu', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:3000/');
+    await page.getByTestId('tab-directions-button').click();
   });
 
   test('should show right-click context menu', async ({ page }) => {
@@ -550,6 +551,7 @@ test.describe('Map interactions with URL parameters', () => {
     );
 
     await page.waitForTimeout(2000);
+    await page.getByTestId('tab-directions-button').click();
 
     // Check that waypoint inputs 0 to 1 and waypoint markers 1 to 2 are visible
     for (let i = 0; i < 2; i++) {
@@ -574,6 +576,7 @@ test.describe('Map interactions with URL parameters', () => {
     );
 
     await page.waitForTimeout(2000);
+    await page.getByTestId('tab-directions-button').click();
 
     // Check that waypoint inputs 0 to 7 and waypoint markers 1 to 8 are visible
     for (let i = 0; i < 8; i++) {
@@ -591,6 +594,7 @@ test.describe('Map interactions with URL parameters', () => {
 https: test.describe('Left drawer', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:3000/');
+    await page.getByTestId('tab-directions-button').click();
   });
 
   test('add/remove waypoint behaviour should work correctly', async ({
