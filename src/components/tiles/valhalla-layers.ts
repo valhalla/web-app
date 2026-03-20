@@ -6,6 +6,7 @@ export const VALHALLA_EDGES_LAYER_ID = 'valhalla-edges';
 export const VALHALLA_SHORTCUTS_LAYER_ID = 'valhalla-shortcuts';
 export const VALHALLA_NODES_LAYER_ID = 'valhalla-nodes';
 export const VALHALLA_DEFAULT_STYLE_URL =
+  import.meta.env.VITE_VALHALLA_DEFAULT_STYLE_URL ||
   'https://raw.githubusercontent.com/valhalla/valhalla/master/docs/docs/api/tile/default_style.json';
 export const VALHALLA_LAYER_IDS = [
   VALHALLA_EDGES_LAYER_ID,

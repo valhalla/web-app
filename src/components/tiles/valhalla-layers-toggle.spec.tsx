@@ -3,6 +3,7 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { LayerSpecification } from 'maplibre-gl';
 import { ValhallaLayersToggle } from './valhalla-layers-toggle';
+import * as valhallaLayers from './valhalla-layers';
 import {
   VALHALLA_SOURCE_ID,
   VALHALLA_LAYER_IDS,
@@ -10,6 +11,18 @@ import {
   VALHALLA_NODES_LAYER_ID,
   VALHALLA_SHORTCUTS_LAYER_ID,
 } from './valhalla-layers';
+
+vi.mock('./valhalla-layers', async () => {
+  const actual =
+    await vi.importActual<typeof import('./valhalla-layers')>(
+      './valhalla-layers'
+    );
+
+  return {
+    ...actual,
+    getValhallaLayers: vi.fn(),
+  };
+});
 
 const createMockMap = () => {
   const sources: Record<string, unknown> = {};
@@ -58,45 +71,39 @@ vi.mock('@/stores/common-store', () => ({
 }));
 
 const noCustomLayers: { layer: LayerSpecification; visible: boolean }[] = [];
+const mockHostedLayers: LayerSpecification[] = [
+  {
+    id: VALHALLA_EDGES_LAYER_ID,
+    type: 'line',
+    source: VALHALLA_SOURCE_ID,
+    'source-layer': 'edges',
+  } as LayerSpecification,
+  {
+    id: VALHALLA_SHORTCUTS_LAYER_ID,
+    type: 'line',
+    source: VALHALLA_SOURCE_ID,
+    'source-layer': 'shortcuts',
+  } as LayerSpecification,
+  {
+    id: VALHALLA_NODES_LAYER_ID,
+    type: 'circle',
+    source: VALHALLA_SOURCE_ID,
+    'source-layer': 'nodes',
+  } as LayerSpecification,
+];
 
 describe('ValhallaLayersToggle', () => {
   beforeEach(() => {
     mockMap = createMockMap();
     mockMapReady = true;
     vi.clearAllMocks();
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => ({
-        ok: true,
-        json: async () => ({
-          layers: [
-            {
-              id: 'edges',
-              type: 'line',
-              source: 'valhalla',
-              'source-layer': 'edges',
-            },
-            {
-              id: 'shortcuts',
-              type: 'line',
-              source: 'valhalla',
-              'source-layer': 'shortcuts',
-            },
-            {
-              id: 'nodes',
-              type: 'circle',
-              source: 'valhalla',
-              'source-layer': 'nodes',
-            },
-          ],
-        }),
-      }))
+    vi.mocked(valhallaLayers.getValhallaLayers).mockResolvedValue(
+      mockHostedLayers
     );
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
-    vi.unstubAllGlobals();
   });
 
   describe('rendering', () => {
