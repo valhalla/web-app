@@ -6,7 +6,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import {
   VALHALLA_SOURCE_ID,
-  VALHALLA_LAYERS,
+  VALHALLA_LAYER_IDS,
+  getValhallaLayers,
   getValhallaSourceSpec,
 } from './valhalla-layers';
 
@@ -38,7 +39,7 @@ export const ValhallaLayersToggle = ({
     };
   }, [mainMap]);
 
-  const handleToggle = (checked: boolean) => {
+  const handleToggle = async (checked: boolean) => {
     if (!mainMap || !mapReady) return;
 
     const map = mainMap.getMap();
@@ -48,11 +49,14 @@ export const ValhallaLayersToggle = ({
       if (!map.getSource(VALHALLA_SOURCE_ID)) {
         map.addSource(VALHALLA_SOURCE_ID, getValhallaSourceSpec());
       }
-      for (const layer of VALHALLA_LAYERS) {
+
+      const valhallaLayers = await getValhallaLayers();
+      for (const layer of valhallaLayers) {
         if (!map.getLayer(layer.id)) {
           map.addLayer(layer);
         }
       }
+
       for (const entry of customLayers) {
         const layerSource =
           'source' in entry.layer ? entry.layer.source : undefined;
@@ -71,9 +75,9 @@ export const ValhallaLayersToggle = ({
         }
       }
     } else {
-      for (const layer of VALHALLA_LAYERS) {
-        if (map.getLayer(layer.id)) {
-          map.removeLayer(layer.id);
+      for (const layerId of VALHALLA_LAYER_IDS) {
+        if (map.getLayer(layerId)) {
+          map.removeLayer(layerId);
         }
       }
 
