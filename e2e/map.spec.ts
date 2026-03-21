@@ -607,8 +607,13 @@ https: test.describe('Left drawer', () => {
 
     await expect(page.getByRole('button', { name: '3' }).first()).toBeVisible();
 
-    // Remove waypoint using the individual remove button (reset is disabled when all inputs are empty)
-    await page.getByTestId('remove-waypoint-button').first().click();
+    // Type something in a waypoint so the reset button becomes enabled
+    await page.getByTestId('waypoint-input-0').click();
+    const searchBox = page.getByPlaceholder('Hit enter for search');
+    await searchBox.fill('test');
+
+    // Remove waypoints
+    await page.getByTestId('reset-waypoints-button').click();
 
     await expect(page.getByRole('button', { name: '3' })).not.toBeVisible();
   });
