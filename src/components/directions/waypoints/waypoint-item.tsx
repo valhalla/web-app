@@ -113,10 +113,7 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
                   refetchDirections();
                 }}
                 data-testid="remove-waypoint-button"
-                disabled={
-                  waypoints.every((wp) => !wp.userInput) &&
-                  waypoints.length <= 2
-                }
+                disabled={waypoints.every((wp) => !wp.userInput)}
               >
                 <Trash className="size-3" />
               </Button>

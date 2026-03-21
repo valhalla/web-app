@@ -135,9 +135,7 @@ export const DirectionsControl = () => {
             onClick={handleRemoveWaypoints}
             data-testid="reset-waypoints-button"
             className="w-full shrink"
-            disabled={
-              waypoints.every((wp) => !wp.userInput) && waypoints.length <= 2
-            }
+            disabled={waypoints.every((wp) => !wp.userInput)}
           >
             <MapPinXInside className="size-5" />
             Reset Waypoints
