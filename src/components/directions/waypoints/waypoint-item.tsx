@@ -11,10 +11,7 @@ import {
 } from '@/components/ui/tooltip';
 import { WaypointSearch } from '@/components/ui/waypoint-search';
 import { GripVertical, Trash } from 'lucide-react';
-import {
-  defaultWaypoints,
-  useDirectionsStore,
-} from '@/stores/directions-store';
+import { useDirectionsStore } from '@/stores/directions-store';
 import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 
 interface WaypointProps {
@@ -117,7 +114,7 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
                 }}
                 data-testid="remove-waypoint-button"
                 disabled={
-                  JSON.stringify(waypoints) === JSON.stringify(defaultWaypoints)
+                  waypoints.length < 3 && waypoints.every((wp) => !wp.userInput)
                 }
               >
                 <Trash className="size-3" />
