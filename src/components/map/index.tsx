@@ -250,7 +250,7 @@ export const MapComponent = () => {
         object.latLng.lng,
         object.latLng.lat,
         object.index,
-        { skipGeocode: true }
+        { skipGeocode: !object.fromDrag }
       ).then(() => {
         refetchDirections();
       });

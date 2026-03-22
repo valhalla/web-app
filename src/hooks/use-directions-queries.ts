@@ -163,7 +163,7 @@ export function useReverseGeocodeDirections() {
     if (options?.skipGeocode) {
       const lngLat: [number, number] = [lng, lat];
       const address: ActiveWaypoint = {
-        title: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+        title: `${lng.toFixed(6)}, ${lat.toFixed(6)}`,
         key: 0,
         selected: true,
         addresslnglat: lngLat,
