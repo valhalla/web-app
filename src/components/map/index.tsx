@@ -249,7 +249,8 @@ export const MapComponent = () => {
       reverseGeocodeDirections(
         object.latLng.lng,
         object.latLng.lat,
-        object.index
+        object.index,
+        { skipGeocode: true }
       ).then(() => {
         refetchDirections();
       });

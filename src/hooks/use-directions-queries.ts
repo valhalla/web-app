@@ -150,7 +150,7 @@ export function useReverseGeocodeDirections() {
     lng: number,
     lat: number,
     index: number,
-    options?: { isPermalink?: boolean }
+    options?: { isPermalink?: boolean; skipGeocode?: boolean }
   ) => {
     // For permalink loading, add waypoint if needed
     if (options?.isPermalink && index > 1) {
@@ -159,6 +159,27 @@ export function useReverseGeocodeDirections() {
 
     // Set placeholder immediately
     updatePlaceholderAddressAtIndex(index, lng, lat);
+
+    if (options?.skipGeocode) {
+      const lngLat: [number, number] = [lng, lat];
+      const address: ActiveWaypoint = {
+        title: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+        key: 0,
+        selected: true,
+        addresslnglat: lngLat,
+        sourcelnglat: lngLat,
+        displaylnglat: lngLat,
+        addressindex: 0,
+      };
+      const addresses = [address];
+      receiveGeocodeResults({ addresses, index });
+      updateTextInput({
+        inputValue: address.title,
+        index,
+        addressindex: 0,
+      });
+      return addresses;
+    }
 
     try {
       const addresses = await fetchReverseGeocode(lng, lat);
