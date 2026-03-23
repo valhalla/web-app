@@ -35,7 +35,12 @@ vi.mock('@/stores/directions-store', () => ({
           id: 'wp-1',
           userInput: 'Berlin',
           geocodeResults: [
-            { title: 'Berlin, Germany', addressindex: 0, lngLat: [13.4, 52.5] },
+            {
+              title: 'Berlin, Germany',
+              addressindex: 0,
+              lngLat: [13.4, 52.5],
+              selected: true,
+            },
           ],
         },
         {
@@ -174,6 +179,12 @@ describe('Waypoint', () => {
 
     expect(mockDoRemoveWaypoint).toHaveBeenCalledWith({ index: 0 });
     expect(mockRefetchDirections).toHaveBeenCalled();
+  });
+
+  it('should disable remove button when there are fewer than 3 waypoints and current waypoint is not selected', () => {
+    render(<Waypoint id="wp-2" index={1} />);
+
+    expect(screen.getByTestId('remove-waypoint-button')).toBeDisabled();
   });
 
   it('should have correct aria-label for waypoint', () => {

@@ -114,7 +114,8 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
                 }}
                 data-testid="remove-waypoint-button"
                 disabled={
-                  waypoints.length < 3 && waypoints.every((wp) => !wp.userInput)
+                  waypoints.length < 3 &&
+                  !geocodeResults?.some((r) => r.selected)
                 }
               >
                 <Trash className="size-3" />
