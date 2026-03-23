@@ -310,12 +310,18 @@ export const MapComponent = () => {
       if (!popupLngLat) return;
       setShowContextPopup(false);
 
+      // Ensure the directions panel is open so DirectionsControl mounts
+      // and URL sync (wps param) runs
+      if (!directionsPanelOpen) {
+        toggleDirections();
+      }
+
       updateWaypointPosition({
         latLng: { lat: popupLngLat.lat, lng: popupLngLat.lng },
         index,
       });
     },
-    [popupLngLat, updateWaypointPosition]
+    [popupLngLat, updateWaypointPosition, directionsPanelOpen, toggleDirections]
   );
 
   const handleAddIsoWaypoint = useCallback(() => {

@@ -51,7 +51,13 @@ export const useCommonStore = create<CommonStore>()(
   devtools(
     immer((set) => ({
       settingsPanelOpen: false,
-      directionsPanelOpen: false,
+      directionsPanelOpen: (() => {
+        try {
+          return new URL(window.location.href).searchParams.has('wps');
+        } catch {
+          return false;
+        }
+      })(),
       coordinates: [],
       loading: false,
       settings: { ...settingsInit },

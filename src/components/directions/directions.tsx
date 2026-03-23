@@ -59,16 +59,24 @@ export const DirectionsControl = () => {
     if (wpsParam) {
       const coordinates = wpsParam.split(',').map(Number);
 
-      for (let i = 0; i < coordinates.length; i += 2) {
-        const lng = coordinates[i]!;
-        const lat = coordinates[i + 1]!;
+      const processWaypoints = async () => {
+        const geocodePromises: Promise<unknown>[] = [];
+        for (let i = 0; i < coordinates.length; i += 2) {
+          const lng = coordinates[i]!;
+          const lat = coordinates[i + 1]!;
 
-        if (!isValidCoordinates(lat, lng) || isNaN(lng) || isNaN(lat)) continue;
+          if (!isValidCoordinates(lat, lng) || isNaN(lng) || isNaN(lat))
+            continue;
 
-        const index = i / 2;
-        reverseGeocode(lng, lat, index, { isPermalink: true });
-      }
-      refetchDirections();
+          const index = i / 2;
+          geocodePromises.push(
+            reverseGeocode(lng, lat, index, { isPermalink: true })
+          );
+        }
+        await Promise.all(geocodePromises);
+        refetchDirections();
+      };
+      processWaypoints();
     }
 
     urlParamsProcessed.current = true;
