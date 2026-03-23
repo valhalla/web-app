@@ -1,23 +1,6 @@
 import { test, expect } from '@playwright/test';
-import {
-  BERLIN_COORDINATES,
-  setupHeightMock,
-  setupNominatimMock,
-  setupRouteMock,
-  setupSearchMock,
-  simpleMockNominatimResponse,
-} from './helpers';
+import { setupHeightMock, setupRouteMock, setupSearchMock } from './helpers';
 import { customRouteResponse } from './mocks';
-
-interface NominatimApiRequest {
-  url: string;
-  method: string;
-  params?: {
-    format?: string | null;
-    lon?: string | null;
-    lat?: string | null;
-  };
-}
 
 interface RouteApiRequest {
   url: string;
@@ -28,32 +11,9 @@ interface RouteApiRequest {
   };
 }
 
-function validateNominatimRequest(request: NominatimApiRequest): void {
-  expect(request.method).toBe('GET');
-  expect(request.url).toMatch(
-    /https:\/\/nominatim\.openstreetmap\.org\/reverse/
-  );
-  expect(request.params?.format).toBe('json');
-  expect(request.params?.lon).toBeTruthy();
-  expect(request.params?.lat).toBeTruthy();
-}
-
 function validateRouteApiRequest(request: RouteApiRequest): void {
   expect(request.method).toBe('GET');
   expect(request.url).toMatch(/https:\/\/valhalla1\.openstreetmap\.de\/route/);
-}
-
-function validateBerlinCoordinates(
-  lonStr: string | null | undefined,
-  latStr: string | null | undefined
-): void {
-  const lon = parseFloat(lonStr || '0');
-  const lat = parseFloat(latStr || '0');
-
-  expect(lon).toBeGreaterThan(BERLIN_COORDINATES.bounds.minLon);
-  expect(lon).toBeLessThan(BERLIN_COORDINATES.bounds.maxLon);
-  expect(lat).toBeGreaterThan(BERLIN_COORDINATES.bounds.minLat);
-  expect(lat).toBeLessThan(BERLIN_COORDINATES.bounds.maxLat);
 }
 
 test.describe('Map interactions with right context menu', () => {
@@ -77,59 +37,9 @@ test.describe('Map interactions with right context menu', () => {
     ).toBeVisible();
   });
 
-  test('should make Nominatim request when clicking "Directions from here"', async ({
+  test('should place "from" waypoint with raw coordinates', async ({
     page,
   }) => {
-    const apiRequests = await setupNominatimMock(page);
-
-    await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
-    await page.getByRole('button', { name: 'Directions from here' }).click();
-    await page.waitForTimeout(2000);
-
-    await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
-
-    expect(apiRequests.length).toBeGreaterThan(0);
-
-    const request = apiRequests[0] as NominatimApiRequest;
-    validateNominatimRequest(request);
-
-    const lon = parseFloat(request.params?.lon || '');
-    const lat = parseFloat(request.params?.lat || '');
-    expect(lon).not.toBeNaN();
-    expect(lat).not.toBeNaN();
-  });
-
-  test('should make Nominatim request with Berlin coordinates', async ({
-    page,
-  }) => {
-    const apiRequests = await setupNominatimMock(
-      page,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      simpleMockNominatimResponse as any
-    );
-
-    await page.getByRole('region', { name: 'Map' }).click({
-      button: 'right',
-      force: true,
-    });
-
-    await page.getByRole('button', { name: 'Directions from here' }).click();
-    await page.waitForTimeout(2000);
-
-    await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
-
-    expect(apiRequests.length).toBe(1);
-
-    const request = apiRequests[0] as NominatimApiRequest;
-    validateNominatimRequest(request);
-    validateBerlinCoordinates(request.params?.lon, request.params?.lat);
-  });
-
-  test('should populate "from" input with Nominatim result', async ({
-    page,
-  }) => {
-    await setupNominatimMock(page);
-
     await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Directions from here' }).click();
     await page.waitForTimeout(2000);
@@ -137,61 +47,11 @@ test.describe('Map interactions with right context menu', () => {
     await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     await expect(
-      page.getByTestId('waypoint-input-0').getByText('Unter den Linden, Mitte,')
+      page.getByTestId('waypoint-input-0').getByText(/\d+\.\d{6}, \d+\.\d{6}/)
     ).toBeVisible();
   });
 
-  test('should make Nominatim request when clicking "Directions to here"', async ({
-    page,
-  }) => {
-    const apiRequests = await setupNominatimMock(page);
-
-    await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
-    await page.getByRole('button', { name: 'Directions to here' }).click();
-    await page.waitForTimeout(2000);
-
-    await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
-
-    expect(apiRequests.length).toBeGreaterThan(0);
-
-    const request = apiRequests[0] as NominatimApiRequest;
-    validateNominatimRequest(request);
-
-    const lon = parseFloat(request.params?.lon || '');
-    const lat = parseFloat(request.params?.lat || '');
-    expect(lon).not.toBeNaN();
-    expect(lat).not.toBeNaN();
-  });
-
-  test('should make Nominatim request with Berlin coordinates for "to here"', async ({
-    page,
-  }) => {
-    const apiRequests = await setupNominatimMock(
-      page,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      simpleMockNominatimResponse as any
-    );
-
-    await page.getByRole('region', { name: 'Map' }).click({
-      button: 'right',
-      force: true,
-    });
-
-    await page.getByRole('button', { name: 'Directions to here' }).click();
-    await page.waitForTimeout(2000);
-
-    await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
-
-    expect(apiRequests.length).toBe(1);
-
-    const request = apiRequests[0] as NominatimApiRequest;
-    validateNominatimRequest(request);
-    validateBerlinCoordinates(request.params?.lon, request.params?.lat);
-  });
-
-  test('should populate "to" input with Nominatim result', async ({ page }) => {
-    await setupNominatimMock(page);
-
+  test('should place "to" waypoint with raw coordinates', async ({ page }) => {
     await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Directions to here' }).click();
     await page.waitForTimeout(2000);
@@ -199,37 +59,13 @@ test.describe('Map interactions with right context menu', () => {
     await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     await expect(
-      page.getByTestId('waypoint-input-1').getByText('Unter den Linden, Mitte,')
+      page.getByTestId('waypoint-input-1').getByText(/\d+\.\d{6}, \d+\.\d{6}/)
     ).toBeVisible();
   });
 
-  test('should make Nominatim request when clicking "Add as via point"', async ({
+  test('should place via point waypoint with raw coordinates', async ({
     page,
   }) => {
-    const apiRequests = await setupNominatimMock(page);
-
-    await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
-    await page.getByRole('button', { name: 'Add as via point' }).click();
-    await page.waitForTimeout(2000);
-
-    await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
-
-    expect(apiRequests.length).toBeGreaterThan(0);
-
-    const request = apiRequests[0] as NominatimApiRequest;
-    validateNominatimRequest(request);
-
-    const lon = parseFloat(request.params?.lon || '');
-    const lat = parseFloat(request.params?.lat || '');
-    expect(lon).not.toBeNaN();
-    expect(lat).not.toBeNaN();
-  });
-
-  test('should populate via point input with Nominatim result', async ({
-    page,
-  }) => {
-    await setupNominatimMock(page);
-
     await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Add as via point' }).click();
     await page.waitForTimeout(2000);
@@ -237,13 +73,11 @@ test.describe('Map interactions with right context menu', () => {
     await expect(page.getByLabel('Map marker').getByRole('img')).toBeVisible();
 
     await expect(
-      page.getByTestId('waypoint-input-1').getByText('Unter den Linden, Mitte,')
+      page.getByTestId('waypoint-input-1').getByText(/\d+\.\d{6}, \d+\.\d{6}/)
     ).toBeVisible();
   });
 
   test('should add multiple via points', async ({ page }) => {
-    await setupNominatimMock(page);
-
     // Add first via point
     await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Add as via point' }).click();
@@ -266,17 +100,15 @@ test.describe('Map interactions with right context menu', () => {
     ).toBeVisible();
 
     await expect(
-      page.getByTestId('waypoint-input-1').getByText('Unter den Linden, Mitte,')
+      page.getByTestId('waypoint-input-1').getByText(/\d+\.\d{6}, \d+\.\d{6}/)
     ).toBeVisible();
 
     await expect(
-      page.getByTestId('waypoint-input-2').getByText('Unter den Linden, Mitte,')
+      page.getByTestId('waypoint-input-2').getByText(/\d+\.\d{6}, \d+\.\d{6}/)
     ).toBeVisible();
   });
 
   test('should handle at least 9 waypoints', async ({ page }) => {
-    await setupNominatimMock(page);
-
     // Add "from" waypoint
     await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Directions from here' }).click();
@@ -319,7 +151,6 @@ test.describe('Map interactions with right context menu', () => {
   test('selecting two point should display route on the map', async ({
     page,
   }) => {
-    await setupNominatimMock(page);
     const apiRequests = await setupRouteMock(page);
 
     // Select "from" point
@@ -351,7 +182,6 @@ test.describe('Map interactions with right context menu', () => {
   });
 
   test('should display maneuvers when route is created', async ({ page }) => {
-    await setupNominatimMock(page);
     await setupRouteMock(page);
 
     // Select "from" point
@@ -411,7 +241,6 @@ test.describe('Map interactions with right context menu', () => {
   test('should send route request again when waypoint is moved', async ({
     page,
   }) => {
-    const nominatimRequests = await setupNominatimMock(page);
     const routeRequests = await setupRouteMock(
       page,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -440,7 +269,6 @@ test.describe('Map interactions with right context menu', () => {
 
     await expect(toWaypoint).toBeVisible();
 
-    expect(nominatimRequests.length).toBe(2);
     expect(routeRequests.length).toBe(1);
 
     // Drag waypoint
@@ -463,7 +291,6 @@ test.describe('Map interactions with right context menu', () => {
       page.mouse.up();
       await page.waitForTimeout(1000);
 
-      expect(nominatimRequests.length).toBe(3);
       expect(routeRequests.length).toBe(2);
     }
   });
@@ -543,7 +370,6 @@ test.describe('Map interactions with URL parameters', () => {
   test('should show the route if url has route parameters', async ({
     page,
   }) => {
-    const nominatimRequests = await setupNominatimMock(page);
     const routeRequests = await setupRouteMock(page);
 
     await page.goto(
@@ -561,14 +387,12 @@ test.describe('Map interactions with URL parameters', () => {
       ).toBeVisible();
     }
 
-    expect(nominatimRequests.length).toBe(2);
     expect(routeRequests.length).toBe(1);
   });
 
   test('should show the route if url has route parameters for many waypoints', async ({
     page,
   }) => {
-    const nominatimRequests = await setupNominatimMock(page);
     const routeRequests = await setupRouteMock(page);
 
     await page.goto(
@@ -586,7 +410,6 @@ test.describe('Map interactions with URL parameters', () => {
       ).toBeVisible();
     }
 
-    expect(nominatimRequests.length).toBe(8);
     expect(routeRequests.length).toBe(1);
   });
 });
@@ -616,7 +439,6 @@ https: test.describe('Left drawer', () => {
   test('should make Nominatim request when entering address in search box', async ({
     page,
   }) => {
-    await setupNominatimMock(page);
     const searchRequests = await setupSearchMock(page);
 
     await page.getByTestId('waypoint-input-0').click();
@@ -639,7 +461,6 @@ https: test.describe('Left drawer', () => {
   test('should display route for two points via entering addresses in search box', async ({
     page,
   }) => {
-    await setupNominatimMock(page);
     const searchRequests = await setupSearchMock(page);
     const routeRequests = await setupRouteMock(page);
 
@@ -681,8 +502,6 @@ https: test.describe('Left drawer', () => {
   test('should display correct behaviour for removing waypoints after route is determined', async ({
     page,
   }) => {
-    await setupNominatimMock(page);
-
     // Add first via waypoint
     await page.getByRole('region', { name: 'Map' }).click({ button: 'right' });
     await page.getByRole('button', { name: 'Add as via point' }).click();
@@ -704,16 +523,15 @@ https: test.describe('Left drawer', () => {
     ).toBeVisible();
 
     await expect(
-      page.getByTestId('waypoint-input-1').getByText('Unter den Linden, Mitte,')
-      // .getByRole('textbox', { name: 'Hit enter for search...' })
+      page.getByTestId('waypoint-input-1').getByText(/\d+\.\d{6}, \d+\.\d{6}/)
     ).toBeVisible();
     await expect(
-      page.getByTestId('waypoint-input-2').getByText('Unter den Linden, Mitte,')
+      page.getByTestId('waypoint-input-2').getByText(/\d+\.\d{6}, \d+\.\d{6}/)
     ).toBeVisible();
 
     await page.getByTestId('remove-waypoint-button').nth(2).click();
     await expect(
-      page.getByTestId('waypoint-input-2').getByText('Unter den Linden, Mitte,')
+      page.getByTestId('waypoint-input-2').getByText(/\d+\.\d{6}, \d+\.\d{6}/)
     ).not.toBeVisible();
 
     // Remove waypoint (should just clear text without removing actual element)
@@ -730,7 +548,6 @@ https: test.describe('Left drawer', () => {
   test('should send the route request again when user changed profile', async ({
     page,
   }) => {
-    await setupNominatimMock(page);
     const routeRequests = await setupRouteMock(page);
 
     // Add first via point
