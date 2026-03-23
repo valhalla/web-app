@@ -6,6 +6,7 @@ import { MetricItem } from '@/components/ui/metric-item';
 import { RouteAttributes } from '@/components/ui/route-attributes';
 import { formatDuration } from '@/utils/date-time';
 import { useDirectionsStore } from '@/stores/directions-store';
+import { getManeuverIcon } from '@/utils/get-maneuver-icon';
 
 const getLength = (length: number) => {
   const visibleLength = length * 1000;
@@ -65,24 +66,30 @@ export const Maneuvers = ({ legs, index }: ManeuversProps) => {
                 zoomToMnv(startIndices[i]! + mnv.begin_shape_index)
               }
             >
-              <div>
-                <p>{mnv.instruction}</p>
-                {mnv.type !== 4 && mnv.type !== 5 && mnv.type !== 6 && (
-                  <div className="flex items-center gap-2">
-                    <MetricItem
-                      icon={MoveHorizontal}
-                      label="Length"
-                      value={getLength(mnv.length)}
-                      variant="outline"
-                    />
-                    <MetricItem
-                      icon={Clock}
-                      label="Time"
-                      value={formatDuration(mnv.time)}
-                      variant="outline"
-                    />
-                  </div>
-                )}
+              <div className="flex items-start gap-3">
+                {React.createElement(getManeuverIcon(mnv.type), {
+                  size: 20,
+                  className: 'mt-1 shrink-0 text-muted-foreground',
+                })}
+                <div>
+                  <p>{mnv.instruction}</p>
+                  {mnv.type !== 4 && mnv.type !== 5 && mnv.type !== 6 && (
+                    <div className="flex items-center gap-2">
+                      <MetricItem
+                        icon={MoveHorizontal}
+                        label="Length"
+                        value={getLength(mnv.length)}
+                        variant="outline"
+                      />
+                      <MetricItem
+                        icon={Clock}
+                        label="Time"
+                        value={formatDuration(mnv.time)}
+                        variant="outline"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <RouteAttributes
