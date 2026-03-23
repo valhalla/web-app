@@ -1,4 +1,4 @@
-import type { LayerSpecification, SourceSpecification } from 'maplibre-gl';
+import type { SourceSpecification } from 'maplibre-gl';
 import { getBaseUrl, normalizeBaseUrl } from '@/utils/base-url';
 
 export const VALHALLA_SOURCE_ID = 'valhalla-tiles';
@@ -26,110 +26,13 @@ export function getValhallaSourceSpec(): SourceSpecification {
   };
 }
 
-export const VALHALLA_EDGES_LAYER: LayerSpecification = {
-  id: VALHALLA_EDGES_LAYER_ID,
-  type: 'line',
-  source: VALHALLA_SOURCE_ID,
-  'source-layer': 'edges',
-  minzoom: 7,
-  maxzoom: 22,
-  filter: ['all'],
-  layout: { visibility: 'visible' },
-  paint: {
-    'line-color': [
-      'match',
-      ['get', 'tile_level'],
-      0,
-      '#ff0000',
-      1,
-      '#ff8800',
-      2,
-      '#ffdd00',
-      '#ff00ff',
-    ],
-    'line-width': [
-      'interpolate',
-      ['exponential', 1.5],
-      ['zoom'],
-      12,
-      ['match', ['get', 'tile_level'], 0, 3, 1, 2, 2, 1, 2],
-      14,
-      ['match', ['get', 'tile_level'], 0, 4, 1, 3, 2, 2, 3],
-      16,
-      ['match', ['get', 'tile_level'], 0, 6, 1, 4, 2, 3, 4],
-      18,
-      ['match', ['get', 'tile_level'], 0, 8, 1, 6, 2, 4, 6],
-      20,
-      ['match', ['get', 'tile_level'], 0, 10, 1, 8, 2, 6, 8],
-      22,
-      ['match', ['get', 'tile_level'], 0, 12, 1, 10, 2, 8, 10],
-    ],
-    'line-opacity': 0.8,
-  },
-};
-
-// Shortcuts is now a separate tile layer.
-// and It uses the same line style as edges.
-export const VALHALLA_SHORTCUTS_LAYER: LayerSpecification = {
-  id: VALHALLA_SHORTCUTS_LAYER_ID,
-  type: 'line',
-  source: VALHALLA_SOURCE_ID,
-  'source-layer': 'shortcuts',
-  minzoom: 7,
-  maxzoom: 22,
-  filter: ['all'],
-  layout: { visibility: 'visible' },
-  paint: {
-    'line-color': [
-      'match',
-      ['get', 'tile_level'],
-      0,
-      '#ff0000',
-      1,
-      '#ff8800',
-      2,
-      '#ffdd00',
-      '#ff00ff',
-    ],
-    'line-width': [
-      'interpolate',
-      ['exponential', 1.5],
-      ['zoom'],
-      12,
-      ['match', ['get', 'tile_level'], 0, 3, 1, 2, 2, 1, 2],
-      14,
-      ['match', ['get', 'tile_level'], 0, 4, 1, 3, 2, 2, 3],
-      16,
-      ['match', ['get', 'tile_level'], 0, 6, 1, 4, 2, 3, 4],
-      18,
-      ['match', ['get', 'tile_level'], 0, 8, 1, 6, 2, 4, 6],
-      20,
-      ['match', ['get', 'tile_level'], 0, 10, 1, 8, 2, 6, 8],
-      22,
-      ['match', ['get', 'tile_level'], 0, 12, 1, 10, 2, 8, 10],
-    ],
-    'line-opacity': 0.8,
-  },
-};
-
-export const VALHALLA_NODES_LAYER: LayerSpecification = {
-  id: VALHALLA_NODES_LAYER_ID,
-  type: 'circle',
-  source: VALHALLA_SOURCE_ID,
-  'source-layer': 'nodes',
-  minzoom: 16,
-  maxzoom: 22,
-  paint: {
-    'circle-radius': ['interpolate', ['linear'], ['zoom'], 16, 2, 18, 4, 20, 6],
-    'circle-color': ['case', ['get', 'traffic_signal'], '#ff0000', '#0088ff'],
-    'circle-stroke-color': '#ffffff',
-    'circle-stroke-width': 1,
-    'circle-opacity': 0.8,
-  },
-};
-
-export const VALHALLA_LAYERS: LayerSpecification[] = [
-  VALHALLA_EDGES_LAYER,
-  VALHALLA_SHORTCUTS_LAYER,
-  VALHALLA_NODES_LAYER,
-];
+export async function getValhallaStyle() {
+  const res = await fetch(
+    'https://raw.githubusercontent.com/valhalla/valhalla/refs/heads/master/docs/docs/api/tile/default_style.json'
+  );
+  const style = await res.json();
+  if (style.sources?.valhalla) {
+    style.sources.valhalla.tiles = [getValhallaTileUrl()];
+  }
+  return style;
+}
