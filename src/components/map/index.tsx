@@ -241,16 +241,11 @@ export const MapComponent = () => {
   }, [activeTab, refetchDirections, updateSettings, refetchIsochrones]);
 
   const updateWaypointPosition = useCallback(
-    (object: {
-      latLng: { lat: number; lng: number };
-      index: number;
-      fromDrag?: boolean;
-    }) => {
+    (object: { latLng: { lat: number; lng: number }; index: number }) => {
       reverseGeocodeDirections(
         object.latLng.lng,
         object.latLng.lat,
-        object.index,
-        { skipGeocode: !object.fromDrag }
+        object.index
       ).then(() => {
         refetchDirections();
       });
@@ -837,7 +832,6 @@ export const MapComponent = () => {
                 updateWaypointPosition({
                   latLng: { lat: e.lngLat.lat, lng: e.lngLat.lng },
                   index: marker.index ?? 0,
-                  fromDrag: true,
                 });
               } else if (marker.type === 'isocenter') {
                 updateIsoPosition(e.lngLat.lng, e.lngLat.lat);
