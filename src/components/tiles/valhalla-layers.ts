@@ -5,6 +5,10 @@ export const VALHALLA_SOURCE_ID = 'valhalla-tiles';
 export const VALHALLA_EDGES_LAYER_ID = 'valhalla-edges';
 export const VALHALLA_SHORTCUTS_LAYER_ID = 'valhalla-shortcuts';
 export const VALHALLA_NODES_LAYER_ID = 'valhalla-nodes';
+export const VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID =
+  'valhalla-access-restrictions-permanent';
+export const VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID =
+  'valhalla-access-restrictions-timed';
 
 // Pre-encoded JSON: {"tile":{"z":{z},"x":{x},"y":{y}}}
 // Placeholders {z}, {x}, {y} remain unencoded for MapLibre to replace
@@ -128,8 +132,64 @@ export const VALHALLA_NODES_LAYER: LayerSpecification = {
   },
 };
 
+export const VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER: LayerSpecification =
+  {
+    id: VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID,
+    type: 'line',
+    source: VALHALLA_SOURCE_ID,
+    'source-layer': 'access_restrictions',
+    minzoom: 7,
+    maxzoom: 22,
+    filter: ['!', ['in', ['get', 'type'], ['literal', [6, 7]]]],
+    layout: { visibility: 'visible' },
+    paint: {
+      'line-color': '#e63946',
+      'line-width': [
+        'interpolate',
+        ['exponential', 1.5],
+        ['zoom'],
+        12,
+        2,
+        16,
+        4,
+        20,
+        6,
+      ],
+      'line-opacity': 0.9,
+    },
+  };
+
+export const VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER: LayerSpecification = {
+  id: VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID,
+  type: 'line',
+  source: VALHALLA_SOURCE_ID,
+  'source-layer': 'access_restrictions',
+  minzoom: 7,
+  maxzoom: 22,
+  filter: ['in', ['get', 'type'], ['literal', [6, 7]]],
+  layout: { visibility: 'visible' },
+  paint: {
+    'line-color': '#f4a261',
+    'line-dasharray': [4, 2],
+    'line-width': [
+      'interpolate',
+      ['exponential', 1.5],
+      ['zoom'],
+      12,
+      2,
+      16,
+      4,
+      20,
+      6,
+    ],
+    'line-opacity': 0.9,
+  },
+};
+
 export const VALHALLA_LAYERS: LayerSpecification[] = [
   VALHALLA_EDGES_LAYER,
   VALHALLA_SHORTCUTS_LAYER,
   VALHALLA_NODES_LAYER,
+  VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER,
+  VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER,
 ];

@@ -50,6 +50,8 @@ import {
   VALHALLA_EDGES_LAYER_ID,
   VALHALLA_NODES_LAYER_ID,
   VALHALLA_SHORTCUTS_LAYER_ID,
+  VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID,
+  VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID,
 } from '@/components/tiles/valhalla-layers';
 import { MarkerIcon, type MarkerColor } from './parts/marker-icon';
 import { maxBounds } from './constants';
@@ -493,6 +495,8 @@ export const MapComponent = () => {
         VALHALLA_EDGES_LAYER_ID,
         VALHALLA_NODES_LAYER_ID,
         VALHALLA_SHORTCUTS_LAYER_ID,
+        VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID,
+        VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID,
       ].filter((layerId) => map.getLayer(layerId));
 
       if (availableLayers.length === 0) return;
@@ -738,7 +742,11 @@ export const MapComponent = () => {
         features.length > 0 &&
         (features[0]?.layer?.id === VALHALLA_EDGES_LAYER_ID ||
           features[0]?.layer?.id === VALHALLA_NODES_LAYER_ID ||
-          features[0]?.layer?.id === VALHALLA_SHORTCUTS_LAYER_ID);
+          features[0]?.layer?.id === VALHALLA_SHORTCUTS_LAYER_ID ||
+          features[0]?.layer?.id ===
+            VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID ||
+          features[0]?.layer?.id ===
+            VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID);
 
       if (isOverRoute) {
         onRouteLineHover(event);
@@ -797,6 +805,8 @@ export const MapComponent = () => {
                 VALHALLA_EDGES_LAYER_ID,
                 VALHALLA_NODES_LAYER_ID,
                 VALHALLA_SHORTCUTS_LAYER_ID,
+                VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID,
+                VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID,
               ]
             : ['routes-line']
         }
