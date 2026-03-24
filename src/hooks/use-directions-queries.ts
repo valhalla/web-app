@@ -133,8 +133,13 @@ export function useReverseGeocodeDirections() {
     options?: { isPermalink?: boolean }
   ) => {
     // For permalink loading, add waypoint if needed
-    if (options?.isPermalink && index > 1) {
-      addEmptyWaypointToEnd();
+    if (options?.isPermalink) {
+      const waypointCount = useDirectionsStore.getState().waypoints.length;
+      const missingWaypoints = index + 1 - waypointCount;
+
+      for (let i = 0; i < missingWaypoints; i++) {
+        addEmptyWaypointToEnd();
+      }
     }
 
     // Set placeholder immediately
