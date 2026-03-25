@@ -7,6 +7,14 @@ import {
   VALHALLA_NODES_LAYER_ID,
   VALHALLA_LAYER_IDS,
   VALHALLA_DEFAULT_STYLE_URL,
+  VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID,
+  VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID,
+  VALHALLA_EDGES_LAYER,
+  VALHALLA_SHORTCUTS_LAYER,
+  VALHALLA_NODES_LAYER,
+  VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER,
+  VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER,
+  VALHALLA_LAYERS,
   getValhallaTileUrl,
   getValhallaSourceSpec,
   getValhallaLayers,
@@ -35,6 +43,12 @@ describe('valhalla-layers', () => {
       expect(VALHALLA_EDGES_LAYER_ID).toBe('valhalla-edges');
       expect(VALHALLA_SHORTCUTS_LAYER_ID).toBe('valhalla-shortcuts');
       expect(VALHALLA_NODES_LAYER_ID).toBe('valhalla-nodes');
+      expect(VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID).toBe(
+        'valhalla-access-restrictions-permanent'
+      );
+      expect(VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID).toBe(
+        'valhalla-access-restrictions-timed'
+      );
     });
 
     it('should export app layer IDs in expected order', () => {
@@ -43,12 +57,110 @@ describe('valhalla-layers', () => {
         VALHALLA_SHORTCUTS_LAYER_ID,
         VALHALLA_NODES_LAYER_ID,
       ]);
+    it('should export VALHALLA_LAYERS array with all layers', () => {
+      expect(VALHALLA_LAYERS).toHaveLength(5);
+      expect(VALHALLA_LAYERS).toContain(VALHALLA_EDGES_LAYER);
+      expect(VALHALLA_LAYERS).toContain(VALHALLA_SHORTCUTS_LAYER);
+      expect(VALHALLA_LAYERS).toContain(VALHALLA_NODES_LAYER);
+      expect(VALHALLA_LAYERS).toContain(
+        VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER
+      );
+      expect(VALHALLA_LAYERS).toContain(
+        VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER
+      );
+    });
+  });
+
+  describe('VALHALLA_EDGES_LAYER', () => {
+    const edgesLayer = VALHALLA_EDGES_LAYER as LineLayerSpecification;
+
+    it('should have correct id', () => {
+      expect(edgesLayer.id).toBe(VALHALLA_EDGES_LAYER_ID);
+    });
+
+    it('should be a line type layer', () => {
+      expect(edgesLayer.type).toBe('line');
+    });
+
+    it('should reference correct source', () => {
+      expect(edgesLayer.source).toBe(VALHALLA_SOURCE_ID);
+    });
+
+    it('should have edges source-layer', () => {
+      expect(edgesLayer['source-layer']).toBe('edges');
     });
 
     it('should export hosted default style url', () => {
       expect(VALHALLA_DEFAULT_STYLE_URL).toContain(
         'raw.githubusercontent.com/valhalla/valhalla/master/docs/docs/api/tile/default_style.json'
       );
+    });
+  });
+
+  describe('VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER', () => {
+    const layer =
+      VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER as LineLayerSpecification;
+
+    it('should have correct id', () => {
+      expect(layer.id).toBe(VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID);
+    });
+
+    it('should be a line type layer', () => {
+      expect(layer.type).toBe('line');
+    });
+
+    it('should reference correct source', () => {
+      expect(layer.source).toBe(VALHALLA_SOURCE_ID);
+    });
+
+    it('should have access_restrictions source-layer', () => {
+      expect(layer['source-layer']).toBe('access_restrictions');
+    });
+
+    it('should filter out timed restrictions', () => {
+      expect(layer.filter).toEqual([
+        '!',
+        ['in', ['get', 'type'], ['literal', [6, 7]]],
+      ]);
+    });
+
+    it('should have paint properties', () => {
+      expect(layer.paint).toHaveProperty('line-color');
+      expect(layer.paint).toHaveProperty('line-width');
+      expect(layer.paint).toHaveProperty('line-opacity');
+    });
+  });
+
+  describe('VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER', () => {
+    const layer =
+      VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER as LineLayerSpecification;
+
+    it('should have correct id', () => {
+      expect(layer.id).toBe(VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID);
+    });
+
+    it('should be a line type layer', () => {
+      expect(layer.type).toBe('line');
+    });
+
+    it('should reference correct source', () => {
+      expect(layer.source).toBe(VALHALLA_SOURCE_ID);
+    });
+
+    it('should have access_restrictions source-layer', () => {
+      expect(layer['source-layer']).toBe('access_restrictions');
+    });
+
+    it('should filter to timed restrictions only', () => {
+      expect(layer.filter).toEqual([
+        'in',
+        ['get', 'type'],
+        ['literal', [6, 7]],
+      ]);
+    });
+
+    it('should have a dash array for visual distinction', () => {
+      expect(layer.paint).toHaveProperty('line-dasharray');
     });
   });
 

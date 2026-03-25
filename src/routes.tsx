@@ -10,6 +10,10 @@ import { App } from './app';
 import { RootComponent } from './components/root-component';
 import * as TanStackQueryProvider from './lib/tanstack-query/root-provider';
 import { searchParamsSchema, isValidTab } from './utils/route-schemas';
+import type { Profile } from './stores/common-store';
+
+const defaultProfile = ((import.meta.env
+  .VITE_DEFAULT_COSTING_MODEL as string) || 'bicycle') as Profile;
 
 export const rootRoute = createRootRoute({ component: RootComponent });
 
@@ -24,7 +28,7 @@ export const indexRoute = createRoute({
       to: '/$activeTab',
       params: { activeTab: 'directions' },
       search: {
-        profile: 'bicycle',
+        profile: defaultProfile,
       },
     });
   },
@@ -44,7 +48,7 @@ const activeTabRoute = createRoute({
         to: '/$activeTab',
         params: { activeTab: 'directions' },
         search: {
-          profile: 'bicycle',
+          profile: defaultProfile,
         },
       });
     }
@@ -54,7 +58,7 @@ const activeTabRoute = createRoute({
         params: { activeTab: params.activeTab },
         search: {
           ...search,
-          profile: 'bicycle',
+          profile: defaultProfile,
         },
       });
     }

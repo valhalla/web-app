@@ -10,6 +10,8 @@ import {
   VALHALLA_EDGES_LAYER_ID,
   VALHALLA_NODES_LAYER_ID,
   VALHALLA_SHORTCUTS_LAYER_ID,
+  VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID,
+  VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID,
 } from './valhalla-layers';
 
 vi.mock('./valhalla-layers', async () => {
@@ -190,6 +192,12 @@ describe('ValhallaLayersToggle', () => {
         VALHALLA_SHORTCUTS_LAYER_ID
       );
       expect(mockMap.removeLayer).toHaveBeenCalledWith(VALHALLA_NODES_LAYER_ID);
+      expect(mockMap.removeLayer).toHaveBeenCalledWith(
+        VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID
+      );
+      expect(mockMap.removeLayer).toHaveBeenCalledWith(
+        VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID
+      );
     });
 
     it('should remove source when toggled off', async () => {

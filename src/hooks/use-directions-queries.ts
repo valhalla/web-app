@@ -13,11 +13,7 @@ import {
   parseDirectionsGeometry,
   showValhallaWarnings,
 } from '@/utils/valhalla';
-import {
-  reverse_geocode,
-  forward_geocode,
-  parseGeocodeResponse,
-} from '@/utils/nominatim';
+import { forward_geocode, parseGeocodeResponse } from '@/utils/nominatim';
 import { filterProfileSettings } from '@/utils/filter-profile-settings';
 import { getDirectionsLanguage } from '@/utils/directions-language';
 import { useCommonStore } from '@/stores/common-store';
@@ -118,22 +114,6 @@ export function useDirectionsQuery() {
   });
 }
 
-async function fetchReverseGeocode(lng: number, lat: number) {
-  const response = await reverse_geocode(lng, lat);
-  const addresses = parseGeocodeResponse(response.data, [lng, lat]);
-
-  if (addresses.length === 0) {
-    toast.warning('No addresses', {
-      description: 'Sorry, no addresses can be found.',
-      position: 'bottom-center',
-      duration: 5000,
-      closeButton: true,
-    });
-  }
-
-  return addresses as ActiveWaypoint[];
-}
-
 export function useReverseGeocodeDirections() {
   const receiveGeocodeResults = useDirectionsStore(
     (state) => state.receiveGeocodeResults
@@ -153,29 +133,37 @@ export function useReverseGeocodeDirections() {
     options?: { isPermalink?: boolean }
   ) => {
     // For permalink loading, add waypoint if needed
-    if (options?.isPermalink && index > 1) {
-      addEmptyWaypointToEnd();
+    if (options?.isPermalink) {
+      const waypointCount = useDirectionsStore.getState().waypoints.length;
+      const missingWaypoints = index + 1 - waypointCount;
+
+      for (let i = 0; i < missingWaypoints; i++) {
+        addEmptyWaypointToEnd();
+      }
     }
 
     // Set placeholder immediately
     updatePlaceholderAddressAtIndex(index, lng, lat);
 
-    try {
-      const addresses = await fetchReverseGeocode(lng, lat);
-      receiveGeocodeResults({
-        addresses,
-        index,
-      });
-      updateTextInput({
-        inputValue: addresses[0]?.title || '',
-        index,
-        addressindex: 0,
-      });
-      return addresses;
-    } catch (error) {
-      console.error('Reverse geocode error:', error);
-      throw error;
-    }
+    // Use raw coordinates directly — no reverse geocoding
+    const lngLat: [number, number] = [lng, lat];
+    const address: ActiveWaypoint = {
+      title: `${lng.toFixed(6)}, ${lat.toFixed(6)}`,
+      key: 0,
+      selected: true,
+      addresslnglat: lngLat,
+      sourcelnglat: lngLat,
+      displaylnglat: lngLat,
+      addressindex: 0,
+    };
+    const addresses = [address];
+    receiveGeocodeResults({ addresses, index });
+    updateTextInput({
+      inputValue: address.title,
+      index,
+      addressindex: 0,
+    });
+    return addresses;
   };
 
   return { reverseGeocode };
