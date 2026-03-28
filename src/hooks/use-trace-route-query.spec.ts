@@ -206,6 +206,64 @@ describe('useTraceRouteQuery', () => {
     );
   });
 
+  it('should prefer explicit gps_accuracy/search_radius over aliases', async () => {
+    const response = createRouteResponse();
+    vi.mocked(axios.post).mockResolvedValue({ data: response });
+
+    const { traceRoute } = useTraceRouteQuery({
+      polyline: 'abc123',
+      trace_options: {
+        accuracy: 9,
+        radius: 70,
+        gps_accuracy: 4,
+        search_radius: 25,
+      },
+    });
+
+    await traceRoute();
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'http://mock-valhalla/trace_route',
+      expect.objectContaining({
+        trace_options: expect.objectContaining({
+          gps_accuracy: 4,
+          search_radius: 25,
+        }),
+      }),
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+  });
+
+  it('should fallback to defaults for invalid numeric trace options', async () => {
+    const response = createRouteResponse();
+    vi.mocked(axios.post).mockResolvedValue({ data: response });
+
+    const { traceRoute } = useTraceRouteQuery({
+      polyline: 'abc123',
+      trace_options: {
+        gps_accuracy: Number.NaN,
+        search_radius: Number.POSITIVE_INFINITY,
+        interpolation_distance: -1,
+        breakage_distance: Number.NaN,
+      },
+    });
+
+    await traceRoute();
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'http://mock-valhalla/trace_route',
+      expect.objectContaining({
+        trace_options: {
+          gps_accuracy: 5,
+          search_radius: 50,
+          interpolation_distance: 10,
+          breakage_distance: 50,
+        },
+      }),
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+  });
+
   it("should map 'car' costing to valhalla 'auto'", async () => {
     const response = createRouteResponse();
     vi.mocked(axios.post).mockResolvedValue({ data: response });

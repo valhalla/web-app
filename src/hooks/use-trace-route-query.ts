@@ -19,6 +19,10 @@ type Shape = {
 };
 
 const normalizePolyline = (input: string) => input.trim().replace(/\r?\n/g, '');
+const withDefaultNonNegative = (value: number | undefined, fallback: number) =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0
+    ? value
+    : fallback;
 
 type ShapeMatch = 'map_snap' | 'edge_walk' | 'walk_or_snap';
 
@@ -61,10 +65,22 @@ export const useTraceRouteQuery = ({
   }
 
   const resolvedTraceOptions = {
-    gps_accuracy: trace_options?.gps_accuracy ?? trace_options?.accuracy ?? 5,
-    search_radius: trace_options?.search_radius ?? trace_options?.radius ?? 50,
-    interpolation_distance: trace_options?.interpolation_distance ?? 10,
-    breakage_distance: trace_options?.breakage_distance ?? 50,
+    gps_accuracy: withDefaultNonNegative(
+      trace_options?.gps_accuracy ?? trace_options?.accuracy,
+      5
+    ),
+    search_radius: withDefaultNonNegative(
+      trace_options?.search_radius ?? trace_options?.radius,
+      50
+    ),
+    interpolation_distance: withDefaultNonNegative(
+      trace_options?.interpolation_distance,
+      10
+    ),
+    breakage_distance: withDefaultNonNegative(
+      trace_options?.breakage_distance,
+      50
+    ),
   };
 
   const valhallaRequest = {

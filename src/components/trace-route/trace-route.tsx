@@ -2,7 +2,7 @@ import { useTraceRouteQuery } from '@/hooks/use-trace-route-query';
 import { useCommonStore, type Profile } from '@/stores/common-store';
 import { useTraceRouteStore } from '@/stores/trace-route-store';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,12 @@ import { useSearch } from '@tanstack/react-router';
 import type { ParsedDirectionsGeometry } from '@/components/types';
 import { Summary } from './summary';
 import { Maneuvers } from './maneuvers';
+
+type TraceRouteErrorPayload = {
+  status?: string;
+  error?: string;
+  error_code?: number;
+};
 
 export const TraceRouteControl = () => {
   const [encodedPolyline, setEncodedPolyline] = useState('');
@@ -37,6 +43,9 @@ export const TraceRouteControl = () => {
   const [interpolationDistance, setInterpolationDistance] =
     useState<number>(10);
   const [showManeuvers, setShowManeuvers] = useState(false);
+  const isMountedRef = useRef(true);
+  const loadingTimeoutRef = useRef<number | null>(null);
+  const fileReadSeqRef = useRef(0);
   const showLoading = useCommonStore((state) => state.showLoading);
   const zoomTo = useCommonStore((state) => state.zoomTo);
   const [fileName, setFileName] = useState<string>('');
@@ -111,6 +120,15 @@ export const TraceRouteControl = () => {
   }, [activeRouteIndex, traceRouteResults.data]);
 
   useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (loadingTimeoutRef.current !== null) {
+        window.clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const t = window.setTimeout(() => {
       const value = encodedPolyline.trim();
       if (!value) {
@@ -148,6 +166,7 @@ export const TraceRouteControl = () => {
   };
 
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const readSeq = ++fileReadSeqRef.current;
     setFile(e.target.files?.[0] || null);
     const file = e.target.files?.[0];
     if (!file) {
@@ -180,6 +199,9 @@ export const TraceRouteControl = () => {
     setFileName(file.name);
 
     const text = await file.text();
+    if (!isMountedRef.current || readSeq !== fileReadSeqRef.current) {
+      return;
+    }
     setFileText(text);
     const coords = parseGpxToLatLng(text);
     zoomTo(coords);
@@ -193,22 +215,28 @@ export const TraceRouteControl = () => {
       setIsProcessing(true);
       showLoading(true);
       const data = await traceRoute();
-      if (data) {
+      if (isMountedRef.current && data) {
         receiveTraceRouteResults({ data });
         zoomTo(data.decodedGeometry);
       }
       return data;
     } catch (error) {
+      if (!isMountedRef.current) {
+        return;
+      }
       clearTraceRoute();
       if (axios.isAxiosError(error) && error.response) {
-        const response = error.response;
-        let error_msg = response.data.error;
-        if (response.data.error_code === 154) {
-          error_msg += ` for route.`;
+        const payload = (error.response.data ?? {}) as TraceRouteErrorPayload;
+        const statusText = payload.status ?? 'Trace route failed';
+        let errorMsg =
+          payload.error ??
+          (error instanceof Error ? error.message : 'Unknown error');
+        if (payload.error_code === 154 && !errorMsg.endsWith('for route.')) {
+          errorMsg += ' for route.';
         }
 
-        toast.warning(`${response.data.status}`, {
-          description: `${error_msg}`,
+        toast.warning(statusText, {
+          description: errorMsg,
           position: 'bottom-center',
           duration: 5000,
           closeButton: true,
@@ -221,10 +249,19 @@ export const TraceRouteControl = () => {
           closeButton: true,
         });
       }
-      throw error;
     } finally {
+      if (!isMountedRef.current) {
+        return;
+      }
       setIsProcessing(false);
-      setTimeout(() => showLoading(false), 500);
+      if (loadingTimeoutRef.current !== null) {
+        window.clearTimeout(loadingTimeoutRef.current);
+      }
+      loadingTimeoutRef.current = window.setTimeout(() => {
+        if (isMountedRef.current) {
+          showLoading(false);
+        }
+      }, 500);
     }
   };
 
