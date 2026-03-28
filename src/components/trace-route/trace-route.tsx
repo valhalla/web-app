@@ -6,11 +6,13 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { SettingsFooter } from '@/components/settings-footer';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { Separator } from '@/components/ui/separator';
 import { AccessibleIcon } from '@radix-ui/react-accessible-icon';
 import { ChevronDown, Settings } from 'lucide-react';
 import { decode } from '@/utils/polyline';
@@ -377,6 +379,9 @@ export const TraceRouteControl = () => {
           </label>
         </CollapsibleContent>
       </Collapsible>
+
+      <Separator />
+      <SettingsFooter />
 
       {traceRouteSuccessful && selectedRoute?.data?.trip && (
         <div className="mt-2 flex flex-col gap-2.5 border rounded-md p-2 bg-background">

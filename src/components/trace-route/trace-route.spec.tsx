@@ -91,6 +91,7 @@ describe('TraceRouteControl', () => {
       screen.getByPlaceholderText('Enter encoded polyline')
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Trace Route' })).toBeDisabled();
+    expect(screen.getByText(/Calculations by/i)).toBeInTheDocument();
   });
 
   it('should decode polyline and set input geometry on textarea change', async () => {
