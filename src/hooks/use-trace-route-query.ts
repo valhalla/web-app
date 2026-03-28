@@ -2,6 +2,7 @@ import type {
   ParsedDirectionsGeometry,
   ValhallaRouteResponse,
 } from '@/components/types';
+import type { Profile } from '@/stores/common-store';
 import { parseGpxToLatLng } from '@/utils/parse-gpx';
 import {
   getValhallaUrl,
@@ -19,13 +20,32 @@ type Shape = {
 
 const normalizePolyline = (input: string) => input.trim().replace(/\r?\n/g, '');
 
+type ShapeMatch = 'map_snap' | 'edge_walk' | 'walk_or_snap';
+
+interface TraceOptions {
+  accuracy?: number;
+  radius?: number;
+  gps_accuracy?: number;
+  breakage_distance?: number;
+  search_radius?: number;
+  interpolation_distance?: number;
+}
+
 export const useTraceRouteQuery = ({
   polyline,
   fileText,
+  costing = 'auto',
+  shape_match = 'map_snap',
+  trace_options,
 }: {
   polyline?: string;
   fileText?: string;
+  costing?: Profile;
+  shape_match?: ShapeMatch;
+  trace_options?: TraceOptions;
 }) => {
+  const valhallaCosting = costing === 'car' ? 'auto' : costing;
+
   const hasPolyline = !!polyline?.trim();
   const hasFile = !!fileText?.trim();
 
@@ -40,18 +60,26 @@ export const useTraceRouteQuery = ({
     }
   }
 
+  const resolvedTraceOptions = {
+    gps_accuracy: trace_options?.gps_accuracy ?? trace_options?.accuracy ?? 5,
+    search_radius: trace_options?.search_radius ?? trace_options?.radius ?? 50,
+    interpolation_distance: trace_options?.interpolation_distance ?? 10,
+    breakage_distance: trace_options?.breakage_distance ?? 50,
+  };
+
   const valhallaRequest = {
     json: {
       ...(hasPolyline
         ? {
             encoded_polyline: normalizePolyline(polyline!),
-            shape_match: 'map_snap',
+            shape_match: shape_match ?? 'map_snap',
           }
         : {
             shape,
-            shape_match: 'map_snap',
+            shape_match: shape_match ?? 'map_snap',
           }),
-      costing: 'auto',
+      costing: valhallaCosting,
+      trace_options: resolvedTraceOptions,
     },
   };
 

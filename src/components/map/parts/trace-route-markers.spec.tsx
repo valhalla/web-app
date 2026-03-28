@@ -25,19 +25,11 @@ vi.mock('@/stores/trace-route-store', () => ({
 }));
 
 const setupStore = ({
-  successful = true,
-  locations = [] as unknown[],
+  inputShape = [] as Array<{ lat: number; lon: number; type?: string }>,
 } = {}) => {
   mockUseTraceRouteStore.mockImplementation((selector) =>
     selector({
-      successful,
-      results: {
-        data: {
-          trip: {
-            locations,
-          },
-        },
-      },
+      inputShape,
     })
   );
 };
@@ -51,10 +43,9 @@ describe('TraceRouteMarkers', () => {
   it('should render nothing outside trace-route tab', () => {
     mockUseParams.mockReturnValue({ activeTab: 'directions' });
     setupStore({
-      successful: true,
-      locations: [
-        { lat: 52.5, lon: 13.4 },
-        { lat: 52.6, lon: 13.5 },
+      inputShape: [
+        { lat: 52.5, lon: 13.4, type: 'break' },
+        { lat: 52.6, lon: 13.5, type: 'break' },
       ],
     });
 
@@ -62,12 +53,11 @@ describe('TraceRouteMarkers', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('should render nothing when trace route is not successful', () => {
+  it('should render nothing when there are no break points', () => {
     setupStore({
-      successful: false,
-      locations: [
-        { lat: 52.5, lon: 13.4 },
-        { lat: 52.6, lon: 13.5 },
+      inputShape: [
+        { lat: 52.5, lon: 13.4, type: 'via' },
+        { lat: 52.6, lon: 13.5, type: 'through' },
       ],
     });
 
@@ -75,19 +65,19 @@ describe('TraceRouteMarkers', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('should render start and end markers when successful data exists', () => {
+  it('should render numbered markers for break points', () => {
     setupStore({
-      successful: true,
-      locations: [
-        { lat: 52.5, lon: 13.4 },
-        { lat: 52.6, lon: 13.5 },
+      inputShape: [
+        { lat: 52.5, lon: 13.4, type: 'break' },
+        { lat: 52.55, lon: 13.45, type: 'via' },
+        { lat: 52.6, lon: 13.5, type: 'break' },
       ],
     });
 
     render(<TraceRouteMarkers />);
 
-    expect(screen.getByText('A')).toBeInTheDocument();
-    expect(screen.getByText('B')).toBeInTheDocument();
+    expect(screen.getByText('1')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
     expect(mockMarker).toHaveBeenCalledTimes(2);
     expect(mockMarker).toHaveBeenNthCalledWith(
       1,

@@ -124,6 +124,12 @@ describe('useTraceRouteQuery', () => {
         encoded_polyline: 'abc123',
         shape_match: 'map_snap',
         costing: 'auto',
+        trace_options: {
+          gps_accuracy: 5,
+          search_radius: 50,
+          interpolation_distance: 10,
+          breakage_distance: 50,
+        },
       },
       { headers: { 'Content-Type': 'application/json' } }
     );
@@ -159,7 +165,63 @@ describe('useTraceRouteQuery', () => {
         ],
         shape_match: 'map_snap',
         costing: 'auto',
+        trace_options: {
+          gps_accuracy: 5,
+          search_radius: 50,
+          interpolation_distance: 10,
+          breakage_distance: 50,
+        },
       },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+  });
+
+  it('should map accuracy and radius to valhalla trace options', async () => {
+    const response = createRouteResponse();
+    vi.mocked(axios.post).mockResolvedValue({ data: response });
+
+    const { traceRoute } = useTraceRouteQuery({
+      polyline: 'abc123',
+      trace_options: {
+        accuracy: 7,
+        radius: 60,
+        breakage_distance: 75,
+        interpolation_distance: 15,
+      },
+    });
+
+    await traceRoute();
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'http://mock-valhalla/trace_route',
+      expect.objectContaining({
+        trace_options: {
+          gps_accuracy: 7,
+          search_radius: 60,
+          interpolation_distance: 15,
+          breakage_distance: 75,
+        },
+      }),
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+  });
+
+  it("should map 'car' costing to valhalla 'auto'", async () => {
+    const response = createRouteResponse();
+    vi.mocked(axios.post).mockResolvedValue({ data: response });
+
+    const { traceRoute } = useTraceRouteQuery({
+      polyline: 'abc123',
+      costing: 'car',
+    });
+
+    await traceRoute();
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'http://mock-valhalla/trace_route',
+      expect.objectContaining({
+        costing: 'auto',
+      }),
       { headers: { 'Content-Type': 'application/json' } }
     );
   });

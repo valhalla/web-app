@@ -17,6 +17,13 @@ interface TraceRouteResult {
   show: Record<string, boolean>;
 }
 
+type Shape = {
+  lat: number;
+  lon: number;
+  type?: 'break' | 'via' | 'through';
+  time?: number;
+};
+
 const createEmptyWaypoint = (id: 'start' | 'end'): TraceRouteWaypoint => ({
   id,
   geocodeResults: [],
@@ -67,6 +74,8 @@ export interface TraceRouteState {
   activeRouteIndex: number;
   waypoints: [TraceRouteWaypoint, TraceRouteWaypoint];
   inputGeometry: number[][] | null;
+
+  inputShape: Shape[] | null;
 }
 
 interface TraceRouteActions {
@@ -76,6 +85,8 @@ interface TraceRouteActions {
   }) => void;
 
   setInputGeometry: (coords: number[][] | null) => void;
+
+  setInputShape: (shape: Shape[] | null) => void;
 
   setWaypoints: (waypoints: TraceRouteWaypoint[]) => void;
   clearWaypoints: () => void;
@@ -93,8 +104,8 @@ export const useTraceRouteStore = create<TraceRouteStore>()(
       activeRouteIndex: 0,
       waypoints: createDefaultWaypoints(),
 
-      // NEW
       inputGeometry: null,
+      inputShape: null,
 
       clearTraceRoute: () =>
         set(
@@ -105,8 +116,8 @@ export const useTraceRouteStore = create<TraceRouteStore>()(
             state.activeRouteIndex = 0;
             state.waypoints = createDefaultWaypoints();
 
-            // NEW
             state.inputGeometry = null;
+            state.inputShape = null;
           },
           undefined,
           'clearTraceRoute'
@@ -149,7 +160,6 @@ export const useTraceRouteStore = create<TraceRouteStore>()(
           'receiveTraceRouteResults'
         ),
 
-      // NEW
       setInputGeometry: (coords) =>
         set(
           (state) => {
@@ -157,6 +167,15 @@ export const useTraceRouteStore = create<TraceRouteStore>()(
           },
           undefined,
           'setInputGeometry'
+        ),
+
+      setInputShape: (shape) =>
+        set(
+          (state) => {
+            state.inputShape = shape;
+          },
+          undefined,
+          'setInputShape'
         ),
 
       setWaypoints: (waypoints) =>
