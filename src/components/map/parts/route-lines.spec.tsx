@@ -17,13 +17,48 @@ vi.mock('react-map-gl/maplibre', () => ({
 }));
 
 const mockUseDirectionsStore = vi.fn();
+const mockUseTraceRouteStore = vi.fn();
+const mockUseParams = vi.hoisted(() =>
+  vi.fn(() => ({ activeTab: 'directions' }))
+);
+
+vi.mock('@tanstack/react-router', () => ({
+  useParams: mockUseParams,
+}));
 
 vi.mock('@/stores/directions-store', () => ({
   useDirectionsStore: (selector: (state: unknown) => unknown) =>
     mockUseDirectionsStore(selector),
 }));
 
-const createMockState = (overrides = {}) => ({
+vi.mock('@/stores/trace-route-store', () => ({
+  useTraceRouteStore: (selector: (state: unknown) => unknown) =>
+    mockUseTraceRouteStore(selector),
+}));
+
+interface MockRouteGeometry {
+  decodedGeometry: number[][];
+  trip: {
+    summary: {
+      length: number;
+      time: number;
+    };
+  };
+  alternates: MockRouteGeometry[];
+}
+
+interface MockRouteState {
+  results: {
+    data: MockRouteGeometry | null;
+    show: Record<number, boolean>;
+  };
+  successful: boolean;
+  activeRouteIndex: number;
+}
+
+const createMockState = (
+  overrides: Partial<MockRouteState> = {}
+): MockRouteState => ({
   results: {
     data: {
       decodedGeometry: [
@@ -40,17 +75,38 @@ const createMockState = (overrides = {}) => ({
   ...overrides,
 });
 
+const setupStores = ({
+  activeTab = 'directions',
+  directionState = createMockState(),
+  traceState = createMockState(),
+}: {
+  activeTab?: string;
+  directionState?: MockRouteState;
+  traceState?: MockRouteState;
+} = {}) => {
+  mockUseParams.mockReturnValue({ activeTab });
+  mockUseDirectionsStore.mockImplementation((selector) =>
+    selector(directionState)
+  );
+  mockUseTraceRouteStore.mockImplementation((selector) => selector(traceState));
+};
+
 describe('RouteLines', () => {
   beforeEach(() => {
     mockSource.mockClear();
     mockLayer.mockClear();
     mockUseDirectionsStore.mockClear();
+    mockUseTraceRouteStore.mockClear();
+    mockUseParams.mockReturnValue({ activeTab: 'directions' });
   });
 
   it('should render nothing when results data is null', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
-      const state = { results: { data: null, show: {} }, successful: false };
-      return selector(state);
+    setupStores({
+      directionState: {
+        results: { data: null, show: {} },
+        successful: false,
+        activeRouteIndex: -1,
+      },
     });
 
     const { container } = render(<RouteLines />);
@@ -59,10 +115,7 @@ describe('RouteLines', () => {
   });
 
   it('should render nothing when not successful', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
-      const state = createMockState({ successful: false });
-      return selector(state);
-    });
+    setupStores({ directionState: createMockState({ successful: false }) });
 
     const { container } = render(<RouteLines />);
 
@@ -70,10 +123,7 @@ describe('RouteLines', () => {
   });
 
   it('should render Source when data is valid', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
-      const state = createMockState();
-      return selector(state);
-    });
+    setupStores();
 
     render(<RouteLines />);
 
@@ -83,10 +133,7 @@ describe('RouteLines', () => {
   });
 
   it('should render two layers (outline and line)', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
-      const state = createMockState();
-      return selector(state);
-    });
+    setupStores();
 
     render(<RouteLines />);
 
@@ -94,10 +141,7 @@ describe('RouteLines', () => {
   });
 
   it('should render outline layer with white color', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
-      const state = createMockState();
-      return selector(state);
-    });
+    setupStores();
 
     render(<RouteLines />);
 
@@ -111,10 +155,7 @@ describe('RouteLines', () => {
   });
 
   it('should render line layer with dynamic color', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
-      const state = createMockState();
-      return selector(state);
-    });
+    setupStores();
 
     render(<RouteLines />);
 
@@ -132,10 +173,7 @@ describe('RouteLines', () => {
   });
 
   it('should convert lat/lng to lng/lat format', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
-      const state = createMockState();
-      return selector(state);
-    });
+    setupStores();
 
     render(<RouteLines />);
 
@@ -143,5 +181,39 @@ describe('RouteLines', () => {
     const coords = sourceCall?.data.features[0].geometry.coordinates;
     expect(coords[0]).toEqual([10, 50]);
     expect(coords[1]).toEqual([11, 51]);
+  });
+
+  it('should use trace-route results when active tab is trace-route', () => {
+    setupStores({
+      activeTab: 'trace-route',
+      directionState: {
+        results: { data: null, show: {} },
+        successful: false,
+        activeRouteIndex: -1,
+      },
+      traceState: createMockState({
+        activeRouteIndex: 0,
+        results: {
+          data: {
+            decodedGeometry: [
+              [1, 2],
+              [3, 4],
+            ],
+            trip: { summary: { length: 2, time: 60 } },
+            alternates: [],
+          },
+          show: { 0: true },
+        },
+      }),
+    });
+
+    render(<RouteLines />);
+
+    const sourceCall = mockSource.mock.calls[0]?.[0];
+    const coords = sourceCall?.data.features[0].geometry.coordinates;
+    expect(coords).toEqual([
+      [2, 1],
+      [4, 3],
+    ]);
   });
 });

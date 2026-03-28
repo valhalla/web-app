@@ -198,6 +198,18 @@ vi.mock('./parts/route-lines', () => ({
   RouteLines: vi.fn(() => <div data-testid="route-lines">Route Lines</div>),
 }));
 
+vi.mock('./parts/trace-input-line', () => ({
+  TraceRouteInputLine: vi.fn(() => (
+    <div data-testid="trace-input-line">Trace Input Line</div>
+  )),
+}));
+
+vi.mock('./parts/trace-route-markers', () => ({
+  TraceRouteMarkers: vi.fn(() => (
+    <div data-testid="trace-route-markers">Trace Route Markers</div>
+  )),
+}));
+
 vi.mock('./parts/highlight-segment', () => ({
   HighlightSegment: vi.fn(() => (
     <div data-testid="highlight-segment">Highlight</div>
@@ -343,6 +355,12 @@ describe('MapComponent', () => {
   it('should render route lines component', () => {
     render(<MapComponent />);
     expect(screen.getByTestId('route-lines')).toBeInTheDocument();
+  });
+
+  it('should render trace-route input and marker layers', () => {
+    render(<MapComponent />);
+    expect(screen.getByTestId('trace-input-line')).toBeInTheDocument();
+    expect(screen.getByTestId('trace-route-markers')).toBeInTheDocument();
   });
 
   it('should render highlight segment component', () => {
