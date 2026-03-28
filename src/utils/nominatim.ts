@@ -31,6 +31,8 @@ export const parseGeocodeResponse = (
   }
 
   const processedResults = [];
+  const seenKeys = new Set<string>();
+
   for (const [index, result] of results.entries()) {
     if (
       'error' in result &&
@@ -48,6 +50,19 @@ export const parseGeocodeResponse = (
         addressindex: index,
       });
     } else {
+      const normalizedTitle = result.display_name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+      const roundedLat = parseFloat(result.lat).toFixed(4);
+      const roundedLon = parseFloat(result.lon).toFixed(4);
+      const dedupeKey = `${normalizedTitle}${roundedLat}${roundedLon}`;
+
+      if (seenKeys.has(dedupeKey)) {
+        continue;
+      }
+      seenKeys.add(dedupeKey);
+
       processedResults.push({
         title:
           result.display_name.length > 0
