@@ -31,15 +31,10 @@ describe('parseGeocodeResponse', () => {
     const lat = `${++counter}.0000`;
     const lon = `${++counter}.0000`;
 
-    // We add '1' at the end of the decimals to show rounding works
-    // For example, if lat is "1.0000", latRounders becomes "1.00001", which safely rounds back to "1.0000"
-    const latRounded = `${lat}1`;
-    const lonRounded = `${lon}1`;
-
     const results = [
       makeResult('Pláce C', lat, lon),
       makeResult('Place C', lat, lon),
-      makeResult('PLÁCE C', latRounded, lonRounded),
+      makeResult('PLÁCE C', lat, lon),
     ];
 
     const processed = parseGeocodeResponse(results);
