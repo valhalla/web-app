@@ -54,9 +54,7 @@ export const parseGeocodeResponse = (
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '');
-      const roundedLat = parseFloat(result.lat).toFixed(4);
-      const roundedLon = parseFloat(result.lon).toFixed(4);
-      const dedupeKey = `${normalizedTitle}${roundedLat}${roundedLon}`;
+      const dedupeKey = `${normalizedTitle}${result.boundingbox.join(',')}`;
 
       if (seenKeys.has(dedupeKey)) {
         continue;
