@@ -54,7 +54,7 @@ export const parseGeocodeResponse = (
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '');
-      const dedupeKey = `${normalizedTitle}${result.boundingbox.join(',')}`;
+      const dedupeKey = `${normalizedTitle}${result.boundingbox?.join(',') ?? ''}`;
 
       if (seenKeys.has(dedupeKey)) {
         continue;
