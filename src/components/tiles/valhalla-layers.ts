@@ -15,19 +15,35 @@ export const VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID =
 const TILE_JSON_ENCODED =
   '%7B%22verbose%22%3A%20true%2C%20%22tile%22%3A%7B%22z%22%3A{z}%2C%22x%22%3A{x}%2C%22y%22%3A{y}%7D%7D';
 
-export function getValhallaTileUrl(): string {
+function getValhallaVectorTileUrl(endpoint: string): string {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  return `${baseUrl}/tile?json=${TILE_JSON_ENCODED}`;
+  return `${baseUrl}/${endpoint}?json=${TILE_JSON_ENCODED}`;
 }
 
-export function getValhallaSourceSpec(): SourceSpecification {
+function getValhallaVectorSourceSpec(endpoint: string): SourceSpecification {
   return {
     type: 'vector',
-    tiles: [getValhallaTileUrl()],
+    tiles: [getValhallaVectorTileUrl(endpoint)],
     minzoom: 7,
     maxzoom: 14,
     scheme: 'xyz',
   };
+}
+
+export function getValhallaTileUrl(): string {
+  return getValhallaVectorTileUrl('tile');
+}
+
+export function getExpansionTileUrl(): string {
+  return getValhallaVectorTileUrl('expansion');
+}
+
+export function getValhallaSourceSpec(): SourceSpecification {
+  return getValhallaVectorSourceSpec('tile');
+}
+
+export function getExpansionSourceSpec(): SourceSpecification {
+  return getValhallaVectorSourceSpec('expansion');
 }
 
 export const VALHALLA_EDGES_LAYER: LayerSpecification = {

@@ -19,6 +19,8 @@ import {
   VALHALLA_LAYERS,
   getValhallaTileUrl,
   getValhallaSourceSpec,
+  getExpansionTileUrl,
+  getExpansionSourceSpec,
 } from './valhalla-layers';
 
 vi.mock('@/utils/base-url', () => ({
@@ -275,6 +277,29 @@ describe('valhalla-layers', () => {
       const spec = getValhallaSourceSpec() as VectorSourceSpecification;
 
       expect(spec.scheme).toBe('xyz');
+    });
+  });
+
+  describe('getExpansionTileUrl', () => {
+    it('should return correctly formatted expansion tile URL', () => {
+      const url = getExpansionTileUrl();
+
+      expect(url).toContain('https://valhalla.example.com/expansion?json=');
+      expect(url).toContain('{z}');
+      expect(url).toContain('{x}');
+      expect(url).toContain('{y}');
+    });
+  });
+
+  describe('getExpansionSourceSpec', () => {
+    it('should return vector source spec for expansion tiles', () => {
+      const spec = getExpansionSourceSpec() as VectorSourceSpecification;
+
+      expect(spec.type).toBe('vector');
+      expect(spec.tiles).toHaveLength(1);
+      expect(spec.tiles![0]).toContain(
+        'https://valhalla.example.com/expansion'
+      );
     });
   });
 });

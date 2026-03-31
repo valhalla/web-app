@@ -84,6 +84,20 @@ describe('TilesInfoPopup', () => {
     expect(screen.getByText('Shortcut')).toBeInTheDocument();
   });
 
+  it('should display "Expansion Edge" label for expansion edge features', () => {
+    const expansionFeature = {
+      ...createMockFeature('edges', {
+        id: '34567',
+        edge_status: 'reached',
+      }),
+      layer: { id: 'valhalla-expansion-edges' },
+    } as MapGeoJSONFeature;
+
+    render(<TilesInfoPopup features={[expansionFeature]} onClose={vi.fn()} />);
+
+    expect(screen.getByText('Expansion Edge')).toBeInTheDocument();
+  });
+
   it('should display all properties of a feature', () => {
     render(<TilesInfoPopup {...defaultProps} />);
 

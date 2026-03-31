@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { VALHALLA_SOURCE_ID } from './valhalla-layers';
+import { EXPANSION_SOURCE_ID } from './expansion-layers';
 
 const EXAMPLE_LAYER = JSON.stringify(
   {
@@ -48,7 +49,7 @@ export const CustomLayerEditor = ({
   const [open, setOpen] = useState(false);
   const [jsonValue, setJsonValue] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [valhallaEnabled, setValhallaEnabled] = useState(false);
+  const [sourceLayersEnabled, setSourceLayersEnabled] = useState(false);
 
   useEffect(() => {
     if (!mainMap) return;
@@ -56,7 +57,10 @@ export const CustomLayerEditor = ({
     const map = mainMap.getMap();
 
     const handleStyleData = () => {
-      setValhallaEnabled(!!map.getSource(VALHALLA_SOURCE_ID));
+      setSourceLayersEnabled(
+        !!map.getSource(VALHALLA_SOURCE_ID) ||
+          !!map.getSource(EXPANSION_SOURCE_ID)
+      );
     };
 
     map.on('styledata', handleStyleData);
@@ -122,7 +126,7 @@ export const CustomLayerEditor = ({
           variant="outline"
           size="sm"
           className="w-full gap-2"
-          disabled={!valhallaEnabled}
+          disabled={!sourceLayersEnabled}
         >
           <Plus className="size-4" />
           Add Custom Layer
@@ -144,6 +148,10 @@ export const CustomLayerEditor = ({
             as JSON. Use{' '}
             <code className="text-xs bg-muted px-1 rounded">
               valhalla-tiles
+            </code>{' '}
+            or{' '}
+            <code className="text-xs bg-muted px-1 rounded">
+              valhalla-expansion
             </code>{' '}
             as the source to visualize Valhalla tile attributes.
           </DialogDescription>

@@ -46,13 +46,8 @@ import { MapInfoPopup } from './parts/map-info-popup';
 import { MapContextMenu } from './parts/map-context-menu';
 import { RouteHoverPopup } from './parts/route-hover-popup';
 import { TilesInfoPopup } from './parts/tiles-info-popup';
-import {
-  VALHALLA_EDGES_LAYER_ID,
-  VALHALLA_NODES_LAYER_ID,
-  VALHALLA_SHORTCUTS_LAYER_ID,
-  VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID,
-  VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID,
-} from '@/components/tiles/valhalla-layers';
+import { VALHALLA_LAYERS } from '@/components/tiles/valhalla-layers';
+import { EXPANSION_LAYERS } from '@/components/tiles/expansion-layers';
 import { MarkerIcon, type MarkerColor } from './parts/marker-icon';
 import { maxBounds } from './constants';
 import { getInitialMapPosition, LAST_CENTER_KEY } from './utils';
@@ -70,6 +65,11 @@ import {
 import { toast } from 'sonner';
 
 const { center, zoom: zoom_initial } = getInitialMapPosition();
+
+const TILE_INTERACTIVE_LAYER_IDS = [
+  ...VALHALLA_LAYERS.map((layer) => layer.id),
+  ...EXPANSION_LAYERS.map((layer) => layer.id),
+];
 
 interface MarkerData {
   id: string;
@@ -491,13 +491,9 @@ export const MapComponent = () => {
 
       const map = mapRef.current.getMap();
 
-      const availableLayers = [
-        VALHALLA_EDGES_LAYER_ID,
-        VALHALLA_NODES_LAYER_ID,
-        VALHALLA_SHORTCUTS_LAYER_ID,
-        VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID,
-        VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID,
-      ].filter((layerId) => map.getLayer(layerId));
+      const availableLayers = TILE_INTERACTIVE_LAYER_IDS.filter((layerId) =>
+        map.getLayer(layerId)
+      );
 
       if (availableLayers.length === 0) return;
 
@@ -740,13 +736,7 @@ export const MapComponent = () => {
       const isOverTiles =
         features &&
         features.length > 0 &&
-        (features[0]?.layer?.id === VALHALLA_EDGES_LAYER_ID ||
-          features[0]?.layer?.id === VALHALLA_NODES_LAYER_ID ||
-          features[0]?.layer?.id === VALHALLA_SHORTCUTS_LAYER_ID ||
-          features[0]?.layer?.id ===
-            VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID ||
-          features[0]?.layer?.id ===
-            VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID);
+        TILE_INTERACTIVE_LAYER_IDS.includes(features[0]?.layer?.id ?? '');
 
       if (isOverRoute) {
         onRouteLineHover(event);
@@ -800,15 +790,7 @@ export const MapComponent = () => {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         interactiveLayerIds={
-          activeTab === 'tiles'
-            ? [
-                VALHALLA_EDGES_LAYER_ID,
-                VALHALLA_NODES_LAYER_ID,
-                VALHALLA_SHORTCUTS_LAYER_ID,
-                VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID,
-                VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID,
-              ]
-            : ['routes-line']
+          activeTab === 'tiles' ? TILE_INTERACTIVE_LAYER_IDS : ['routes-line']
         }
         mapStyle={resolvedMapStyle}
         style={{ width: '100%', height: '100vh' }}

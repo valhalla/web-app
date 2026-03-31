@@ -30,6 +30,9 @@ export function TilesInfoPopup({ features, onClose }: TilesInfoPopupProps) {
         let layerType = 'Node';
         if (isEdge) layerType = 'Edge';
         else if (isShortcut) layerType = 'Shortcut';
+        if (feature.layer?.id?.includes('expansion') && isEdge) {
+          layerType = 'Expansion Edge';
+        }
         const properties = feature.properties || {};
         const Icon = isEdgeLike ? Route : MapPin;
 

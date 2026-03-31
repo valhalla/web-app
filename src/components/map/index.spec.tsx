@@ -823,6 +823,46 @@ describe('MapComponent', () => {
       vi.useRealTimers();
     });
 
+    it('should query expansion layers when they exist', async () => {
+      vi.useFakeTimers();
+      mockGetLayer.mockImplementation((layerId?: string) =>
+        layerId === 'valhalla-expansion-edges'
+          ? { id: 'valhalla-expansion-edges' }
+          : undefined
+      );
+      mockQueryRenderedFeatures.mockReturnValue([
+        {
+          type: 'Feature',
+          sourceLayer: 'edges',
+          properties: { id: 'exp-1', edge_status: 'reached' },
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+          layer: { id: 'valhalla-expansion-edges' },
+        },
+      ]);
+
+      render(<MapComponent />);
+
+      fireEvent.click(screen.getByTestId('map'));
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+
+      expect(mockQueryRenderedFeatures).toHaveBeenCalledWith(
+        { x: 100, y: 100 },
+        { layers: ['valhalla-expansion-edges'] }
+      );
+      expect(screen.getByTestId('tiles-info-popup')).toBeInTheDocument();
+
+      vi.useRealTimers();
+    });
+
     it('should close tiles info popup when close button is clicked', async () => {
       vi.useFakeTimers();
       mockGetLayer.mockReturnValue(true);

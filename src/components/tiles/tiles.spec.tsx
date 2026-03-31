@@ -392,8 +392,9 @@ describe('TilesControl', () => {
       const user = userEvent.setup();
       render(<TilesControl />);
 
-      const groupSwitches = screen.getAllByRole('switch');
-      const roadsGroupSwitch = groupSwitches[3]!;
+      const roadsGroupSwitch = screen.getByRole('switch', {
+        name: /roads group visibility/i,
+      });
 
       await user.click(roadsGroupSwitch);
 
@@ -418,8 +419,9 @@ describe('TilesControl', () => {
       const user = userEvent.setup();
       render(<TilesControl />);
 
-      const groupSwitches = screen.getAllByRole('switch');
-      const waterGroupSwitch = groupSwitches[2]!;
+      const waterGroupSwitch = screen.getByRole('switch', {
+        name: /water group visibility/i,
+      });
 
       await user.click(waterGroupSwitch);
       await user.click(waterGroupSwitch);

@@ -14,7 +14,9 @@ import {
 import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ValhallaLayersToggle } from './valhalla-layers-toggle';
+import { ExpansionLayersToggle } from './expansion-layers-toggle';
 import { VALHALLA_SOURCE_ID } from './valhalla-layers';
+import { EXPANSION_SOURCE_ID } from './expansion-layers';
 import { CustomLayerEditor } from './custom-layer-editor';
 
 interface LayerInfo {
@@ -216,6 +218,11 @@ export const TilesControl = () => {
     return layersInGroup.some((layer) => layer.source === VALHALLA_SOURCE_ID);
   };
 
+  const isExpansionGroup = (sourceLayer: string) => {
+    const layersInGroup = groupedLayers.grouped[sourceLayer] || [];
+    return layersInGroup.some((layer) => layer.source === EXPANSION_SOURCE_ID);
+  };
+
   const handleRemoveCustomLayer = (id: string) => {
     if (!mainMap) return;
     const map = mainMap.getMap();
@@ -240,6 +247,7 @@ export const TilesControl = () => {
   return (
     <div className="flex flex-col gap-3 flex-1 overflow-hidden min-h-0">
       <ValhallaLayersToggle customLayers={customLayers} />
+      <ExpansionLayersToggle customLayers={customLayers} />
 
       <div className="flex items-center justify-between gap-3 p-3 bg-muted/50 rounded-md">
         <Label
@@ -292,8 +300,14 @@ export const TilesControl = () => {
                       Valhalla
                     </span>
                   )}
+                  {isExpansionGroup(sourceLayer) && (
+                    <span className="text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded ml-2">
+                      Expansion
+                    </span>
+                  )}
                 </CollapsibleTrigger>
                 <Switch
+                  aria-label={`${sourceLayer} group visibility`}
                   checked={isGroupVisible(sourceLayer)}
                   onCheckedChange={(checked) =>
                     handleToggleGroup(sourceLayer, checked)
