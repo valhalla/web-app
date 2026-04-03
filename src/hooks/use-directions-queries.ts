@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { toast } from 'sonner';
 
 import type {
@@ -44,14 +43,27 @@ async function fetchDirections() {
     dateTime,
     language,
   });
+  const params = new URLSearchParams({
+    json: JSON.stringify(valhallaRequest.json),
+  });
 
-  const { data } = await axios.get<ValhallaRouteResponse>(
-    getValhallaUrl() + '/route',
-    {
-      params: { json: JSON.stringify(valhallaRequest.json) },
-      headers: { 'Content-Type': 'application/json' },
+  const response = await fetch(`${getValhallaUrl()}/route?${params}`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    let error_msg = errorData.error || 'Could not fetch resource';
+
+    // Append context for route-specific error
+    if (errorData.error_code === 154) {
+      error_msg += ` for route.`;
     }
-  );
+
+    throw new Error(error_msg);
+  }
+
+  const data: ValhallaRouteResponse = await response.json();
 
   // Parse geometry for main route
   (data as ParsedDirectionsGeometry).decodedGeometry =
@@ -91,14 +103,9 @@ export function useDirectionsQuery() {
         return data;
       } catch (error) {
         clearRoutes();
-        if (axios.isAxiosError(error) && error.response) {
-          const response = error.response;
-          let error_msg = response.data.error;
-          if (response.data.error_code === 154) {
-            error_msg += ` for route.`;
-          }
-          toast.warning(`${response.data.status}`, {
-            description: `${error_msg}`,
+        if (error instanceof Error) {
+          toast.warning('Error', {
+            description: error.message,
             position: 'bottom-center',
             duration: 5000,
             closeButton: true,
