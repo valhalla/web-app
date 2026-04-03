@@ -14,7 +14,6 @@ import type { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
 import type maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import axios from 'axios';
 import { throttle } from 'throttle-debounce';
 import { getValhallaUrl, buildHeightRequest } from '@/utils/valhalla';
 import { buildHeightgraphData } from '@/utils/heightgraph';
@@ -282,25 +281,30 @@ export const MapComponent = () => {
     [directionsPanelOpen, toggleDirections, navigate]
   );
 
-  const getHeight = useCallback((lng: number, lat: number) => {
+  const getHeight = useCallback(async (lng: number, lat: number) => {
     setIsHeightLoading(true);
-    axios
-      .post(getValhallaUrl() + '/height', buildHeightRequest([[lat, lng]]), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      .then(({ data }) => {
-        if ('height' in data) {
-          setElevation(data.height[0] + ' m');
-        }
-      })
-      .catch(({ response }) => {
-        console.log(response);
-      })
-      .finally(() => {
-        setIsHeightLoading(false);
+
+    try {
+      const response = await fetch(`${getValhallaUrl()}/height`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(buildHeightRequest([[lat, lng]])),
       });
+
+      if (!response.ok) {
+        throw new Error('Could not fetch resource');
+      }
+
+      const data = await response.json();
+
+      if ('height' in data) {
+        setElevation(data.height[0] + ' m');
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsHeightLoading(false);
+    }
   }, []);
 
   const handleAddWaypoint = useCallback(
@@ -322,7 +326,7 @@ export const MapComponent = () => {
     updateIsoPosition(popupLngLat.lng, popupLngLat.lat);
   }, [popupLngLat, updateIsoPosition]);
 
-  const getHeightData = useCallback(() => {
+  const getHeightData = useCallback(async () => {
     if (!directionResults.data?.decodedGeometry) return;
 
     const heightPayloadNew = buildHeightRequest(
@@ -332,35 +336,40 @@ export const MapComponent = () => {
     if (JSON.stringify(heightPayload) !== JSON.stringify(heightPayloadNew)) {
       setIsHeightLoading(true);
       setHeightPayload(heightPayloadNew);
-      axios
-        .post(getValhallaUrl() + '/height', heightPayloadNew, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-        .then(({ data }) => {
-          const reversedGeometry = JSON.parse(
-            JSON.stringify(directionResults.data?.decodedGeometry)
-          ).map((pair: number[]) => {
-            return [...pair.reverse()];
-          });
-          const heightData = buildHeightgraphData(
-            reversedGeometry,
-            data.range_height
-          );
-          const { inclineTotal, declineTotal } = heightData[0]!.properties;
-          updateInclineDecline({
-            inclineTotal,
-            declineTotal,
-          });
-          setHeightgraphData(heightData);
-        })
-        .catch(({ response }) => {
-          console.log(response);
-        })
-        .finally(() => {
-          setIsHeightLoading(false);
+
+      try {
+        const response = await fetch(`${getValhallaUrl()}/height`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(heightPayloadNew),
         });
+
+        if (!response.ok) {
+          throw new Error('Could not fetch resource');
+        }
+
+        const data = await response.json();
+
+        const reversedGeometry = JSON.parse(
+          JSON.stringify(directionResults.data?.decodedGeometry)
+        ).map((pair: number[]) => {
+          return [...pair.reverse()];
+        });
+        const heightData = buildHeightgraphData(
+          reversedGeometry,
+          data.range_height
+        );
+        const { inclineTotal, declineTotal } = heightData[0]!.properties;
+        updateInclineDecline({
+          inclineTotal,
+          declineTotal,
+        });
+        setHeightgraphData(heightData);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsHeightLoading(false);
+      }
     }
   }, [directionResults, heightPayload, updateInclineDecline]);
 

@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { toast } from 'sonner';
 
 import type {
@@ -46,14 +45,21 @@ async function fetchIsochrones() {
     generalize,
     interval,
   });
+  const params = new URLSearchParams({
+    json: JSON.stringify(valhallaRequest.json),
+  });
 
-  const { data } = await axios.get<ValhallaIsochroneResponse>(
-    getValhallaUrl() + '/isochrone',
-    {
-      params: { json: JSON.stringify(valhallaRequest.json) },
-      headers: { 'Content-Type': 'application/json' },
-    }
-  );
+  const response = await fetch(`${getValhallaUrl()}/isochrone?${params}`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Could not fetch resource');
+  }
+
+  const data: ValhallaIsochroneResponse = await response.json();
 
   // Calculate area for each feature
   data.features.forEach((feature) => {
@@ -89,10 +95,9 @@ export function useIsochronesQuery() {
           state.successful = false;
         });
 
-        if (axios.isAxiosError(error) && error.response) {
-          const response = error.response;
-          toast.warning(`${response.data.status}`, {
-            description: `${response.data.error}`,
+        if (error instanceof Error) {
+          toast.warning('Error', {
+            description: error.message || 'Failed to fetch isochrones',
             position: 'bottom-center',
             duration: 5000,
             closeButton: true,
