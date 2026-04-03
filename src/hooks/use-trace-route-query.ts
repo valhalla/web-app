@@ -9,7 +9,6 @@ import {
   parseDirectionsGeometry,
   showValhallaWarnings,
 } from '@/utils/valhalla';
-import axios from 'axios';
 
 type Shape = {
   lat: number;
@@ -34,6 +33,12 @@ interface TraceOptions {
   search_radius?: number;
   interpolation_distance?: number;
 }
+
+type TraceRouteErrorPayload = {
+  status?: string;
+  error?: string;
+  error_code?: number;
+};
 
 export const useTraceRouteQuery = ({
   polyline,
@@ -107,11 +112,25 @@ export const useTraceRouteQuery = ({
       throw new Error('GPX must contain at least 2 points.');
     }
 
-    const { data } = await axios.post<ValhallaRouteResponse>(
-      `${getValhallaUrl()}/trace_route`,
-      valhallaRequest.json,
-      { headers: { 'Content-Type': 'application/json' } }
-    );
+    const response = await fetch(`${getValhallaUrl()}/trace_route`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(valhallaRequest.json),
+    });
+
+    if (!response.ok) {
+      const errorData =
+        ((await response.json().catch(() => ({}))) as TraceRouteErrorPayload) ??
+        {};
+      const error = new Error(
+        errorData.error || `Trace route failed (${response.status})`
+      ) as Error & { payload?: TraceRouteErrorPayload; status?: number };
+      error.payload = errorData;
+      error.status = response.status;
+      throw error;
+    }
+
+    const data: ValhallaRouteResponse = await response.json();
 
     (data as ParsedDirectionsGeometry).decodedGeometry =
       parseDirectionsGeometry(data);

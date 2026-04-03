@@ -1,7 +1,6 @@
 import { useTraceRouteQuery } from '@/hooks/use-trace-route-query';
 import { useCommonStore, type Profile } from '@/stores/common-store';
 import { useTraceRouteStore } from '@/stores/trace-route-store';
-import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -122,6 +121,7 @@ export const TraceRouteControl = () => {
   }, [activeRouteIndex, traceRouteResults.data]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
       if (loadingTimeoutRef.current !== null) {
@@ -227,8 +227,12 @@ export const TraceRouteControl = () => {
         return;
       }
       clearTraceRoute();
-      if (axios.isAxiosError(error) && error.response) {
-        const payload = (error.response.data ?? {}) as TraceRouteErrorPayload;
+      const payload =
+        typeof error === 'object' && error !== null && 'payload' in error
+          ? ((error as { payload?: TraceRouteErrorPayload }).payload ?? {})
+          : null;
+
+      if (payload) {
         const statusText = payload.status ?? 'Trace route failed';
         let errorMsg =
           payload.error ??

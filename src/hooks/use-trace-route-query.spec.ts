@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import axios from 'axios';
 import { useTraceRouteQuery } from './use-trace-route-query';
 import { parseGpxToLatLng } from '@/utils/parse-gpx';
 import {
@@ -7,12 +6,6 @@ import {
   parseDirectionsGeometry,
   showValhallaWarnings,
 } from '@/utils/valhalla';
-
-vi.mock('axios', () => ({
-  default: {
-    post: vi.fn(),
-  },
-}));
 
 vi.mock('@/utils/parse-gpx', () => ({
   parseGpxToLatLng: vi.fn(),
@@ -94,10 +87,17 @@ const createRouteResponse = () => ({
   ],
 });
 
+const getLastFetchBody = () => {
+  const call = vi.mocked(fetch).mock.calls.at(-1);
+  const init = call?.[1] as RequestInit | undefined;
+  return JSON.parse((init?.body as string) ?? '{}');
+};
+
 describe('useTraceRouteQuery', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getValhallaUrl).mockReturnValue('http://mock-valhalla');
+    vi.stubGlobal('fetch', vi.fn());
   });
 
   it('should throw when both polyline and file are missing', async () => {
@@ -110,7 +110,10 @@ describe('useTraceRouteQuery', () => {
 
   it('should post encoded polyline request and parse geometry', async () => {
     const response = createRouteResponse();
-    vi.mocked(axios.post).mockResolvedValue({ data: response });
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(response),
+    } as unknown as Response);
 
     const { traceRoute } = useTraceRouteQuery({
       polyline: '  abc\n123  ',
@@ -118,9 +121,10 @@ describe('useTraceRouteQuery', () => {
 
     const result = await traceRoute();
 
-    expect(axios.post).toHaveBeenCalledWith(
-      'http://mock-valhalla/trace_route',
-      {
+    expect(fetch).toHaveBeenCalledWith('http://mock-valhalla/trace_route', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         encoded_polyline: 'abc123',
         shape_match: 'map_snap',
         costing: 'auto',
@@ -130,9 +134,8 @@ describe('useTraceRouteQuery', () => {
           interpolation_distance: 10,
           breakage_distance: 50,
         },
-      },
-      { headers: { 'Content-Type': 'application/json' } }
-    );
+      }),
+    });
 
     expect(parseDirectionsGeometry).toHaveBeenCalledTimes(2);
     expect(showValhallaWarnings).toHaveBeenCalledWith(response.trip.warnings);
@@ -150,14 +153,18 @@ describe('useTraceRouteQuery', () => {
     ]);
 
     const response = createRouteResponse();
-    vi.mocked(axios.post).mockResolvedValue({ data: response });
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(response),
+    } as unknown as Response);
 
     const { traceRoute } = useTraceRouteQuery({ fileText: '<gpx>...</gpx>' });
     await traceRoute();
 
-    expect(axios.post).toHaveBeenCalledWith(
-      'http://mock-valhalla/trace_route',
-      {
+    expect(fetch).toHaveBeenCalledWith('http://mock-valhalla/trace_route', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         shape: [
           { lat: 52.5, lon: 13.4, type: 'break' },
           { lat: 52.6, lon: 13.5 },
@@ -171,14 +178,16 @@ describe('useTraceRouteQuery', () => {
           interpolation_distance: 10,
           breakage_distance: 50,
         },
-      },
-      { headers: { 'Content-Type': 'application/json' } }
-    );
+      }),
+    });
   });
 
   it('should map accuracy and radius to valhalla trace options', async () => {
     const response = createRouteResponse();
-    vi.mocked(axios.post).mockResolvedValue({ data: response });
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(response),
+    } as unknown as Response);
 
     const { traceRoute } = useTraceRouteQuery({
       polyline: 'abc123',
@@ -192,23 +201,20 @@ describe('useTraceRouteQuery', () => {
 
     await traceRoute();
 
-    expect(axios.post).toHaveBeenCalledWith(
-      'http://mock-valhalla/trace_route',
-      expect.objectContaining({
-        trace_options: {
-          gps_accuracy: 7,
-          search_radius: 60,
-          interpolation_distance: 15,
-          breakage_distance: 75,
-        },
-      }),
-      { headers: { 'Content-Type': 'application/json' } }
-    );
+    expect(getLastFetchBody().trace_options).toEqual({
+      gps_accuracy: 7,
+      search_radius: 60,
+      interpolation_distance: 15,
+      breakage_distance: 75,
+    });
   });
 
   it('should prefer explicit gps_accuracy/search_radius over aliases', async () => {
     const response = createRouteResponse();
-    vi.mocked(axios.post).mockResolvedValue({ data: response });
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(response),
+    } as unknown as Response);
 
     const { traceRoute } = useTraceRouteQuery({
       polyline: 'abc123',
@@ -222,21 +228,18 @@ describe('useTraceRouteQuery', () => {
 
     await traceRoute();
 
-    expect(axios.post).toHaveBeenCalledWith(
-      'http://mock-valhalla/trace_route',
-      expect.objectContaining({
-        trace_options: expect.objectContaining({
-          gps_accuracy: 4,
-          search_radius: 25,
-        }),
-      }),
-      { headers: { 'Content-Type': 'application/json' } }
-    );
+    expect(getLastFetchBody().trace_options).toMatchObject({
+      gps_accuracy: 4,
+      search_radius: 25,
+    });
   });
 
   it('should fallback to defaults for invalid numeric trace options', async () => {
     const response = createRouteResponse();
-    vi.mocked(axios.post).mockResolvedValue({ data: response });
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(response),
+    } as unknown as Response);
 
     const { traceRoute } = useTraceRouteQuery({
       polyline: 'abc123',
@@ -250,23 +253,20 @@ describe('useTraceRouteQuery', () => {
 
     await traceRoute();
 
-    expect(axios.post).toHaveBeenCalledWith(
-      'http://mock-valhalla/trace_route',
-      expect.objectContaining({
-        trace_options: {
-          gps_accuracy: 5,
-          search_radius: 50,
-          interpolation_distance: 10,
-          breakage_distance: 50,
-        },
-      }),
-      { headers: { 'Content-Type': 'application/json' } }
-    );
+    expect(getLastFetchBody().trace_options).toEqual({
+      gps_accuracy: 5,
+      search_radius: 50,
+      interpolation_distance: 10,
+      breakage_distance: 50,
+    });
   });
 
   it("should map 'car' costing to valhalla 'auto'", async () => {
     const response = createRouteResponse();
-    vi.mocked(axios.post).mockResolvedValue({ data: response });
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(response),
+    } as unknown as Response);
 
     const { traceRoute } = useTraceRouteQuery({
       polyline: 'abc123',
@@ -275,13 +275,7 @@ describe('useTraceRouteQuery', () => {
 
     await traceRoute();
 
-    expect(axios.post).toHaveBeenCalledWith(
-      'http://mock-valhalla/trace_route',
-      expect.objectContaining({
-        costing: 'auto',
-      }),
-      { headers: { 'Content-Type': 'application/json' } }
-    );
+    expect(getLastFetchBody().costing).toBe('auto');
   });
 
   it('should throw when GPX file has fewer than 2 points', async () => {
