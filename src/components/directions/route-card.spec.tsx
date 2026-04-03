@@ -194,13 +194,20 @@ describe('RouteCard', () => {
 
     await user.click(screen.getByRole('button', { name: /export/i }));
 
-    expect(screen.getByRole('menuitem', { name: 'JSON' })).toBeInTheDocument();
+    expect(screen.getByText('Format')).toBeInTheDocument();
+    expect(screen.getByText('Options')).toBeInTheDocument();
     expect(
-      screen.getByRole('menuitem', { name: 'GeoJSON' })
+      screen.getByRole('menuitemradio', { name: 'JSON' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('menuitemradio', { name: 'GeoJSON' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('menuitemcheckbox', { name: 'Include elevation' })
     ).toBeInTheDocument();
   });
 
-  it('should call exportDataAsJson when JSON is clicked', async () => {
+  it('should call exportDataAsJson when JSON format is selected and Export is clicked', async () => {
     const user = userEvent.setup();
     const data = createMockData();
     render(
@@ -208,7 +215,8 @@ describe('RouteCard', () => {
     );
 
     await user.click(screen.getByRole('button', { name: /export/i }));
-    await user.click(screen.getByRole('menuitem', { name: 'JSON' }));
+    await user.click(screen.getByRole('menuitemradio', { name: 'JSON' }));
+    await user.click(screen.getByTestId('export-action-button'));
 
     expect(mockExportDataAsJson).toHaveBeenCalledWith(
       data,
@@ -216,7 +224,7 @@ describe('RouteCard', () => {
     );
   });
 
-  it('should call downloadFile with GeoJSON when GeoJSON is clicked', async () => {
+  it('should call downloadFile with GeoJSON when GeoJSON format is selected and Export is clicked', async () => {
     const user = userEvent.setup();
     const data = createMockData();
     render(
@@ -224,7 +232,8 @@ describe('RouteCard', () => {
     );
 
     await user.click(screen.getByRole('button', { name: /export/i }));
-    await user.click(screen.getByRole('menuitem', { name: 'GeoJSON' }));
+    await user.click(screen.getByRole('menuitemradio', { name: 'GeoJSON' }));
+    await user.click(screen.getByTestId('export-action-button'));
 
     expect(mockDownloadFile).toHaveBeenCalledWith({
       data: expect.stringContaining('"type": "Feature"'),
@@ -243,7 +252,8 @@ describe('RouteCard', () => {
     );
 
     await user.click(screen.getByRole('button', { name: /export/i }));
-    await user.click(screen.getByRole('menuitem', { name: 'GeoJSON' }));
+    await user.click(screen.getByRole('menuitemradio', { name: 'GeoJSON' }));
+    await user.click(screen.getByTestId('export-action-button'));
 
     const callArg = mockDownloadFile.mock.calls[0]?.[0] as {
       data: string;
