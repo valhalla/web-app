@@ -26,6 +26,7 @@ import { Separator } from '@/components/ui/separator';
 import { exportDataAsJson } from '@/utils/export';
 import { getDateTimeString } from '@/utils/date-time';
 import { fetchHeight } from '@/utils/height';
+import { toast } from 'sonner';
 
 interface RouteCardProps {
   data: ParsedDirectionsGeometry;
@@ -74,10 +75,27 @@ export const RouteCard = ({
     async (isGeoJson: boolean = false) => {
       const coordinates = data?.decodedGeometry;
       if (!coordinates) return;
-      const elevationData = fetchHeight({ coordinates });
-      const elevationResults = await elevationData;
-      if (!elevationResults || !elevationResults.height) {
-        alert('Failed to fetch elevation data.');
+
+      let elevationResults: Awaited<ReturnType<typeof fetchHeight>>;
+      try {
+        elevationResults = await fetchHeight({
+          coordinates: coordinates as [number, number][],
+        });
+      } catch {
+        toast.error('Failed to fetch elevation data.', {
+          position: 'bottom-center',
+          duration: 5000,
+          closeButton: true,
+        });
+        return;
+      }
+
+      if (!elevationResults.height) {
+        toast.error('Failed to fetch elevation data.', {
+          position: 'bottom-center',
+          duration: 5000,
+          closeButton: true,
+        });
         return;
       }
 
@@ -86,13 +104,11 @@ export const RouteCard = ({
           ...data,
           trip: {
             ...data.trip,
-            legs: [
-              {
-                ...data.trip.legs[0],
-                elevation_interval: 30,
-                elevation: elevationResults.height,
-              },
-            ],
+            legs: (data.trip.legs ?? []).map((leg) => ({
+              ...leg,
+              elevation_interval: 30,
+              elevation: elevationResults.height,
+            })),
           },
         };
         const formattedData = JSON.stringify(dataWithElevation, null, 2);
@@ -208,17 +224,20 @@ export const RouteCard = ({
                 <DropdownMenuLabel className="text-xs text-muted-foreground font-semibold uppercase tracking-wide px-2 py-1">
                   Format
                 </DropdownMenuLabel>
-                <DropdownMenuRadioGroup value={exportFormat}>
+                <DropdownMenuRadioGroup
+                  value={exportFormat}
+                  onValueChange={(value) =>
+                    setExportFormat(value as 'geojson' | 'json')
+                  }
+                >
                   <DropdownMenuRadioItem
                     value="geojson"
-                    onClick={() => setExportFormat('geojson')}
                     onSelect={(e) => e.preventDefault()}
                   >
                     GeoJSON
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem
                     value="json"
-                    onClick={() => setExportFormat('json')}
                     onSelect={(e) => e.preventDefault()}
                   >
                     JSON

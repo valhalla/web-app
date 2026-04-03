@@ -6,6 +6,8 @@ import type { ParsedDirectionsGeometry } from '@/components/types';
 
 const mockExportDataAsJson = vi.fn();
 const mockDownloadFile = vi.fn();
+const mockFetchHeight = vi.fn();
+const mockToastError = vi.fn();
 
 vi.mock('@/utils/export', () => ({
   exportDataAsJson: (...args: unknown[]) => mockExportDataAsJson(...args),
@@ -13,6 +15,16 @@ vi.mock('@/utils/export', () => ({
 
 vi.mock('@/utils/download-file', () => ({
   downloadFile: (...args: unknown[]) => mockDownloadFile(...args),
+}));
+
+vi.mock('@/utils/height', () => ({
+  fetchHeight: (...args: unknown[]) => mockFetchHeight(...args),
+}));
+
+vi.mock('sonner', () => ({
+  toast: {
+    error: (...args: unknown[]) => mockToastError(...args),
+  },
 }));
 
 vi.mock('@/utils/date-time', () => ({
@@ -92,6 +104,7 @@ const createMockData = (
 describe('RouteCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetchHeight.mockResolvedValue({ height: [100, 101, 102] });
   });
 
   it('should render without crashing', () => {
@@ -240,6 +253,77 @@ describe('RouteCard', () => {
       fileName: 'valhalla-directions_2024-01-01_12-00-00.geojson',
       fileType: 'text/json',
     });
+  });
+
+  it('should fetch elevation and export JSON with elevation when option is enabled', async () => {
+    const user = userEvent.setup();
+    const baseData = createMockData();
+    const firstLeg = baseData.trip.legs[0]!;
+    const data = createMockData({
+      trip: {
+        ...baseData.trip,
+        legs: [
+          ...baseData.trip.legs,
+          {
+            ...firstLeg,
+            shape: 'encoded-2',
+          },
+        ],
+      },
+    });
+
+    render(
+      <RouteCard data={data} index={0} isActive={true} onSelect={vi.fn()} />
+    );
+
+    await user.click(screen.getByRole('button', { name: /export/i }));
+    await user.click(screen.getByRole('menuitemradio', { name: 'JSON' }));
+    await user.click(
+      screen.getByRole('menuitemcheckbox', { name: 'Include elevation' })
+    );
+    await user.click(screen.getByTestId('export-action-button'));
+
+    expect(mockFetchHeight).toHaveBeenCalledWith({
+      coordinates: data.decodedGeometry,
+    });
+
+    const callArg = mockDownloadFile.mock.calls[0]?.[0] as {
+      data: string;
+      fileName: string;
+      fileType: string;
+    };
+    const exportedJson = JSON.parse(callArg.data);
+
+    expect(callArg.fileName).toBe(
+      'valhalla-directions_2024-01-01_12-00-00_with_elevation.json'
+    );
+    expect(exportedJson.trip.legs).toHaveLength(2);
+    expect(exportedJson.trip.legs[0].elevation_interval).toBe(30);
+    expect(exportedJson.trip.legs[0].elevation).toEqual([100, 101, 102]);
+    expect(exportedJson.trip.legs[1].elevation_interval).toBe(30);
+    expect(exportedJson.trip.legs[1].elevation).toEqual([100, 101, 102]);
+  });
+
+  it('should show error toast and skip download when elevation fetch fails', async () => {
+    const user = userEvent.setup();
+    const data = createMockData();
+    mockFetchHeight.mockRejectedValueOnce(new Error('network failed'));
+
+    render(
+      <RouteCard data={data} index={0} isActive={true} onSelect={vi.fn()} />
+    );
+
+    await user.click(screen.getByRole('button', { name: /export/i }));
+    await user.click(
+      screen.getByRole('menuitemcheckbox', { name: 'Include elevation' })
+    );
+    await user.click(screen.getByTestId('export-action-button'));
+
+    expect(mockToastError).toHaveBeenCalledWith(
+      'Failed to fetch elevation data.',
+      expect.any(Object)
+    );
+    expect(mockDownloadFile).not.toHaveBeenCalled();
   });
 
   it('should convert coordinates to GeoJSON format (lng, lat)', async () => {

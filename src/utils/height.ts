@@ -1,17 +1,21 @@
 import { getValhallaUrl } from './valhalla';
 
-type Coordinates = number[][];
+type LatLng = [lat: number, lng: number];
+
+interface HeightResponse {
+  height?: number[];
+}
 
 export const fetchHeight = async ({
   coordinates,
 }: {
-  coordinates: Coordinates;
-}) => {
+  coordinates: LatLng[];
+}): Promise<HeightResponse> => {
   const resample_distance = 30; // meters
   const height_precision = 2;
 
   const heightPayload = {
-    shape: coordinates.map((coord) => ({ lat: coord[0], lon: coord[1] })),
+    shape: coordinates.map(([lat, lng]) => ({ lat, lon: lng })),
     resample_distance,
     height_precision,
     id: 'valhalla_height',
