@@ -158,10 +158,10 @@ describe('SettingsPanel', () => {
     ).toBeInTheDocument();
   });
 
-  it('should render Reset button', () => {
+  it('should render Reset button', async () => {
     renderWithQueryClient(<SettingsPanel />);
     expect(
-      screen.getByRole('button', { name: /^Reset$/i })
+      await screen.findByRole('button', { name: /^Reset$/i })
     ).toBeInTheDocument();
   });
 
