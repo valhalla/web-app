@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { TraceRouteControl } from './trace-route';
 import { useTraceRouteQuery } from '@/hooks/use-trace-route-query';
 import type { ParsedDirectionsGeometry } from '@/components/types';
+import { parseGpxToLatLng } from '@/utils/parse-gpx';
 
 const mockTraceRoute = vi.fn();
 const mockShowLoading = vi.fn();
@@ -13,6 +14,7 @@ const mockClearTraceRoute = vi.fn();
 const mockSetInputGeometry = vi.fn();
 const mockSetInputShape = vi.fn();
 const mockSetActiveRouteIndex = vi.fn();
+const mockToastWarning = vi.fn();
 const mockDecode = vi.fn(() => [
   [52.5, 13.4],
   [52.6, 13.5],
@@ -66,6 +68,12 @@ vi.mock('@/utils/polyline', () => ({
 
 vi.mock('@/utils/parse-gpx', () => ({
   parseGpxToLatLng: vi.fn(() => []),
+}));
+
+vi.mock('sonner', () => ({
+  toast: {
+    warning: (...args: unknown[]) => mockToastWarning(...args),
+  },
 }));
 
 vi.mock('@tanstack/react-router', () => ({
@@ -168,6 +176,70 @@ describe('TraceRouteControl', () => {
     await user.clear(input);
 
     expect(mockClearTraceRoute).toHaveBeenCalled();
+  });
+
+  it('should keep Trace Route disabled while GPX file is still being read', async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(parseGpxToLatLng).mockReturnValue([
+      [52.5, 13.4],
+      [52.6, 13.5],
+    ]);
+
+    const deferredFileText: { resolve?: (value: string) => void } = {};
+    const file = new File(['<gpx></gpx>'], 'route.gpx', {
+      type: 'application/gpx+xml',
+    });
+    Object.defineProperty(file, 'text', {
+      value: () =>
+        new Promise<string>((resolve) => {
+          deferredFileText.resolve = resolve;
+        }),
+    });
+
+    render(<TraceRouteControl />);
+
+    const traceButton = screen.getByRole('button', { name: 'Trace Route' });
+    const fileInput = screen.getByLabelText('Upload GPX file');
+
+    await user.upload(fileInput, file);
+    expect(traceButton).toBeDisabled();
+
+    if (!deferredFileText.resolve) {
+      throw new Error('Expected file text resolver to be initialized');
+    }
+
+    deferredFileText.resolve(
+      '<gpx><trk><trkseg><trkpt lat="52.5" lon="13.4" /><trkpt lat="52.6" lon="13.5" /></trkseg></trk></gpx>'
+    );
+
+    await waitFor(() => {
+      expect(traceButton).toBeEnabled();
+    });
+  });
+
+  it('should reject oversized GPX files and show warning toast', async () => {
+    const user = userEvent.setup();
+    render(<TraceRouteControl />);
+
+    const oversizedFile = new File(
+      ['x'.repeat(2 * 1024 * 1024 + 1)],
+      'too-big.gpx',
+      {
+        type: 'application/gpx+xml',
+      }
+    );
+
+    await user.upload(screen.getByLabelText('Upload GPX file'), oversizedFile);
+
+    expect(mockToastWarning).toHaveBeenCalledWith(
+      'File too large',
+      expect.objectContaining({
+        description: expect.stringContaining('Max GPX size is 2 MB'),
+      })
+    );
+    expect(mockClearTraceRoute).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Trace Route' })).toBeDisabled();
   });
 
   it('should keep maneuvers hidden by default and show them on click', async () => {

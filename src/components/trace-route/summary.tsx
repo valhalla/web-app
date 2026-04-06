@@ -43,6 +43,14 @@ export const Summary = ({
 
   const { mainMap } = useMap();
 
+  const isFiniteLatLon = (
+    coord: number[] | undefined
+  ): coord is [number, number] =>
+    Array.isArray(coord) &&
+    coord.length >= 2 &&
+    Number.isFinite(coord[0]) &&
+    Number.isFinite(coord[1]);
+
   const handleChange = (checked: boolean) => {
     toggleShowOnMap({ show: checked, idx: index });
   };
@@ -50,23 +58,25 @@ export const Summary = ({
   const handleRecenter = () => {
     if (!mainMap || routeCoordinates.length === 0) return;
 
-    const firstCoord = routeCoordinates[0];
-    if (!firstCoord || !firstCoord[0] || !firstCoord[1]) return;
+    const validCoords = routeCoordinates.filter(isFiniteLatLon);
 
-    const bounds: [[number, number], [number, number]] =
-      routeCoordinates.reduce<[[number, number], [number, number]]>(
-        (acc, coord) => {
-          if (!coord || !coord[0] || !coord[1]) return acc;
-          return [
-            [Math.min(acc[0][0], coord[1]), Math.min(acc[0][1], coord[0])],
-            [Math.max(acc[1][0], coord[1]), Math.max(acc[1][1], coord[0])],
-          ];
-        },
-        [
-          [firstCoord[1], firstCoord[0]],
-          [firstCoord[1], firstCoord[0]],
-        ]
-      );
+    const firstCoord = validCoords[0];
+    if (!firstCoord) return;
+
+    const bounds: [[number, number], [number, number]] = validCoords.reduce<
+      [[number, number], [number, number]]
+    >(
+      (acc, coord) => {
+        return [
+          [Math.min(acc[0][0], coord[1]), Math.min(acc[0][1], coord[0])],
+          [Math.max(acc[1][0], coord[1]), Math.max(acc[1][1], coord[0])],
+        ];
+      },
+      [
+        [firstCoord[1], firstCoord[0]],
+        [firstCoord[1], firstCoord[0]],
+      ]
+    );
 
     mainMap.fitBounds(bounds, {
       padding: {

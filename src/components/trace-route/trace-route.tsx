@@ -30,7 +30,6 @@ type TraceRouteErrorPayload = {
 export const TraceRouteControl = () => {
   const [encodedPolyline, setEncodedPolyline] = useState('');
   const [fileText, setFileText] = useState('');
-  const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const { profile } = useSearch({ from: '/$activeTab' }) as {
     profile: Profile;
@@ -63,6 +62,17 @@ export const TraceRouteControl = () => {
   const setActiveRouteIndex = useTraceRouteStore(
     (state) => state.setActiveRouteIndex
   );
+
+  const decodePolylineSafely = (value: string) => {
+    try {
+      const decoded = decode(value, 6) as [number, number][];
+      return decoded.filter(
+        (coord) => Number.isFinite(coord[0]) && Number.isFinite(coord[1])
+      );
+    } catch {
+      return [] as [number, number][];
+    }
+  };
 
   const shapeBuilder = (coords: [number, number][]) => {
     const shape = coords.map(([lat, lon]) => ({ lat, lon })) as {
@@ -115,6 +125,8 @@ export const TraceRouteControl = () => {
   const selectedRoute =
     routeOptions.find((route) => route.index === activeRouteIndex) ??
     routeOptions[0];
+  const hasTraceInput =
+    encodedPolyline.trim().length > 0 || fileText.trim().length > 0;
 
   useEffect(() => {
     setShowManeuvers(false);
@@ -130,23 +142,6 @@ export const TraceRouteControl = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      const value = encodedPolyline.trim();
-      if (!value) {
-        setInputGeometry(null);
-        setInputShape(null);
-        clearTraceRoute();
-        return;
-      }
-
-      const coords = decode(value, 6) as [number, number][];
-      setInputGeometry(coords.length >= 2 ? coords : null);
-    }, 250);
-
-    return () => window.clearTimeout(t);
-  }, [encodedPolyline, setInputGeometry, setInputShape, clearTraceRoute]);
-
   const onPolylineChange = (value: string) => {
     setEncodedPolyline(value);
     const v = value.trim();
@@ -157,7 +152,15 @@ export const TraceRouteControl = () => {
 
       return;
     }
-    const coords = decode(v, 6) as [number, number][];
+    const coords = decodePolylineSafely(v);
+
+    if (coords.length === 0) {
+      setInputGeometry(null);
+      setInputShape(null);
+      clearTraceRoute();
+      return;
+    }
+
     zoomTo(coords);
     setInputGeometry(coords.length >= 2 ? coords : null);
 
@@ -169,7 +172,6 @@ export const TraceRouteControl = () => {
 
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const readSeq = ++fileReadSeqRef.current;
-    setFile(e.target.files?.[0] || null);
     const file = e.target.files?.[0];
     if (!file) {
       setFileName('');
@@ -183,11 +185,11 @@ export const TraceRouteControl = () => {
     if (file.size > MAX_GPX_BYTES) {
       e.target.value = '';
 
-      setFile(null);
       setFileName('');
       setFileText('');
       setInputGeometry(null);
       setInputShape(null);
+      clearTraceRoute();
 
       toast.warning('File too large', {
         description: `Max GPX size is ${(MAX_GPX_BYTES / (1024 * 1024)).toFixed(0)} MB.`,
@@ -302,7 +304,7 @@ export const TraceRouteControl = () => {
 
       <Button
         className="w-full"
-        disabled={isProcessing || (!encodedPolyline && !file)}
+        disabled={isProcessing || !hasTraceInput}
         onClick={handleTraceRoute}
       >
         {isProcessing ? 'Loading...' : 'Trace Route'}
