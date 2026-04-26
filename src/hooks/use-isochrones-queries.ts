@@ -10,6 +10,7 @@ import {
   getValhallaUrl,
   buildIsochronesRequest,
   showValhallaWarnings,
+  VALHALLA_CLIENT_HEADERS,
 } from '@/utils/valhalla';
 import {
   reverse_geocode,
@@ -52,6 +53,7 @@ async function fetchIsochrones() {
   const response = await fetch(`${getValhallaUrl()}/isochrone?${params}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...VALHALLA_CLIENT_HEADERS,
     },
   });
 

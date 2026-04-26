@@ -11,6 +11,7 @@ import {
   buildDirectionsRequest,
   parseDirectionsGeometry,
   showValhallaWarnings,
+  VALHALLA_CLIENT_HEADERS,
 } from '@/utils/valhalla';
 import { forward_geocode, parseGeocodeResponse } from '@/utils/nominatim';
 import { filterProfileSettings } from '@/utils/filter-profile-settings';
@@ -48,7 +49,10 @@ async function fetchDirections() {
   });
 
   const response = await fetch(`${getValhallaUrl()}/route?${params}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...VALHALLA_CLIENT_HEADERS,
+    },
   });
 
   if (!response.ok) {

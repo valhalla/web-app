@@ -8,7 +8,7 @@ const TilesControl = lazy(() =>
   import('./tiles/tiles').then((module) => ({ default: module.TilesControl }))
 );
 import { useCommonStore } from '@/stores/common-store';
-import { getValhallaUrl } from '@/utils/valhalla';
+import { getValhallaUrl, VALHALLA_CLIENT_HEADERS } from '@/utils/valhalla';
 import {
   Sheet,
   SheetContent,
@@ -61,7 +61,9 @@ export const RoutePlanner = () => {
   } = useQuery({
     queryKey: ['lastUpdate'],
     queryFn: async () => {
-      const response = await fetch(`${getValhallaUrl()}/status`);
+      const response = await fetch(`${getValhallaUrl()}/status`, {
+        headers: VALHALLA_CLIENT_HEADERS,
+      });
       const data = await response.json();
       return new Date(data.tileset_last_modified * 1000);
     },

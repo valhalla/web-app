@@ -15,7 +15,11 @@ import type maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { throttle } from 'throttle-debounce';
-import { getValhallaUrl, buildHeightRequest } from '@/utils/valhalla';
+import {
+  getValhallaUrl,
+  buildHeightRequest,
+  VALHALLA_CLIENT_HEADERS,
+} from '@/utils/valhalla';
 import { buildHeightgraphData } from '@/utils/heightgraph';
 import HeightGraph from '@/components/heightgraph';
 import { DrawControl } from './draw-control';
@@ -287,7 +291,10 @@ export const MapComponent = () => {
     try {
       const response = await fetch(`${getValhallaUrl()}/height`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...VALHALLA_CLIENT_HEADERS,
+        },
         body: JSON.stringify(buildHeightRequest([[lat, lng]])),
       });
 
@@ -340,7 +347,10 @@ export const MapComponent = () => {
       try {
         const response = await fetch(`${getValhallaUrl()}/height`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...VALHALLA_CLIENT_HEADERS,
+          },
           body: JSON.stringify(heightPayloadNew),
         });
 
