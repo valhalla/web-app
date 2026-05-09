@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import { useDirectionsStore } from '@/stores/directions-store';
 import {
   useDirectionsQuery,
-  useReverseGeocodeDirections,
+  useSetWaypointFromCoords,
 } from '@/hooks/use-directions-queries';
 
 interface WaypointProps {
@@ -38,7 +38,7 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
   );
   const updateTextInput = useDirectionsStore((state) => state.updateTextInput);
   const { refetch: refetchDirections } = useDirectionsQuery();
-  const { reverseGeocode } = useReverseGeocodeDirections();
+  const { setWaypointFromCoords } = useSetWaypointFromCoords();
   const doRemoveWaypoint = useDirectionsStore(
     (state) => state.doRemoveWaypoint
   );
@@ -59,7 +59,11 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
     }
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        await reverseGeocode(pos.coords.longitude, pos.coords.latitude, index);
+        await setWaypointFromCoords(
+          pos.coords.longitude,
+          pos.coords.latitude,
+          index
+        );
         refetchDirections();
       },
       (error) => {
@@ -71,7 +75,7 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  }, [reverseGeocode, refetchDirections, index]);
+  }, [setWaypointFromCoords, refetchDirections, index]);
 
   const handleResultSelect = useCallback(
     (result: ActiveWaypoint) => {

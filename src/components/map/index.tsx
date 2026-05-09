@@ -64,7 +64,7 @@ import { useDirectionsStore } from '@/stores/directions-store';
 import { useIsochronesStore } from '@/stores/isochrones-store';
 import {
   useDirectionsQuery,
-  useReverseGeocodeDirections,
+  useSetWaypointFromCoords,
 } from '@/hooks/use-directions-queries';
 import {
   useIsochronesQuery,
@@ -125,8 +125,7 @@ export const MapComponent = () => {
 
   const { refetch: refetchDirections } = useDirectionsQuery();
   const { refetch: refetchIsochrones } = useIsochronesQuery();
-  const { reverseGeocode: reverseGeocodeDirections } =
-    useReverseGeocodeDirections();
+  const { setWaypointFromCoords } = useSetWaypointFromCoords();
   const { reverseGeocode: reverseGeocodeIsochrones } =
     useReverseGeocodeIsochrones();
   const [heightgraphHoverDistance, setHeightgraphHoverDistance] = useState<
@@ -247,7 +246,7 @@ export const MapComponent = () => {
 
   const updateWaypointPosition = useCallback(
     (object: { latLng: { lat: number; lng: number }; index: number }) => {
-      reverseGeocodeDirections(
+      setWaypointFromCoords(
         object.latLng.lng,
         object.latLng.lat,
         object.index
@@ -255,7 +254,7 @@ export const MapComponent = () => {
         refetchDirections();
       });
     },
-    [reverseGeocodeDirections, refetchDirections]
+    [setWaypointFromCoords, refetchDirections]
   );
 
   const updateIsoPosition = useCallback(

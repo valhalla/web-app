@@ -17,7 +17,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useDirectionsStore } from '@/stores/directions-store';
 import {
   useDirectionsQuery,
-  useReverseGeocodeDirections,
+  useSetWaypointFromCoords,
 } from '@/hooks/use-directions-queries';
 import { useOptimizedRouteQuery } from '@/hooks/use-optimized-route-query';
 import { Sparkles } from 'lucide-react';
@@ -41,7 +41,7 @@ export const DirectionsControl = () => {
   const updateDateTime = useCommonStore((state) => state.updateDateTime);
   const dateTime = useCommonStore((state) => state.dateTime);
   const { refetch: refetchDirections } = useDirectionsQuery();
-  const { reverseGeocode } = useReverseGeocodeDirections();
+  const { setWaypointFromCoords } = useSetWaypointFromCoords();
   const { optimizeRoute, isPending: isOptimizing } = useOptimizedRouteQuery();
   const isOptimized = useDirectionsStore((state) => state.isOptimized);
   const activeRouteIndex = useDirectionsStore(
@@ -66,7 +66,7 @@ export const DirectionsControl = () => {
         if (!isValidCoordinates(lat, lng) || isNaN(lng) || isNaN(lat)) continue;
 
         const index = i / 2;
-        reverseGeocode(lng, lat, index, { isPermalink: true });
+        setWaypointFromCoords(lng, lat, index, { isPermalink: true });
       }
       refetchDirections();
     }

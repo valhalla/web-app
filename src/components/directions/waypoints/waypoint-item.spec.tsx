@@ -64,6 +64,9 @@ vi.mock('@/hooks/use-directions-queries', () => ({
   useDirectionsQuery: vi.fn(() => ({
     refetch: mockRefetchDirections,
   })),
+  useSetWaypointFromCoords: vi.fn(() => ({
+    setWaypointFromCoords: vi.fn().mockResolvedValue([]),
+  })),
 }));
 
 vi.mock('@/components/ui/waypoint-search', () => ({

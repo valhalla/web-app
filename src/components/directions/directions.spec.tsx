@@ -5,7 +5,7 @@ import { DirectionsControl } from './directions';
 
 const mockNavigate = vi.fn();
 const mockRefetchDirections = vi.fn();
-const mockReverseGeocode = vi.fn().mockResolvedValue([]);
+const mockSetWaypointFromCoords = vi.fn().mockResolvedValue([]);
 const mockAddEmptyWaypointToEnd = vi.fn();
 const mockClearWaypoints = vi.fn();
 const mockClearRoutes = vi.fn();
@@ -63,8 +63,8 @@ vi.mock('@/hooks/use-directions-queries', () => ({
   useDirectionsQuery: vi.fn(() => ({
     refetch: mockRefetchDirections,
   })),
-  useReverseGeocodeDirections: vi.fn(() => ({
-    reverseGeocode: mockReverseGeocode,
+  useSetWaypointFromCoords: vi.fn(() => ({
+    setWaypointFromCoords: mockSetWaypointFromCoords,
   })),
 }));
 
@@ -312,14 +312,14 @@ describe('DirectionsControl URL parsing', () => {
 
     render(<DirectionsControl />);
 
-    expect(mockReverseGeocode).toHaveBeenCalledTimes(2);
-    expect(mockReverseGeocode).toHaveBeenCalledWith(
+    expect(mockSetWaypointFromCoords).toHaveBeenCalledTimes(2);
+    expect(mockSetWaypointFromCoords).toHaveBeenCalledWith(
       13.365016850476763,
       52.483706198952575,
       0,
       { isPermalink: true }
     );
-    expect(mockReverseGeocode).toHaveBeenCalledWith(
+    expect(mockSetWaypointFromCoords).toHaveBeenCalledWith(
       13.422421655040836,
       52.49336042169804,
       1,
@@ -335,14 +335,14 @@ describe('DirectionsControl URL parsing', () => {
 
     render(<DirectionsControl />);
 
-    expect(mockReverseGeocode).toHaveBeenCalledTimes(2);
-    expect(mockReverseGeocode).toHaveBeenCalledWith(
+    expect(mockSetWaypointFromCoords).toHaveBeenCalledTimes(2);
+    expect(mockSetWaypointFromCoords).toHaveBeenCalledWith(
       103.66492937866911,
       1.4827280571964963,
       0,
       { isPermalink: true }
     );
-    expect(mockReverseGeocode).toHaveBeenCalledWith(
+    expect(mockSetWaypointFromCoords).toHaveBeenCalledWith(
       103.66421854954496,
       1.4840285187178779,
       1,
@@ -358,7 +358,7 @@ describe('DirectionsControl URL parsing', () => {
 
     render(<DirectionsControl />);
 
-    expect(mockReverseGeocode).not.toHaveBeenCalled();
+    expect(mockSetWaypointFromCoords).not.toHaveBeenCalled();
   });
 
   it('should handle coordinates near edge of valid range', async () => {
@@ -369,11 +369,11 @@ describe('DirectionsControl URL parsing', () => {
 
     render(<DirectionsControl />);
 
-    expect(mockReverseGeocode).toHaveBeenCalledTimes(2);
-    expect(mockReverseGeocode).toHaveBeenCalledWith(179.9, 89, 0, {
+    expect(mockSetWaypointFromCoords).toHaveBeenCalledTimes(2);
+    expect(mockSetWaypointFromCoords).toHaveBeenCalledWith(179.9, 89, 0, {
       isPermalink: true,
     });
-    expect(mockReverseGeocode).toHaveBeenCalledWith(-179.9, -89, 1, {
+    expect(mockSetWaypointFromCoords).toHaveBeenCalledWith(-179.9, -89, 1, {
       isPermalink: true,
     });
   });
