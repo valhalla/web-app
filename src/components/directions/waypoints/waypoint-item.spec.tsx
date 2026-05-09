@@ -8,10 +8,15 @@ const mockUpdateTextInput = vi.fn();
 const mockDoRemoveWaypoint = vi.fn();
 const mockRefetchDirections = vi.fn();
 const mockSetWaypointFromCoords = vi.fn().mockResolvedValue([]);
+const mockFlyTo = vi.fn();
 const { mockToastError } = vi.hoisted(() => ({ mockToastError: vi.fn() }));
 
 vi.mock('sonner', () => ({
   toast: { error: mockToastError },
+}));
+
+vi.mock('react-map-gl/maplibre', () => ({
+  useMap: vi.fn(() => ({ mainMap: { flyTo: mockFlyTo } })),
 }));
 
 vi.mock('@dnd-kit/sortable', () => ({
@@ -44,7 +49,7 @@ vi.mock('@/stores/directions-store', () => ({
             {
               title: 'Berlin, Germany',
               addressindex: 0,
-              lngLat: [13.4, 52.5],
+              displaylnglat: [13.4, 52.5],
               selected: true,
             },
           ],
@@ -211,6 +216,26 @@ describe('Waypoint', () => {
       'aria-label',
       'Waypoint 2'
     );
+  });
+
+  describe('zoom-to-waypoint button', () => {
+    it('flies the map to the selected waypoint coords', async () => {
+      const user = userEvent.setup();
+      render(<Waypoint id="wp-1" index={0} />);
+
+      await user.click(screen.getByTestId('zoom-to-waypoint-button'));
+
+      expect(mockFlyTo).toHaveBeenCalledWith({
+        center: [13.4, 52.5],
+        zoom: 14,
+      });
+    });
+
+    it('is disabled when the waypoint has no selected coords', () => {
+      render(<Waypoint id="wp-2" index={1} />);
+
+      expect(screen.getByTestId('zoom-to-waypoint-button')).toBeDisabled();
+    });
   });
 
   describe('use current location button', () => {

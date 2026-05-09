@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useMap } from 'react-map-gl/maplibre';
 
 import type { ActiveWaypoint } from '@/components/types';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { WaypointSearch } from '@/components/ui/waypoint-search';
-import { GripVertical, Locate, Trash } from 'lucide-react';
+import { GripVertical, Locate, Search, Trash } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDirectionsStore } from '@/stores/directions-store';
 import {
@@ -42,8 +43,10 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
   const doRemoveWaypoint = useDirectionsStore(
     (state) => state.doRemoveWaypoint
   );
+  const { mainMap } = useMap();
   const waypoint = waypoints[index];
   const { userInput, geocodeResults } = waypoint!;
+  const selectedCoords = geocodeResults?.find((r) => r.selected)?.displaylnglat;
 
   const handleGeocodeResults = useCallback(
     (addresses: ActiveWaypoint[]) => {
@@ -76,6 +79,11 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }, [setWaypointFromCoords, refetchDirections, index]);
+
+  const handleZoomToWaypoint = useCallback(() => {
+    if (!mainMap || !selectedCoords) return;
+    mainMap.flyTo({ center: [selectedCoords[0], selectedCoords[1]], zoom: 14 });
+  }, [mainMap, selectedCoords]);
 
   const handleResultSelect = useCallback(
     (result: ActiveWaypoint) => {
@@ -133,12 +141,12 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
           </Tooltip>
         }
         rightContent={
-          <>
+          <div className="flex items-center gap-0.5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="icon-sm"
+                  size="icon-xs"
                   onClick={handleUseCurrentLocation}
                   data-testid="use-current-location-button"
                   aria-label={`Use my current location for waypoint ${index + 1}`}
@@ -154,7 +162,24 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="icon-sm"
+                  size="icon-xs"
+                  onClick={handleZoomToWaypoint}
+                  disabled={!selectedCoords}
+                  data-testid="zoom-to-waypoint-button"
+                  aria-label={`Zoom map to waypoint ${index + 1}`}
+                >
+                  <Search className="size-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Zoom to this waypoint</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={() => {
                     doRemoveWaypoint({ index });
                     refetchDirections();
@@ -172,7 +197,7 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
                 <p>Remove this waypoint</p>
               </TooltipContent>
             </Tooltip>
-          </>
+          </div>
         }
       />
     </div>
