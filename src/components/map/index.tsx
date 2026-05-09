@@ -390,6 +390,14 @@ export const MapComponent = () => {
 
     // Add waypoint markers
     waypoints.forEach((waypoint, index) => {
+      const isOrigin = index === 0;
+      const isDestination =
+        index === waypoints.length - 1 && waypoints.length > 1;
+      const color: MarkerColor = isOrigin
+        ? 'green'
+        : isDestination
+          ? 'red'
+          : 'grey';
       waypoint.geocodeResults.forEach((address) => {
         if (address.selected) {
           newMarkers.push({
@@ -399,7 +407,7 @@ export const MapComponent = () => {
             type: 'waypoint',
             index: index,
             title: address.title,
-            color: 'green',
+            color,
             number: (index + 1).toString(),
           });
         }
