@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format, parseISO, isValid } from 'date-fns';
+import { format, parseISO, isValid, isToday } from 'date-fns';
 import { Calendar as CalendarIcon, ChevronDown, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -47,7 +47,11 @@ const formatTriggerLabel = (type: number, value: string): string | null => {
   if (type === 0) return 'Now';
   const date = parseISO(value);
   if (!isValid(date)) return TYPE_PREFIX[type] ?? '';
-  return `${TYPE_PREFIX[type]} ${format(date, 'd MMM, HH:mm')}`;
+  // Drop the date when it's today; keep it short and avoid wrapping.
+  const stamp = isToday(date)
+    ? format(date, 'HH:mm')
+    : format(date, 'd MMM HH:mm');
+  return `${TYPE_PREFIX[type]} ${stamp}`;
 };
 
 const toLocalDateTimeString = (date: Date): string =>

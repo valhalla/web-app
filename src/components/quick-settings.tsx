@@ -76,22 +76,9 @@ const tristateOptions = (Base: LucideIcon): IconEnumOption[] => [
   },
 ];
 
-const binaryOptions = (Base: LucideIcon): IconEnumOption[] => [
-  {
-    value: 'no',
-    label: 'No',
-    renderIcon: () => <StateIcon Base={Base} state="no" />,
-  },
-  {
-    value: 'yes',
-    label: 'Yes',
-    renderIcon: () => <StateIcon Base={Base} state="yes" />,
-  },
-];
-
 const HIGHWAY_OPTIONS = tristateOptions(Milestone);
 const TOLL_OPTIONS = tristateOptions(DollarSign);
-const FERRY_OPTIONS = binaryOptions(Ship);
+const FERRY_OPTIONS = tristateOptions(Ship);
 
 const willingnessToOption = (value: number): string => {
   if (value <= 0) return 'no';
@@ -244,14 +231,14 @@ export const QuickSettings = ({
         className="bg-muted/60 rounded-md px-3 py-2"
       >
         <div className="space-y-1.25">
-          <div className="flex items-center gap-2 py-1">
+          <div className="flex flex-wrap items-center gap-2 py-1">
             <IconEnumButton
               id="use_ferry"
               label="Use ferries"
-              value={(settings.use_ferry as number) > 0 ? 'yes' : 'no'}
+              value={willingnessToOption(settings.use_ferry as number)}
               options={FERRY_OPTIONS}
               onValueChange={(value) =>
-                handleSettingChange('use_ferry', value === 'yes' ? 0.5 : 0)
+                handleSettingChange('use_ferry', optionToWillingness(value))
               }
             />
             {supportsHighwayToll && (

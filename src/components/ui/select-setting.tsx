@@ -85,7 +85,7 @@ export const SelectSetting = ({
 
   if (inline) {
     return (
-      <div className="flex items-center justify-between gap-2 py-1">
+      <div className="flex flex-wrap items-center justify-between gap-2 py-1">
         {labelBlock}
         {selectControl}
       </div>

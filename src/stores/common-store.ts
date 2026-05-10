@@ -113,7 +113,9 @@ export const useCommonStore = create<CommonStore>()(
       updateDateTime: (key, value) =>
         set(
           (state) => {
-            if (key === 'type') state.dateTime.type = value as number;
+            // The Select control fires onValueChange with strings; coerce here
+            // so type stays numeric (formatTriggerLabel uses === comparisons).
+            if (key === 'type') state.dateTime.type = Number(value);
             else state.dateTime.value = value as string;
           },
           undefined,
