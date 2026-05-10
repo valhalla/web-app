@@ -40,7 +40,17 @@ const activeTabRoute = createRoute({
   component: App,
   validateSearch: zodValidator(searchParamsSchema),
   search: {
-    middlewares: [retainSearchParams(['profile', 'style'])],
+    middlewares: [
+      retainSearchParams([
+        'profile',
+        'style',
+        'use_ferry',
+        'use_highways',
+        'use_tolls',
+        'alternates',
+        'lang',
+      ]),
+    ],
   },
   beforeLoad: ({ params, search }) => {
     if (!isValidTab(params.activeTab)) {

@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { useSearch } from '@tanstack/react-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import {
   Star,
   Milestone,
@@ -21,6 +21,9 @@ import { cn } from '@/lib/utils';
 import { useCommonStore } from '@/stores/common-store';
 import {
   languageOptions,
+  settingsInit,
+  HIGHWAY_TOLL_PROFILES,
+  DEFAULT_DIRECTIONS_LANGUAGE,
   type DirectionsLanguage,
 } from '@/components/settings-panel/settings-options';
 import {
@@ -30,7 +33,6 @@ import {
 import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
 import type { PossibleSettings } from '@/components/types';
-import type { Profile } from '@/stores/common-store';
 
 type IconState = 'no' | 'yes' | 'preferred';
 
@@ -103,8 +105,6 @@ const optionToWillingness = (option: string): number => {
   return 0.5;
 };
 
-const HIGHWAY_TOLL_PROFILES: Profile[] = ['car', 'truck', 'bus', 'motorcycle'];
-
 interface QuickSettingsProps {
   showTravelTime?: boolean;
   showAlternates?: boolean;
@@ -116,7 +116,9 @@ export const QuickSettings = ({
   showAlternates = true,
   showLanguage = true,
 }: QuickSettingsProps) => {
-  const { profile } = useSearch({ from: '/$activeTab' });
+  const search = useSearch({ from: '/$activeTab' });
+  const navigate = useNavigate({ from: '/$activeTab' });
+  const { profile } = search;
   const settings = useCommonStore((state) => state.settings);
   const updateSettings = useCommonStore((state) => state.updateSettings);
   const dateTime = useCommonStore((state) => state.dateTime);
@@ -125,13 +127,78 @@ export const QuickSettings = ({
   const { refetch: refetchIsochrones } = useIsochronesQuery();
 
   const [open, setOpen] = useState(true);
-  const [language, setLanguage] = useState<DirectionsLanguage>(() =>
-    getDirectionsLanguage()
-  );
+  const [language, setLanguage] = useState<DirectionsLanguage>(() => {
+    // URL wins on first render; otherwise localStorage / system locale.
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href).searchParams.get('lang');
+      if (url && languageOptions.some((opt) => opt.value === url)) {
+        return url as DirectionsLanguage;
+      }
+    }
+    return getDirectionsLanguage();
+  });
 
   const supportsHighwayToll = profile
-    ? HIGHWAY_TOLL_PROFILES.includes(profile)
+    ? (HIGHWAY_TOLL_PROFILES as readonly string[]).includes(profile)
     : false;
+
+  // Hydrate store from URL on mount (URL wins when present).
+  const urlSettingsHydrated = useRef(false);
+  useEffect(() => {
+    if (urlSettingsHydrated.current) return;
+    urlSettingsHydrated.current = true;
+
+    if (search.use_ferry !== undefined) {
+      updateSettings('use_ferry', search.use_ferry);
+    }
+    if (search.use_highways !== undefined) {
+      updateSettings('use_highways', search.use_highways);
+    }
+    if (search.use_tolls !== undefined) {
+      updateSettings('use_tolls', search.use_tolls);
+    }
+    if (search.alternates !== undefined) {
+      updateSettings('alternates', search.alternates);
+    }
+    if (search.lang) {
+      setDirectionsLanguage(search.lang as DirectionsLanguage);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Mirror store → URL (omit values at default to keep URLs clean).
+  useEffect(() => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        use_ferry:
+          settings.use_ferry === settingsInit.use_ferry
+            ? undefined
+            : (settings.use_ferry as number),
+        use_highways:
+          settings.use_highways === settingsInit.use_highways
+            ? undefined
+            : (settings.use_highways as number),
+        use_tolls:
+          settings.use_tolls === settingsInit.use_tolls
+            ? undefined
+            : (settings.use_tolls as number),
+        alternates:
+          settings.alternates === settingsInit.alternates
+            ? undefined
+            : (settings.alternates as number),
+        lang: language === DEFAULT_DIRECTIONS_LANGUAGE ? undefined : language,
+      }),
+      replace: true,
+    });
+  }, [
+    settings.use_ferry,
+    settings.use_highways,
+    settings.use_tolls,
+    settings.alternates,
+    language,
+    navigate,
+  ]);
 
   const refetchAll = useCallback(() => {
     refetchDirections();

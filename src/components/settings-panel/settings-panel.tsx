@@ -1,6 +1,10 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { profileSettings, generalSettings } from './settings-options';
+import {
+  profileSettings,
+  generalSettings,
+  QUICK_SETTING_PARAMS,
+} from './settings-options';
 import { filterProfileSettings } from '@/utils/filter-profile-settings';
 import type { PossibleSettings } from '@/components/types';
 
@@ -25,12 +29,7 @@ import { MultiSelectSetting } from '../ui/multiselect-setting';
 
 type ProfileWithSettings = Exclude<Profile, 'auto'>;
 
-const QUICK_SETTING_PARAMS = new Set([
-  'use_highways',
-  'use_tolls',
-  'use_ferry',
-  'alternates',
-]);
+const QUICK_SETTING_PARAM_SET: Set<string> = new Set(QUICK_SETTING_PARAMS);
 
 export const SettingsPanel = () => {
   const { profile } = useSearch({ from: '/$activeTab' });
@@ -228,7 +227,7 @@ export const SettingsPanel = () => {
           >
             <div className="space-y-1.25">
               {generalSettings[profile as ProfileWithSettings].numeric
-                .filter((option) => !QUICK_SETTING_PARAMS.has(option.param))
+                .filter((option) => !QUICK_SETTING_PARAM_SET.has(option.param))
                 .map((option, key) => (
                   <SliderSetting
                     key={key}
@@ -291,7 +290,7 @@ export const SettingsPanel = () => {
                 />
               ))}
               {generalSettings.all.numeric
-                .filter((option) => !QUICK_SETTING_PARAMS.has(option.param))
+                .filter((option) => !QUICK_SETTING_PARAM_SET.has(option.param))
                 .map((option, key) => (
                   <SliderSetting
                     key={key}

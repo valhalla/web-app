@@ -5,6 +5,7 @@ import type { PossibleSettings } from '@/components/types';
 import {
   settingsInit,
   settingsInitTruckOverride,
+  QUICK_SETTING_PARAMS,
 } from '@/components/settings-panel/settings-options';
 import { z } from 'zod';
 
@@ -47,11 +48,15 @@ interface CommonActions {
 
 type CommonStore = CommonState & CommonActions;
 
+// Open the left panel by default on non-mobile viewports (Tailwind md breakpoint).
+const DEFAULT_PANEL_OPEN =
+  typeof window !== 'undefined' && window.innerWidth >= 768;
+
 export const useCommonStore = create<CommonStore>()(
   devtools(
     immer((set) => ({
       settingsPanelOpen: false,
-      directionsPanelOpen: false,
+      directionsPanelOpen: DEFAULT_PANEL_OPEN,
       coordinates: [],
       loading: false,
       settings: { ...settingsInit },
@@ -91,8 +96,16 @@ export const useCommonStore = create<CommonStore>()(
       resetSettings: (profile) =>
         set(
           (state) => {
-            state.settings =
+            const base =
               profile === 'truck' ? settingsInitTruckOverride : settingsInit;
+            // Preserve quick-panel params — they're treated as cross-profile
+            // user preferences (URL-permalinked) and shouldn't be wiped on a
+            // profile change or an explicit Reset.
+            const preserved: Partial<PossibleSettings> = {};
+            for (const param of QUICK_SETTING_PARAMS) {
+              preserved[param] = state.settings[param];
+            }
+            state.settings = { ...base, ...preserved };
           },
           undefined,
           'resetSettings'
