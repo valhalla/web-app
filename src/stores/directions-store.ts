@@ -100,6 +100,7 @@ interface DirectionsActions {
   ) => void;
   setIsOptimized: (isOptimized: boolean) => void;
   setActiveRouteIndex: (index: number) => void;
+  clearPlaceholderWaypoints: () => void;
 }
 
 type DirectionsStore = DirectionsState & DirectionsActions;
@@ -352,6 +353,25 @@ export const useDirectionsStore = create<DirectionsStore>()(
           },
           undefined,
           'setActiveRouteIndex'
+        ),
+
+      clearPlaceholderWaypoints: () =>
+        set(
+          (state) => {
+            state.waypoints.forEach((wp, i) => {
+              const hasOnlyPlaceholders = wp.geocodeResults.every(
+                (r) => !r.title || r.title === ''
+              );
+              if (hasOnlyPlaceholders) {
+                if (state.waypoints[i]) {
+                  state.waypoints[i].geocodeResults = [];
+                  state.waypoints[i].userInput = '';
+                }
+              }
+            });
+          },
+          undefined,
+          'clearPlaceholderWaypoints'
         ),
     })),
     { name: 'directions-store' }

@@ -37,8 +37,6 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
   const doRemoveWaypoint = useDirectionsStore(
     (state) => state.doRemoveWaypoint
   );
-  const waypoint = waypoints[index];
-  const { userInput, geocodeResults } = waypoint!;
 
   const handleGeocodeResults = useCallback(
     (addresses: ActiveWaypoint[]) => {
@@ -59,6 +57,11 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
     },
     [updateTextInput, index, refetchDirections]
   );
+
+  const waypoint = waypoints.find((wp) => wp.id === id);
+  if (!waypoint) return null;
+
+  const { userInput, geocodeResults } = waypoint!;
 
   const style = {
     transform: CSS.Transform.toString(transform),

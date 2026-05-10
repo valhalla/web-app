@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { DirectionsControl } from './directions/directions';
 import { IsochronesControl } from './isochrones/isochrones';
+import { useDirectionsStore } from '@/stores/directions-store';
 
 const TilesControl = lazy(() =>
   import('./tiles/tiles').then((module) => ({ default: module.TilesControl }))
@@ -52,6 +53,9 @@ export const RoutePlanner = () => {
   const loading = useCommonStore((state) => state.loading);
   const toggleDirections = useCommonStore((state) => state.toggleDirections);
 
+  const clearPlaceholderWaypoints = useDirectionsStore(
+    (state) => state.clearPlaceholderWaypoints
+  );
   const tabConfig = TAB_CONFIG[activeTab as keyof typeof TAB_CONFIG];
 
   const {
@@ -126,7 +130,10 @@ export const RoutePlanner = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={toggleDirections}
+              onClick={() => {
+                clearPlaceholderWaypoints();
+                toggleDirections();
+              }}
               data-testid="close-directions-button"
             >
               <X className="size-4" />
