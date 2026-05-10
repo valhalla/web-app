@@ -26,6 +26,14 @@ export const IsochronesControl = () => {
   useEffect(() => {
     if (urlParamsProcessed.current || !mainMap) return;
 
+    const alreadyHydrated = useIsochronesStore
+      .getState()
+      .geocodeResults.some((r) => r.selected);
+    if (alreadyHydrated) {
+      urlParamsProcessed.current = true;
+      return;
+    }
+
     const wpsParam = initialUrlParams.current.wps;
 
     if (wpsParam) {

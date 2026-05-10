@@ -35,14 +35,23 @@ const mockGeocodeResults: {
   sourcelnglat: [number, number];
 }[] = [];
 
-vi.mock('@/stores/isochrones-store', () => ({
-  useIsochronesStore: vi.fn((selector) =>
-    selector({
-      results: mockResults,
-      geocodeResults: mockGeocodeResults,
-    })
-  ),
-}));
+vi.mock('@/stores/isochrones-store', () => {
+  const useIsochronesStore = Object.assign(
+    vi.fn((selector) =>
+      selector({
+        results: mockResults,
+        geocodeResults: mockGeocodeResults,
+      })
+    ),
+    {
+      getState: () => ({
+        results: mockResults,
+        geocodeResults: mockGeocodeResults,
+      }),
+    }
+  );
+  return { useIsochronesStore };
+});
 
 vi.mock('@/hooks/use-isochrones-queries', () => ({
   useIsochronesQuery: vi.fn(() => ({

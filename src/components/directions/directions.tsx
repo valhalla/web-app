@@ -50,6 +50,14 @@ export const DirectionsControl = () => {
   useEffect(() => {
     if (urlParamsProcessed.current) return;
 
+    const alreadyHydrated = useDirectionsStore
+      .getState()
+      .waypoints.some((wp) => wp.geocodeResults.some((r) => r.selected));
+    if (alreadyHydrated) {
+      urlParamsProcessed.current = true;
+      return;
+    }
+
     const wpsParam = initialUrlParams.current.wps;
 
     if (wpsParam) {

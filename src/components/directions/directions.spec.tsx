@@ -31,21 +31,35 @@ const mockResults = {
   show: { '0': true },
 };
 
-vi.mock('@/stores/directions-store', () => ({
-  defaultWaypoints: [
-    { id: '0', geocodeResults: [], userInput: '' },
-    { id: '1', geocodeResults: [], userInput: '' },
-  ],
-  useDirectionsStore: vi.fn((selector) =>
-    selector({
-      waypoints: mockWaypoints,
-      results: mockResults,
-      addEmptyWaypointToEnd: mockAddEmptyWaypointToEnd,
-      clearWaypoints: mockClearWaypoints,
-      clearRoutes: mockClearRoutes,
-    })
-  ),
-}));
+vi.mock('@/stores/directions-store', () => {
+  const useDirectionsStore = Object.assign(
+    vi.fn((selector) =>
+      selector({
+        waypoints: mockWaypoints,
+        results: mockResults,
+        addEmptyWaypointToEnd: mockAddEmptyWaypointToEnd,
+        clearWaypoints: mockClearWaypoints,
+        clearRoutes: mockClearRoutes,
+      })
+    ),
+    {
+      getState: () => ({
+        waypoints: mockWaypoints,
+        results: mockResults,
+        addEmptyWaypointToEnd: mockAddEmptyWaypointToEnd,
+        clearWaypoints: mockClearWaypoints,
+        clearRoutes: mockClearRoutes,
+      }),
+    }
+  );
+  return {
+    defaultWaypoints: [
+      { id: '0', geocodeResults: [], userInput: '' },
+      { id: '1', geocodeResults: [], userInput: '' },
+    ],
+    useDirectionsStore,
+  };
+});
 
 vi.mock('@/hooks/use-directions-queries', () => ({
   useDirectionsQuery: vi.fn(() => ({
