@@ -48,8 +48,7 @@ export const IconEnumButton = ({
                 id={id}
                 type="button"
                 variant="outline"
-                size="sm"
-                className="h-8 gap-1 px-2"
+                className="h-9 gap-1.5 px-2.5"
                 aria-label={`${label}: ${currentLabel}`}
               >
                 {current?.renderIcon()}

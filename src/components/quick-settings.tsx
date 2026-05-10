@@ -37,9 +37,9 @@ import type { PossibleSettings } from '@/components/types';
 type IconState = 'no' | 'yes' | 'preferred';
 
 const StateIcon = ({ Base, state }: { Base: LucideIcon; state: IconState }) => (
-  <span className="relative inline-block size-4 shrink-0">
+  <span className="relative inline-block size-5 shrink-0">
     <Base
-      className={cn('size-4', state === 'no' && 'text-muted-foreground/60')}
+      className={cn('size-5', state === 'no' && 'text-muted-foreground/60')}
     />
     {state === 'no' && (
       <span

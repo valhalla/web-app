@@ -92,12 +92,11 @@ export const DateTimeButton = ({
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
-                className="h-8 gap-1 px-2"
+                className="h-9 gap-1.5 px-2.5"
                 aria-label={`Travel time: ${triggerLabel ?? TYPE_LABELS[-1]}`}
                 data-testid="date-time-button"
               >
-                <Clock className="size-4" />
+                <Clock className="size-5" />
                 {triggerLabel && (
                   <span className="text-xs">{triggerLabel}</span>
                 )}
