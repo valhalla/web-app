@@ -26,17 +26,11 @@ export function CollapsibleSection({
   className,
 }: CollapsibleSectionProps) {
   return (
-    <Collapsible
-      open={open}
-      onOpenChange={onOpenChange}
-      className={`border rounded-md p-2 px-3 ${className || ''}`}
-    >
-      <CollapsibleTrigger className="flex items-center justify-between w-full">
+    <Collapsible open={open} onOpenChange={onOpenChange} className={className}>
+      <CollapsibleTrigger className="flex items-center justify-between w-full py-1">
         <div className="flex items-center gap-2">
-          {Icon && <Icon className="size-4 text-muted-foreground" />}
-          <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            {title}
-          </h3>
+          {Icon && <Icon className="size-4" />}
+          <h3 className="text-sm font-medium">{title}</h3>
           {subtitle && (
             <span className="text-xs text-muted-foreground capitalize">
               {subtitle}
@@ -49,7 +43,7 @@ export function CollapsibleSection({
           }`}
         />
       </CollapsibleTrigger>
-      <CollapsibleContent className="pt-3">{children}</CollapsibleContent>
+      <CollapsibleContent className="pt-2">{children}</CollapsibleContent>
     </Collapsible>
   );
 }

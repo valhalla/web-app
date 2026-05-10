@@ -22,9 +22,11 @@ describe('SettingsButton', () => {
     expect(() => render(<SettingsButton />)).not.toThrow();
   });
 
-  it('should render a button with settings icon', () => {
+  it('should render an "Advanced settings" labeled button', () => {
     render(<SettingsButton />);
-    expect(screen.getByTestId('show-hide-settings-btn')).toBeInTheDocument();
+    const button = screen.getByTestId('show-hide-settings-btn');
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveTextContent(/Advanced settings/i);
   });
 
   it('should call toggleSettings when clicked', async () => {
@@ -34,16 +36,5 @@ describe('SettingsButton', () => {
     await user.click(screen.getByTestId('show-hide-settings-btn'));
 
     expect(mockToggleSettings).toHaveBeenCalledTimes(1);
-  });
-
-  it('should have tooltip with Show/Hide Settings text', async () => {
-    const user = userEvent.setup();
-    render(<SettingsButton />);
-
-    await user.hover(screen.getByTestId('show-hide-settings-btn'));
-
-    expect(
-      await screen.findByRole('tooltip', { name: 'Show/Hide Settings' })
-    ).toBeInTheDocument();
   });
 });

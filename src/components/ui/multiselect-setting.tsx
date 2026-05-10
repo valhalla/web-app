@@ -48,7 +48,7 @@ export const MultiSelectSetting = ({
               type="button"
               variant="ghost"
               size="icon-xs"
-              className="text-muted-foreground/70 hover:text-muted-foreground hover:bg-transparent"
+              className="text-muted-foreground hover:text-foreground hover:bg-transparent"
             >
               <AccessibleIcon label={`More info about ${label}`}>
                 <HelpCircle className="size-3.5" />

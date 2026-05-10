@@ -37,6 +37,8 @@ Husky `pre-commit` runs `npm run typecheck && npx lint-staged` (eslint --fix on 
 - **Zustand** + `immer` + `devtools` middleware for client state (3 stores in `src/stores/`)
 - **Tailwind CSS v4** via `@tailwindcss/vite` + **shadcn/ui** (style `new-york`, base `slate`, lucide icons; see `components.json`)
 - **maplibre-gl** + **react-map-gl** + `@watergis/maplibre-gl-terradraw` for drawing exclude-polygons
+- **react-day-picker** (used by the shadcn `Calendar` primitive that powers the date/time button)
+- **date-fns** for formatting
 - **zod** for env/search-param/URL validation
 - Path alias: `@/*` → `src/*`
 
@@ -73,8 +75,9 @@ Server-state lives in TanStack Query. The global `QueryClient` (`src/lib/tanstac
 
 - `src/components/map/` — MapLibre map. `index.tsx` is the orchestrator; `parts/` holds map sublayers (route lines, isochrone polygons, hover popups, draw controls, marker icons). `valhalla-layers.ts` defines internal Valhalla edge/node/shortcut/access-restriction MVT layer IDs.
 - `src/components/directions/`, `src/components/isochrones/`, `src/components/tiles/` — the three tab panels.
-- `src/components/settings-panel/` — profile-specific costing options. `settings-options.ts` holds `settingsInit` (default) and `settingsInitTruckOverride`.
-- `src/components/ui/` — shadcn/ui primitives (do not rename — they're tracked by `components.json`).
+- `src/components/quick-settings.tsx` — left-sidebar "General settings" collapsible panel. Hosts the most-used controls inline so they're visible without opening the advanced panel: ferry/highway/toll icon buttons (a state-decorated `IconEnumButton` for each), a `DateTimeButton`, an alternates slider, and the directions language picker. Used by both the directions and isochrones tabs (the latter passes `showAlternates={false} showLanguage={false}`). Renders the `SettingsButton` ("Advanced settings") at the bottom — that's the entry point to `SettingsPanel`.
+- `src/components/settings-panel/` — full ("advanced") costing options panel. `settings-options.ts` holds `settingsInit`, `settingsInitTruckOverride`, the per-profile `profileSettings` / `generalSettings` lists, and the `languageOptions` / language storage helpers. `settings-panel.tsx` renders `Profile Settings` + `General Settings`, **filtering out** `use_highways`, `use_tolls`, `use_ferry`, `alternates` since those moved to QuickSettings (params still flow through `filter-profile-settings.ts` for API requests).
+- `src/components/ui/` — shadcn/ui primitives (do not rename — they're tracked by `components.json`). `icon-enum-setting.tsx` (`IconEnumButton`), `date-time-button.tsx`, and `calendar.tsx` are the QuickSettings building blocks.
 - `src/components/types.ts` — shared `PossibleSettings`, `ActiveWaypoint`, Valhalla response types.
 
 ### Backend integration

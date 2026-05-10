@@ -21,7 +21,6 @@ import { X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useParams, useNavigate } from '@tanstack/react-router';
 import { ProfilePicker } from './profile-picker';
-import { SettingsButton } from './settings-button';
 import type { Profile } from '@/stores/common-store';
 import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
@@ -138,12 +137,11 @@ export const RoutePlanner = () => {
           </SheetHeader>
 
           {activeTab !== 'tiles' && (
-            <div className="flex justify-between px-2 mb-1">
+            <div className="px-2 mb-1">
               <ProfilePicker
                 loading={loading}
                 onProfileChange={handleProfileChange}
               />
-              <SettingsButton />
             </div>
           )}
 

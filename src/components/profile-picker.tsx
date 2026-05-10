@@ -19,13 +19,13 @@ import { Loader2 } from 'lucide-react';
 import { useSearch } from '@tanstack/react-router';
 
 const iconMap = {
-  truck: <TruckSvg />,
-  car: <CarSvg />,
-  bicycle: <BikeSvg />,
-  pedestrian: <PedestrianSvg />,
-  motor_scooter: <ScooterSvg />,
-  bus: <BusSvg />,
-  motorcycle: <MotorbikeSvg />,
+  truck: <TruckSvg className="size-7" />,
+  car: <CarSvg className="size-7" />,
+  bicycle: <BikeSvg className="size-7" />,
+  pedestrian: <PedestrianSvg className="size-7" />,
+  motor_scooter: <ScooterSvg className="size-7" />,
+  bus: <BusSvg className="size-7" />,
+  motorcycle: <MotorbikeSvg className="size-7" />,
 };
 
 interface ProfilePickerProps {
@@ -64,7 +64,9 @@ export const ProfilePicker = ({
         <ToggleGroup
           type="single"
           variant="outline"
+          size="lg"
           value={activeProfile}
+          className="[&_button]:h-12 [&_button]:min-w-12 [&_button]:px-1"
           onValueChange={(value: Profile) => {
             if (value && value !== activeProfile) {
               handleUpdateProfile(value);

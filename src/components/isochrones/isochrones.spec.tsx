@@ -77,6 +77,12 @@ vi.mock('./isochrone-card', () => ({
   ),
 }));
 
+vi.mock('@/components/quick-settings', () => ({
+  QuickSettings: () => (
+    <div data-testid="mock-quick-settings">Quick Settings</div>
+  ),
+}));
+
 describe('IsochronesControl', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -172,18 +178,9 @@ describe('IsochronesControl', () => {
     expect(result.wps).toBeUndefined();
   });
 
-  it('should render container with proper structure', () => {
+  it('should render QuickSettings component', () => {
     render(<IsochronesControl />);
-
-    const container = screen.getByTestId('mock-waypoints').parentElement;
-    expect(container).toHaveClass(
-      'flex',
-      'flex-col',
-      'gap-3',
-      'border',
-      'rounded-md',
-      'p-2'
-    );
+    expect(screen.getByTestId('mock-quick-settings')).toBeInTheDocument();
   });
 });
 

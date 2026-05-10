@@ -3,10 +3,8 @@ import { useCallback, useEffect, useRef } from 'react';
 import { Waypoints } from './waypoints/waypoint-list';
 
 import { SettingsFooter } from '@/components/settings-footer';
-import { DateTimePicker } from '@/components/date-time-picker';
-import { Separator } from '@/components/ui/separator';
+import { QuickSettings } from '@/components/quick-settings';
 
-import { useCommonStore } from '@/stores/common-store';
 import type { ParsedDirectionsGeometry } from '@/components/types';
 import { Button } from '@/components/ui/button';
 import { MapPinPlus, MapPinXInside } from 'lucide-react';
@@ -38,8 +36,6 @@ export const DirectionsControl = () => {
   const initialUrlParams = useRef(parseUrlParams());
   const urlParamsProcessed = useRef(false);
   const navigate = useNavigate({ from: '/$activeTab' });
-  const updateDateTime = useCommonStore((state) => state.updateDateTime);
-  const dateTime = useCommonStore((state) => state.dateTime);
   const { refetch: refetchDirections } = useDirectionsQuery();
   const { reverseGeocode } = useReverseGeocodeDirections();
   const { optimizeRoute, isPending: isOptimizing } = useOptimizedRouteQuery();
@@ -95,14 +91,6 @@ export const DirectionsControl = () => {
     });
   }, [waypoints, navigate]);
 
-  const handleDateTimeChange = useCallback(
-    (field: 'type' | 'value', value: string) => {
-      updateDateTime(field, value);
-      refetchDirections();
-    },
-    [updateDateTime, refetchDirections]
-  );
-
   const handleAddWaypoint = useCallback(() => {
     addEmptyWaypointToEnd();
   }, [addEmptyWaypointToEnd]);
@@ -118,7 +106,7 @@ export const DirectionsControl = () => {
 
   return (
     <>
-      <div className="flex flex-col gap-3 border rounded-md p-2">
+      <div className="flex flex-col gap-3">
         <Waypoints />
         <div className="flex justify-between gap-4">
           <Button
@@ -163,14 +151,9 @@ export const DirectionsControl = () => {
             <p>You should have at least 4 waypoints to optimize the route</p>
           </TooltipContent>
         </Tooltip>
-        <DateTimePicker
-          type={dateTime.type}
-          value={dateTime.value}
-          onChange={handleDateTimeChange}
-        />
-        <Separator />
-        <SettingsFooter />
       </div>
+      <QuickSettings />
+      <SettingsFooter />
       {results.data && (
         <div>
           <h3 className="font-bold mb-2">Directions</h3>

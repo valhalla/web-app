@@ -3,7 +3,6 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SettingsPanel } from './settings-panel';
-import { DIRECTIONS_LANGUAGE_STORAGE_KEY } from './settings-options';
 
 const createTestQueryClient = () =>
   new QueryClient({
@@ -180,16 +179,6 @@ describe('SettingsPanel', () => {
     expect(screen.getByText('Bicycle Type')).toBeInTheDocument();
   });
 
-  it('should render general settings like Use Ferries', () => {
-    renderWithQueryClient(<SettingsPanel />);
-    expect(screen.getByText('Use Ferries')).toBeInTheDocument();
-  });
-
-  it('should render Alternates setting from all general settings', () => {
-    renderWithQueryClient(<SettingsPanel />);
-    expect(screen.getByText('Alternates')).toBeInTheDocument();
-  });
-
   it('should call resetSettings with current profile when Reset is clicked', async () => {
     const user = userEvent.setup();
     renderWithQueryClient(<SettingsPanel />);
@@ -246,7 +235,6 @@ describe('SettingsPanel', () => {
   it('should render all expected general numeric settings for bicycle', () => {
     renderWithQueryClient(<SettingsPanel />);
 
-    expect(screen.getByText('Use Ferries')).toBeInTheDocument();
     expect(screen.getByText('Use Living Streets')).toBeInTheDocument();
     expect(screen.getByText('Turn Penalty')).toBeInTheDocument();
   });
@@ -554,51 +542,6 @@ describe('SettingsPanel', () => {
         name: /Pedestrian Type/i,
       });
       expect(pedestrianTypeSelect).toBeInTheDocument();
-    });
-  });
-
-  describe('Language Picker', () => {
-    it('should render Directions Language section when activeTab is directions', () => {
-      renderWithQueryClient(<SettingsPanel />);
-      expect(screen.getByText('Directions Language')).toBeInTheDocument();
-      expect(screen.getByText('Language')).toBeInTheDocument();
-    });
-
-    it('should not render Directions Language section when activeTab is isochrones', () => {
-      mockUseParams.mockReturnValue({ activeTab: 'isochrones' });
-      renderWithQueryClient(<SettingsPanel />);
-      expect(screen.queryByText('Directions Language')).not.toBeInTheDocument();
-    });
-
-    it('should use system locale when no language is stored', () => {
-      vi.stubGlobal('navigator', { language: 'fr-FR' });
-      renderWithQueryClient(<SettingsPanel />);
-      expect(screen.getByText('French (France)')).toBeInTheDocument();
-    });
-
-    it('should fall back to en-US when system locale is not supported', () => {
-      vi.stubGlobal('navigator', { language: 'xx-XX' });
-      renderWithQueryClient(<SettingsPanel />);
-      expect(screen.getByText('English (United States)')).toBeInTheDocument();
-    });
-
-    it('should use stored language from localStorage on initial render', () => {
-      localStorage.setItem(DIRECTIONS_LANGUAGE_STORAGE_KEY, 'de-DE');
-      renderWithQueryClient(<SettingsPanel />);
-      expect(screen.getByText('German (Germany)')).toBeInTheDocument();
-    });
-
-    it('should render language select with correct id', () => {
-      renderWithQueryClient(<SettingsPanel />);
-      const languageSelect = screen.getByRole('combobox', {
-        name: /Language/i,
-      });
-      expect(languageSelect).toBeInTheDocument();
-    });
-
-    it('should render language description in help tooltip', () => {
-      renderWithQueryClient(<SettingsPanel />);
-      expect(screen.getByText('Language')).toBeInTheDocument();
     });
   });
 });

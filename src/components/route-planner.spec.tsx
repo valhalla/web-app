@@ -69,12 +69,6 @@ vi.mock('./profile-picker', () => ({
   )),
 }));
 
-vi.mock('./settings-button', () => ({
-  SettingsButton: vi.fn(() => (
-    <button data-testid="mock-settings-button">Settings</button>
-  )),
-}));
-
 describe('RoutePlanner', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -113,11 +107,6 @@ describe('RoutePlanner', () => {
   it('should render ProfilePicker', () => {
     render(<RoutePlanner />);
     expect(screen.getByTestId('mock-profile-picker')).toBeInTheDocument();
-  });
-
-  it('should render SettingsButton', () => {
-    render(<RoutePlanner />);
-    expect(screen.getByTestId('mock-settings-button')).toBeInTheDocument();
   });
 
   it('should render DirectionsControl when on directions tab', () => {
@@ -191,13 +180,6 @@ describe('RoutePlanner', () => {
       render(<RoutePlanner />);
       expect(
         screen.queryByTestId('mock-profile-picker')
-      ).not.toBeInTheDocument();
-    });
-
-    it('should not render SettingsButton on tiles tab', () => {
-      render(<RoutePlanner />);
-      expect(
-        screen.queryByTestId('mock-settings-button')
       ).not.toBeInTheDocument();
     });
 

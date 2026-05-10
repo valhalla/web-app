@@ -868,9 +868,9 @@ export const settingsInit = {
   weight: 21.77,
   axle_load: 9,
   hazmat: false,
-  use_highways: 1,
-  use_tolls: 1,
-  use_ferry: 1,
+  use_highways: 0.5,
+  use_tolls: 0.5,
+  use_ferry: 0,
   ferry_cost: 300,
   use_living_streets: 0.5,
   use_tracks: 0,
@@ -919,7 +919,7 @@ export const settingsInit = {
   use_trails: 0,
   denoise: 0.1,
   generalize: 0,
-  alternates: 0,
+  alternates: 2,
   speed_types: ['current', 'freeflow', 'predicted', 'constrained'],
 };
 
