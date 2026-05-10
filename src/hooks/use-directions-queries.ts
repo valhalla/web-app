@@ -125,7 +125,7 @@ export function useDirectionsQuery() {
   });
 }
 
-export function useReverseGeocodeDirections() {
+export function useSetWaypointFromCoords() {
   const receiveGeocodeResults = useDirectionsStore(
     (state) => state.receiveGeocodeResults
   );
@@ -137,7 +137,7 @@ export function useReverseGeocodeDirections() {
     (state) => state.updatePlaceholderAddressAtIndex
   );
 
-  const reverseGeocode = async (
+  const setWaypointFromCoords = async (
     lng: number,
     lat: number,
     index: number,
@@ -156,7 +156,6 @@ export function useReverseGeocodeDirections() {
     // Set placeholder immediately
     updatePlaceholderAddressAtIndex(index, lng, lat);
 
-    // Use raw coordinates directly — no reverse geocoding
     const lngLat: [number, number] = [lng, lat];
     const address: ActiveWaypoint = {
       title: `${lng.toFixed(6)}, ${lat.toFixed(6)}`,
@@ -177,7 +176,7 @@ export function useReverseGeocodeDirections() {
     return addresses;
   };
 
-  return { reverseGeocode };
+  return { setWaypointFromCoords };
 }
 
 async function fetchForwardGeocode(

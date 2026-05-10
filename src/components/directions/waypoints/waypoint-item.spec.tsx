@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Waypoint } from './waypoint-item';
@@ -7,6 +7,17 @@ const mockReceiveGeocodeResults = vi.fn();
 const mockUpdateTextInput = vi.fn();
 const mockDoRemoveWaypoint = vi.fn();
 const mockRefetchDirections = vi.fn();
+const mockSetWaypointFromCoords = vi.fn().mockResolvedValue([]);
+const mockFlyTo = vi.fn();
+const { mockToastError } = vi.hoisted(() => ({ mockToastError: vi.fn() }));
+
+vi.mock('sonner', () => ({
+  toast: { error: mockToastError },
+}));
+
+vi.mock('react-map-gl/maplibre', () => ({
+  useMap: vi.fn(() => ({ mainMap: { flyTo: mockFlyTo } })),
+}));
 
 vi.mock('@dnd-kit/sortable', () => ({
   useSortable: vi.fn(() => ({
@@ -38,7 +49,7 @@ vi.mock('@/stores/directions-store', () => ({
             {
               title: 'Berlin, Germany',
               addressindex: 0,
-              lngLat: [13.4, 52.5],
+              displaylnglat: [13.4, 52.5],
               selected: true,
             },
           ],
@@ -63,6 +74,9 @@ vi.mock('@/stores/directions-store', () => ({
 vi.mock('@/hooks/use-directions-queries', () => ({
   useDirectionsQuery: vi.fn(() => ({
     refetch: mockRefetchDirections,
+  })),
+  useSetWaypointFromCoords: vi.fn(() => ({
+    setWaypointFromCoords: mockSetWaypointFromCoords,
   })),
 }));
 
@@ -202,5 +216,118 @@ describe('Waypoint', () => {
       'aria-label',
       'Waypoint 2'
     );
+  });
+
+  describe('zoom-to-waypoint button', () => {
+    it('flies the map to the selected waypoint coords', async () => {
+      const user = userEvent.setup();
+      render(<Waypoint id="wp-1" index={0} />);
+
+      await user.click(screen.getByTestId('zoom-to-waypoint-button'));
+
+      expect(mockFlyTo).toHaveBeenCalledWith({
+        center: [13.4, 52.5],
+        zoom: 14,
+      });
+    });
+
+    it('is disabled when the waypoint has no selected coords', () => {
+      render(<Waypoint id="wp-2" index={1} />);
+
+      expect(screen.getByTestId('zoom-to-waypoint-button')).toBeDisabled();
+    });
+  });
+
+  describe('use current location button', () => {
+    const originalGeolocation = navigator.geolocation;
+
+    afterEach(() => {
+      Object.defineProperty(navigator, 'geolocation', {
+        configurable: true,
+        value: originalGeolocation,
+      });
+    });
+
+    const stubGeolocation = (
+      getCurrentPosition: Geolocation['getCurrentPosition']
+    ) => {
+      Object.defineProperty(navigator, 'geolocation', {
+        configurable: true,
+        value: { getCurrentPosition },
+      });
+    };
+
+    it('sets the waypoint from coords on success and refetches directions', async () => {
+      stubGeolocation((success) => {
+        success({
+          coords: { longitude: 13.4, latitude: 52.5 },
+        } as GeolocationPosition);
+      });
+      const user = userEvent.setup();
+      render(<Waypoint id="wp-1" index={0} />);
+
+      await user.click(screen.getByTestId('use-current-location-button'));
+
+      expect(mockSetWaypointFromCoords).toHaveBeenCalledWith(13.4, 52.5, 0);
+      expect(mockRefetchDirections).toHaveBeenCalled();
+      expect(mockToastError).not.toHaveBeenCalled();
+    });
+
+    it('shows the permission-denied toast when access is blocked', async () => {
+      stubGeolocation((_success, error) => {
+        error?.({
+          code: 1,
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3,
+          message: '',
+        } as GeolocationPositionError);
+      });
+      const user = userEvent.setup();
+      render(<Waypoint id="wp-1" index={0} />);
+
+      await user.click(screen.getByTestId('use-current-location-button'));
+
+      expect(mockToastError).toHaveBeenCalledWith(
+        "We couldn't get your location. Please check your browser settings and allow location access."
+      );
+      expect(mockSetWaypointFromCoords).not.toHaveBeenCalled();
+    });
+
+    it('shows the generic toast for non-permission errors', async () => {
+      stubGeolocation((_success, error) => {
+        error?.({
+          code: 3,
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3,
+          message: '',
+        } as GeolocationPositionError);
+      });
+      const user = userEvent.setup();
+      render(<Waypoint id="wp-1" index={0} />);
+
+      await user.click(screen.getByTestId('use-current-location-button'));
+
+      expect(mockToastError).toHaveBeenCalledWith(
+        "We couldn't get your location. Please try again."
+      );
+    });
+
+    it('shows an error when the browser has no geolocation API', async () => {
+      Object.defineProperty(navigator, 'geolocation', {
+        configurable: true,
+        value: undefined,
+      });
+      const user = userEvent.setup();
+      render(<Waypoint id="wp-1" index={0} />);
+
+      await user.click(screen.getByTestId('use-current-location-button'));
+
+      expect(mockToastError).toHaveBeenCalledWith(
+        "Your browser doesn't support geolocation."
+      );
+      expect(mockSetWaypointFromCoords).not.toHaveBeenCalled();
+    });
   });
 });
