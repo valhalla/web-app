@@ -3,14 +3,45 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { LayerSpecification } from 'maplibre-gl';
 import { TilesControl } from './tiles';
+import { VALHALLA_SOURCE_ID } from './valhalla-layers';
 
 const createMockLayers = () => [
-  { id: 'water-fill', type: 'fill', 'source-layer': 'water' },
-  { id: 'water-outline', type: 'line', 'source-layer': 'water' },
-  { id: 'road-primary', type: 'line', 'source-layer': 'roads' },
-  { id: 'road-secondary', type: 'line', 'source-layer': 'roads' },
-  { id: 'road-tertiary', type: 'line', 'source-layer': 'roads' },
-  { id: 'building-fill', type: 'fill', 'source-layer': 'buildings' },
+  {
+    id: 'edges-fill',
+    type: 'fill',
+    'source-layer': 'edges',
+    source: VALHALLA_SOURCE_ID,
+  },
+  {
+    id: 'edges-outline',
+    type: 'line',
+    'source-layer': 'edges',
+    source: VALHALLA_SOURCE_ID,
+  },
+  {
+    id: 'nodes-primary',
+    type: 'line',
+    'source-layer': 'nodes',
+    source: VALHALLA_SOURCE_ID,
+  },
+  {
+    id: 'nodes-secondary',
+    type: 'line',
+    'source-layer': 'nodes',
+    source: VALHALLA_SOURCE_ID,
+  },
+  {
+    id: 'nodes-tertiary',
+    type: 'line',
+    'source-layer': 'nodes',
+    source: VALHALLA_SOURCE_ID,
+  },
+  {
+    id: 'restrictions-fill',
+    type: 'fill',
+    'source-layer': 'access_restrictions',
+    source: VALHALLA_SOURCE_ID,
+  },
   { id: 'background', type: 'background' },
   { id: 'sky', type: 'sky' },
 ];
@@ -110,12 +141,12 @@ describe('TilesControl', () => {
       ).toBeInTheDocument();
     });
 
-    it('should display grouped layers by source layer', () => {
+    it('should display grouped Valhalla layers by source layer', () => {
       render(<TilesControl />);
 
-      expect(screen.getByText('water')).toBeInTheDocument();
-      expect(screen.getByText('roads')).toBeInTheDocument();
-      expect(screen.getByText('buildings')).toBeInTheDocument();
+      expect(screen.getByText('edges')).toBeInTheDocument();
+      expect(screen.getByText('nodes')).toBeInTheDocument();
+      expect(screen.getByText('access_restrictions')).toBeInTheDocument();
     });
 
     it('should display layer count for each group', () => {
@@ -126,44 +157,11 @@ describe('TilesControl', () => {
       expect(screen.getByText('(1)')).toBeInTheDocument();
     });
 
-    it('should display ungrouped layers without source-layer', () => {
+    it('should not display non-Valhalla layers', () => {
       render(<TilesControl />);
 
-      expect(screen.getByText('background')).toBeInTheDocument();
-      expect(screen.getByText('sky')).toBeInTheDocument();
-    });
-
-    it('should display layer type for ungrouped layers', () => {
-      render(<TilesControl />);
-
-      expect(screen.getByText('(background)')).toBeInTheDocument();
-      expect(screen.getByText('(sky)')).toBeInTheDocument();
-    });
-
-    it('should filter out maplibregl-inspect layers', () => {
-      const layersWithInspect = [
-        ...createMockLayers(),
-        { id: 'maplibregl-inspect-layer', type: 'line' },
-      ];
-      mockMap = createMockMap(layersWithInspect);
-
-      render(<TilesControl />);
-
-      expect(
-        screen.queryByText('maplibregl-inspect-layer')
-      ).not.toBeInTheDocument();
-    });
-
-    it('should filter out td- prefixed layers', () => {
-      const layersWithTd = [
-        ...createMockLayers(),
-        { id: 'td-custom-layer', type: 'line' },
-      ];
-      mockMap = createMockMap(layersWithTd);
-
-      render(<TilesControl />);
-
-      expect(screen.queryByText('td-custom-layer')).not.toBeInTheDocument();
+      expect(screen.queryByText('background')).not.toBeInTheDocument();
+      expect(screen.queryByText('sky')).not.toBeInTheDocument();
     });
 
     it('should show "No layers found" when no layers match', async () => {
@@ -180,12 +178,14 @@ describe('TilesControl', () => {
       const user = userEvent.setup();
       render(<TilesControl />);
 
-      await user.type(screen.getByPlaceholderText('Search layers...'), 'water');
+      await user.type(screen.getByPlaceholderText('Search layers...'), 'edges');
 
       await waitFor(() => {
-        expect(screen.getByText('water')).toBeInTheDocument();
-        expect(screen.queryByText('roads')).not.toBeInTheDocument();
-        expect(screen.queryByText('buildings')).not.toBeInTheDocument();
+        expect(screen.getByText('edges')).toBeInTheDocument();
+        expect(screen.queryByText('nodes')).not.toBeInTheDocument();
+        expect(
+          screen.queryByText('access_restrictions')
+        ).not.toBeInTheDocument();
       });
     });
 
@@ -193,11 +193,11 @@ describe('TilesControl', () => {
       const user = userEvent.setup();
       render(<TilesControl />);
 
-      await user.type(screen.getByPlaceholderText('Search layers...'), 'road');
+      await user.type(screen.getByPlaceholderText('Search layers...'), 'node');
 
       await waitFor(() => {
-        expect(screen.getByText('roads')).toBeInTheDocument();
-        expect(screen.queryByText('water')).not.toBeInTheDocument();
+        expect(screen.getByText('nodes')).toBeInTheDocument();
+        expect(screen.queryByText('edges')).not.toBeInTheDocument();
       });
     });
 
@@ -205,10 +205,10 @@ describe('TilesControl', () => {
       const user = userEvent.setup();
       render(<TilesControl />);
 
-      await user.type(screen.getByPlaceholderText('Search layers...'), 'WATER');
+      await user.type(screen.getByPlaceholderText('Search layers...'), 'EDGES');
 
       await waitFor(() => {
-        expect(screen.getByText('water')).toBeInTheDocument();
+        expect(screen.getByText('edges')).toBeInTheDocument();
       });
     });
 
@@ -226,39 +226,23 @@ describe('TilesControl', () => {
       });
     });
 
-    it('should filter ungrouped layers too', async () => {
-      const user = userEvent.setup();
-      render(<TilesControl />);
-
-      await user.type(
-        screen.getByPlaceholderText('Search layers...'),
-        'background'
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('background')).toBeInTheDocument();
-        expect(screen.queryByText('water')).not.toBeInTheDocument();
-        expect(screen.queryByText('sky')).not.toBeInTheDocument();
-      });
-    });
-
     it('should clear filter and show all layers when search is cleared', async () => {
       const user = userEvent.setup();
       render(<TilesControl />);
 
       const searchInput = screen.getByPlaceholderText('Search layers...');
-      await user.type(searchInput, 'water');
+      await user.type(searchInput, 'edges');
 
       await waitFor(() => {
-        expect(screen.queryByText('roads')).not.toBeInTheDocument();
+        expect(screen.queryByText('nodes')).not.toBeInTheDocument();
       });
 
       await user.clear(searchInput);
 
       await waitFor(() => {
-        expect(screen.getByText('water')).toBeInTheDocument();
-        expect(screen.getByText('roads')).toBeInTheDocument();
-        expect(screen.getByText('buildings')).toBeInTheDocument();
+        expect(screen.getByText('edges')).toBeInTheDocument();
+        expect(screen.getByText('nodes')).toBeInTheDocument();
+        expect(screen.getByText('access_restrictions')).toBeInTheDocument();
       });
     });
   });
@@ -268,13 +252,13 @@ describe('TilesControl', () => {
       const user = userEvent.setup();
       render(<TilesControl />);
 
-      expect(screen.queryByText('water-fill')).not.toBeInTheDocument();
+      expect(screen.queryByText('edges-fill')).not.toBeInTheDocument();
 
-      await user.click(screen.getByText('water'));
+      await user.click(screen.getByText('edges'));
 
       await waitFor(() => {
-        expect(screen.getByText('water-fill')).toBeInTheDocument();
-        expect(screen.getByText('water-outline')).toBeInTheDocument();
+        expect(screen.getByText('edges-fill')).toBeInTheDocument();
+        expect(screen.getByText('edges-outline')).toBeInTheDocument();
       });
     });
 
@@ -282,16 +266,16 @@ describe('TilesControl', () => {
       const user = userEvent.setup();
       render(<TilesControl />);
 
-      await user.click(screen.getByText('water'));
+      await user.click(screen.getByText('edges'));
 
       await waitFor(() => {
-        expect(screen.getByText('water-fill')).toBeInTheDocument();
+        expect(screen.getByText('edges-fill')).toBeInTheDocument();
       });
 
-      await user.click(screen.getByText('water'));
+      await user.click(screen.getByText('edges'));
 
       await waitFor(() => {
-        expect(screen.queryByText('water-fill')).not.toBeInTheDocument();
+        expect(screen.queryByText('edges-fill')).not.toBeInTheDocument();
       });
     });
 
@@ -299,7 +283,7 @@ describe('TilesControl', () => {
       const user = userEvent.setup();
       render(<TilesControl />);
 
-      await user.click(screen.getByText('water'));
+      await user.click(screen.getByText('edges'));
 
       await waitFor(() => {
         expect(screen.getByText('(fill)')).toBeInTheDocument();
@@ -311,12 +295,12 @@ describe('TilesControl', () => {
       const user = userEvent.setup();
       render(<TilesControl />);
 
-      await user.click(screen.getByText('water'));
-      await user.click(screen.getByText('roads'));
+      await user.click(screen.getByText('edges'));
+      await user.click(screen.getByText('nodes'));
 
       await waitFor(() => {
-        expect(screen.getByText('water-fill')).toBeInTheDocument();
-        expect(screen.getByText('road-primary')).toBeInTheDocument();
+        expect(screen.getByText('edges-fill')).toBeInTheDocument();
+        expect(screen.getByText('nodes-primary')).toBeInTheDocument();
       });
     });
   });
@@ -326,21 +310,21 @@ describe('TilesControl', () => {
       const user = userEvent.setup();
       render(<TilesControl />);
 
-      await user.click(screen.getByText('water'));
+      await user.click(screen.getByText('edges'));
 
       await waitFor(() => {
-        expect(screen.getByText('water-fill')).toBeInTheDocument();
+        expect(screen.getByText('edges-fill')).toBeInTheDocument();
       });
 
-      const waterFillSwitch = screen.getByRole('switch', {
-        name: /water-fill/,
+      const edgesFillSwitch = screen.getByRole('switch', {
+        name: /edges-fill/,
       });
-      expect(waterFillSwitch).toBeChecked();
+      expect(edgesFillSwitch).toBeChecked();
 
-      await user.click(waterFillSwitch);
+      await user.click(edgesFillSwitch);
 
       expect(mockMap.setLayoutProperty).toHaveBeenCalledWith(
-        'water-fill',
+        'edges-fill',
         'visibility',
         'none'
       );
@@ -350,39 +334,23 @@ describe('TilesControl', () => {
       const user = userEvent.setup();
       render(<TilesControl />);
 
-      await user.click(screen.getByText('water'));
+      await user.click(screen.getByText('edges'));
 
       await waitFor(() => {
-        expect(screen.getByText('water-fill')).toBeInTheDocument();
+        expect(screen.getByText('edges-fill')).toBeInTheDocument();
       });
 
-      const waterFillSwitch = screen.getByRole('switch', {
-        name: /water-fill/,
+      const edgesFillSwitch = screen.getByRole('switch', {
+        name: /edges-fill/,
       });
 
-      await user.click(waterFillSwitch);
-      await user.click(waterFillSwitch);
+      await user.click(edgesFillSwitch);
+      await user.click(edgesFillSwitch);
 
       expect(mockMap.setLayoutProperty).toHaveBeenLastCalledWith(
-        'water-fill',
+        'edges-fill',
         'visibility',
         'visible'
-      );
-    });
-
-    it('should toggle ungrouped layer visibility', async () => {
-      const user = userEvent.setup();
-      render(<TilesControl />);
-
-      const backgroundSwitch = screen.getByRole('switch', {
-        name: /^background/,
-      });
-      await user.click(backgroundSwitch);
-
-      expect(mockMap.setLayoutProperty).toHaveBeenCalledWith(
-        'background',
-        'visibility',
-        'none'
       );
     });
   });
@@ -393,22 +361,22 @@ describe('TilesControl', () => {
       render(<TilesControl />);
 
       const groupSwitches = screen.getAllByRole('switch');
-      const roadsGroupSwitch = groupSwitches[3]!;
+      const nodesGroupSwitch = groupSwitches[3]!;
 
-      await user.click(roadsGroupSwitch);
+      await user.click(nodesGroupSwitch);
 
       expect(mockMap.setLayoutProperty).toHaveBeenCalledWith(
-        'road-primary',
+        'nodes-primary',
         'visibility',
         'none'
       );
       expect(mockMap.setLayoutProperty).toHaveBeenCalledWith(
-        'road-secondary',
+        'nodes-secondary',
         'visibility',
         'none'
       );
       expect(mockMap.setLayoutProperty).toHaveBeenCalledWith(
-        'road-tertiary',
+        'nodes-tertiary',
         'visibility',
         'none'
       );
@@ -419,18 +387,18 @@ describe('TilesControl', () => {
       render(<TilesControl />);
 
       const groupSwitches = screen.getAllByRole('switch');
-      const waterGroupSwitch = groupSwitches[2]!;
+      const edgesGroupSwitch = groupSwitches[2]!;
 
-      await user.click(waterGroupSwitch);
-      await user.click(waterGroupSwitch);
+      await user.click(edgesGroupSwitch);
+      await user.click(edgesGroupSwitch);
 
       expect(mockMap.setLayoutProperty).toHaveBeenCalledWith(
-        'water-fill',
+        'edges-fill',
         'visibility',
         'visible'
       );
       expect(mockMap.setLayoutProperty).toHaveBeenCalledWith(
-        'water-outline',
+        'edges-outline',
         'visibility',
         'visible'
       );
@@ -485,10 +453,10 @@ describe('TilesControl', () => {
       const user = userEvent.setup();
       render(<TilesControl />);
 
-      await user.click(screen.getByText('water'));
+      await user.click(screen.getByText('edges'));
 
       await waitFor(() => {
-        expect(screen.getByText('water-fill')).toBeInTheDocument();
+        expect(screen.getByText('edges-fill')).toBeInTheDocument();
       });
 
       const styleDataHandlers = mockMap.on.mock.calls
@@ -502,7 +470,7 @@ describe('TilesControl', () => {
       });
 
       await waitFor(() => {
-        expect(screen.queryByText('water-fill')).not.toBeInTheDocument();
+        expect(screen.queryByText('edges-fill')).not.toBeInTheDocument();
       });
     });
   });

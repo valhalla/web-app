@@ -82,7 +82,7 @@ describe('ValhallaLayersToggle', () => {
     it('should render toggle label', () => {
       render(<ValhallaLayersToggle customLayers={noCustomLayers} />);
 
-      expect(screen.getByText('Append Valhalla layers')).toBeInTheDocument();
+      expect(screen.getByText('Show Valhalla layers')).toBeInTheDocument();
     });
 
     it('should render switch in unchecked state by default', () => {
