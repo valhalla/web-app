@@ -322,6 +322,7 @@ export const QuickSettings = ({
               value={language}
               options={[...languageOptions]}
               onValueChange={handleLanguageChange}
+              inline
             />
           )}
         </div>
