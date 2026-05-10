@@ -7,6 +7,9 @@ const mockToggleDirections = vi.fn();
 const mockRefetchDirections = vi.fn();
 const mockRefetchIsochrones = vi.fn();
 const mockNavigate = vi.fn();
+const mockClearRoutes = vi.fn();
+const mockClearWaypoints = vi.fn();
+const mockClearTraceRoute = vi.fn();
 
 vi.mock('@tanstack/react-router', () => ({
   useParams: vi.fn(() => ({ activeTab: 'directions' })),
@@ -61,6 +64,29 @@ vi.mock('./tiles/tiles', () => ({
   )),
 }));
 
+vi.mock('./trace-route/trace-route', () => ({
+  TraceRouteControl: vi.fn(() => (
+    <div data-testid="mock-trace-route-control">Trace Route Control</div>
+  )),
+}));
+
+vi.mock('@/stores/directions-store', () => ({
+  useDirectionsStore: {
+    getState: vi.fn(() => ({
+      clearRoutes: mockClearRoutes,
+      clearWaypoints: mockClearWaypoints,
+    })),
+  },
+}));
+
+vi.mock('@/stores/trace-route-store', () => ({
+  useTraceRouteStore: {
+    getState: vi.fn(() => ({
+      clearTraceRoute: mockClearTraceRoute,
+    })),
+  },
+}));
+
 vi.mock('./profile-picker', () => ({
   ProfilePicker: vi.fn(({ onProfileChange }) => (
     <div data-testid="mock-profile-picker">
@@ -94,6 +120,7 @@ describe('RoutePlanner', () => {
     expect(screen.getByTestId('directions-tab-button')).toBeInTheDocument();
     expect(screen.getByTestId('isochrones-tab-button')).toBeInTheDocument();
     expect(screen.getByTestId('tiles-tab-button')).toBeInTheDocument();
+    expect(screen.getByTestId('trace-route-tab-button')).toBeInTheDocument();
   });
 
   it('should render close button', () => {
@@ -179,6 +206,40 @@ describe('RoutePlanner', () => {
     expect(mockNavigate).toHaveBeenCalledWith({
       params: { activeTab: 'tiles' },
     });
+  });
+
+  it('should render TraceRouteControl when on trace-route tab', async () => {
+    const router = await import('@tanstack/react-router');
+    vi.mocked(router.useParams).mockReturnValue({ activeTab: 'trace-route' });
+
+    render(<RoutePlanner />);
+
+    expect(screen.getByTestId('mock-trace-route-control')).toBeInTheDocument();
+  });
+
+  it('should clear directions state when switching to trace-route tab', async () => {
+    const router = await import('@tanstack/react-router');
+    vi.mocked(router.useParams).mockReturnValue({ activeTab: 'directions' });
+
+    const { rerender } = render(<RoutePlanner />);
+
+    vi.mocked(router.useParams).mockReturnValue({ activeTab: 'trace-route' });
+    rerender(<RoutePlanner />);
+
+    expect(mockClearWaypoints).toHaveBeenCalled();
+    expect(mockClearRoutes).toHaveBeenCalled();
+  });
+
+  it('should clear trace-route state when switching back to directions tab', async () => {
+    const router = await import('@tanstack/react-router');
+    vi.mocked(router.useParams).mockReturnValue({ activeTab: 'trace-route' });
+
+    const { rerender } = render(<RoutePlanner />);
+
+    vi.mocked(router.useParams).mockReturnValue({ activeTab: 'directions' });
+    rerender(<RoutePlanner />);
+
+    expect(mockClearTraceRoute).toHaveBeenCalled();
   });
 
   describe('when on tiles tab', () => {

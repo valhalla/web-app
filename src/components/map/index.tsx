@@ -71,6 +71,8 @@ import {
   useReverseGeocodeIsochrones,
 } from '@/hooks/use-isochrones-queries';
 import { toast } from 'sonner';
+import { TraceRouteMarkers } from './parts/trace-route-markers';
+import { TraceRouteInputLine } from './parts/trace-input-line';
 
 const { center, zoom: zoom_initial } = getInitialMapPosition();
 
@@ -853,7 +855,9 @@ export const MapComponent = () => {
           onStyleChange={handleStyleChange}
           onCustomStyleLoaded={handleCustomStyleLoaded}
         />
+        <TraceRouteInputLine />
         <RouteLines />
+        <TraceRouteMarkers />
         <HighlightSegment />
         <IsochronePolygons />
         <IsochroneLocations />

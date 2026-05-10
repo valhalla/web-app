@@ -116,6 +116,10 @@ describe('route-schemas', () => {
       expect(isValidTab('tiles')).toBe(true);
     });
 
+    it('should return true for trace-route', () => {
+      expect(isValidTab('trace-route')).toBe(true);
+    });
+
     it('should return false for invalid tab names', () => {
       expect(isValidTab('invalid')).toBe(false);
       expect(isValidTab('settings')).toBe(false);

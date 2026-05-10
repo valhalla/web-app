@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { DirectionsControl } from './directions/directions';
@@ -25,6 +25,9 @@ import { SettingsButton } from './settings-button';
 import type { Profile } from '@/stores/common-store';
 import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
+import { TraceRouteControl } from './trace-route/trace-route';
+import { useDirectionsStore } from '@/stores/directions-store';
+import { useTraceRouteStore } from '@/stores/trace-route-store';
 
 const TAB_CONFIG = {
   directions: {
@@ -39,6 +42,10 @@ const TAB_CONFIG = {
     title: 'Tiles',
     description: 'View and manage map tiles',
   },
+  'trace-route': {
+    title: 'Trace Route',
+    description: 'Trace a route from a GPS trace',
+  },
 } as const;
 
 export const RoutePlanner = () => {
@@ -51,8 +58,25 @@ export const RoutePlanner = () => {
   const { refetch: refetchIsochrones } = useIsochronesQuery();
   const loading = useCommonStore((state) => state.loading);
   const toggleDirections = useCommonStore((state) => state.toggleDirections);
+  const prevTab = useRef<string | null>(null);
 
   const tabConfig = TAB_CONFIG[activeTab as keyof typeof TAB_CONFIG];
+
+  useEffect(() => {
+    const prev = prevTab.current;
+    prevTab.current = activeTab;
+
+    if (!prev || prev === activeTab) return;
+    if (activeTab === 'trace-route') {
+      const { clearRoutes, clearWaypoints } = useDirectionsStore.getState();
+      clearWaypoints();
+      clearRoutes();
+    }
+    if (activeTab === 'directions' && prev === 'trace-route') {
+      const { clearTraceRoute } = useTraceRouteStore.getState();
+      clearTraceRoute();
+    }
+  }, [activeTab]);
 
   const {
     data: lastUpdate,
@@ -122,6 +146,12 @@ export const RoutePlanner = () => {
               <TabsTrigger value="tiles" data-testid="tiles-tab-button">
                 Tiles
               </TabsTrigger>
+              <TabsTrigger
+                value="trace-route"
+                data-testid="trace-route-tab-button"
+              >
+                Trace Route
+              </TabsTrigger>
             </TabsList>
             <Button
               variant="ghost"
@@ -159,6 +189,14 @@ export const RoutePlanner = () => {
           >
             <Suspense fallback={<div>Loading...</div>}>
               <TilesControl />
+            </Suspense>
+          </TabsContent>
+          <TabsContent
+            value="trace-route"
+            className="flex flex-col gap-3 px-2 flex-1 overflow-hidden min-h-0"
+          >
+            <Suspense fallback={<div>Loading...</div>}>
+              <TraceRouteControl />
             </Suspense>
           </TabsContent>
 

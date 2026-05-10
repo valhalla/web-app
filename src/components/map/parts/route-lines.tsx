@@ -4,22 +4,39 @@ import { useDirectionsStore } from '@/stores/directions-store';
 import { routeObjects } from '../constants';
 import type { Feature, FeatureCollection, LineString } from 'geojson';
 import type { ParsedDirectionsGeometry } from '@/components/types';
+import { useParams } from '@tanstack/react-router';
+import { useTraceRouteStore } from '@/stores/trace-route-store';
 
 export function RouteLines() {
+  const { activeTab } = useParams({ from: '/$activeTab' });
+  const isTraceRoute = activeTab === 'trace-route';
+
   const directionResults = useDirectionsStore((state) => state.results);
   const directionsSuccessful = useDirectionsStore((state) => state.successful);
-  const activeRouteIndex = useDirectionsStore(
+  const activeDirectionRouteIndex = useDirectionsStore(
     (state) => state.activeRouteIndex
   );
 
-  const data = useMemo(() => {
-    if (!directionResults.data || !directionsSuccessful) return null;
+  const traceRouteResults = useTraceRouteStore((state) => state.results);
+  const traceRouteSuccessful = useTraceRouteStore((state) => state.successful);
+  const traceRouteActiveIndex = useTraceRouteStore(
+    (state) => state.activeRouteIndex
+  );
 
-    const hasNoData = Object.keys(directionResults.data).length === 0;
+  const results = isTraceRoute ? traceRouteResults : directionResults;
+  const successful = isTraceRoute ? traceRouteSuccessful : directionsSuccessful;
+  const activeRouteIndex = isTraceRoute
+    ? traceRouteActiveIndex
+    : activeDirectionRouteIndex;
+
+  const data = useMemo(() => {
+    if (!results.data || !successful) return null;
+
+    const hasNoData = Object.keys(results.data).length === 0;
     if (hasNoData) return null;
 
-    const response = directionResults.data;
-    const showRoutes = directionResults.show || {};
+    const response = results.data;
+    const showRoutes = results.show || {};
     const features: Feature<LineString>[] = [];
 
     if (response.alternates) {
@@ -77,7 +94,7 @@ export function RouteLines() {
       type: 'FeatureCollection',
       features,
     } as FeatureCollection;
-  }, [directionResults, directionsSuccessful, activeRouteIndex]);
+  }, [results, successful, activeRouteIndex]);
 
   if (!data) return null;
 
