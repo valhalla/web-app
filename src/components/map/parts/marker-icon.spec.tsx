@@ -69,6 +69,20 @@ describe('MarkerIcon', () => {
       const wrapper = container.firstChild;
       expect(wrapper).toHaveClass('[&_path]:fill-[#007bff]');
     });
+
+    it('should apply red color class when color is red', () => {
+      const { container } = render(<MarkerIcon color="red" />);
+
+      const wrapper = container.firstChild;
+      expect(wrapper).toHaveClass('[&_path]:fill-[#dc3545]');
+    });
+
+    it('should apply grey color class when color is grey', () => {
+      const { container } = render(<MarkerIcon color="grey" />);
+
+      const wrapper = container.firstChild;
+      expect(wrapper).toHaveClass('[&_path]:fill-[#6c757d]');
+    });
   });
 
   it('should apply custom className', () => {
