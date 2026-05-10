@@ -133,13 +133,6 @@ export const DateTimeButton = ({
 
           {type > 0 && (
             <>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={handleDateSelect}
-                captionLayout="dropdown"
-                className="border rounded-md"
-              />
               <div className="flex items-center gap-2">
                 <CalendarIcon className="size-4 text-muted-foreground" />
                 <Input
@@ -149,6 +142,13 @@ export const DateTimeButton = ({
                   className="flex-1"
                 />
               </div>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={handleDateSelect}
+                captionLayout="dropdown"
+                className="border rounded-md"
+              />
             </>
           )}
         </div>
