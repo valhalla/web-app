@@ -82,6 +82,14 @@ vi.mock('@/stores/common-store', () => ({
   }),
 }));
 
+vi.mock('react-map-gl/maplibre', () => ({
+  useMap: vi.fn(() => ({ mainMap: { getMap: vi.fn() } })),
+}));
+
+vi.mock('@/components/map/map-language-control', () => ({
+  updateMapLabels: vi.fn(),
+}));
+
 vi.mock('@/hooks/use-directions-queries', () => ({
   useDirectionsQuery: vi.fn(() => ({
     refetch: mockRefetchDirections,
@@ -558,16 +566,15 @@ describe('SettingsPanel', () => {
   });
 
   describe('Language Picker', () => {
-    it('should render Directions Language section when activeTab is directions', () => {
+    it('should render Language section on all tabs', () => {
       renderWithQueryClient(<SettingsPanel />);
-      expect(screen.getByText('Directions Language')).toBeInTheDocument();
-      expect(screen.getByText('Language')).toBeInTheDocument();
+      expect(screen.getAllByText('Language').length).toBeGreaterThan(0);
     });
 
-    it('should not render Directions Language section when activeTab is isochrones', () => {
+    it('should render Language section when activeTab is isochrones', () => {
       mockUseParams.mockReturnValue({ activeTab: 'isochrones' });
       renderWithQueryClient(<SettingsPanel />);
-      expect(screen.queryByText('Directions Language')).not.toBeInTheDocument();
+      expect(screen.getAllByText('Language').length).toBeGreaterThan(0);
     });
 
     it('should use system locale when no language is stored', () => {
@@ -598,7 +605,7 @@ describe('SettingsPanel', () => {
 
     it('should render language description in help tooltip', () => {
       renderWithQueryClient(<SettingsPanel />);
-      expect(screen.getByText('Language')).toBeInTheDocument();
+      expect(screen.getAllByText('Language').length).toBeGreaterThan(0);
     });
   });
 });

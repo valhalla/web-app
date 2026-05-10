@@ -38,13 +38,17 @@ export function getDirectionsLanguage(): DirectionsLanguage {
   const stored = localStorage.getItem(DIRECTIONS_LANGUAGE_STORAGE_KEY);
 
   if (!stored) {
-    return getSystemLanguage();
+    const language = getSystemLanguage();
+    localStorage.setItem(DIRECTIONS_LANGUAGE_STORAGE_KEY, language);
+    return language;
   }
 
   const isValid = languageOptions.some((opt) => opt.value === stored);
 
   if (!isValid) {
-    return getSystemLanguage();
+    const language = getSystemLanguage();
+    localStorage.setItem(DIRECTIONS_LANGUAGE_STORAGE_KEY, language);
+    return language;
   }
 
   return stored as DirectionsLanguage;

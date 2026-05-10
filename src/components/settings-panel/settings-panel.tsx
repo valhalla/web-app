@@ -11,6 +11,7 @@ import {
   getDirectionsLanguage,
   setDirectionsLanguage,
 } from '@/utils/directions-language';
+import { updateMapLabels } from '@/components/map/map-language-control';
 import type { PossibleSettings } from '@/components/types';
 
 import { SliderSetting } from '@/components/ui/slider-setting';
@@ -33,6 +34,7 @@ import {
   Settings2,
 } from 'lucide-react';
 import { useParams, useSearch } from '@tanstack/react-router';
+import { useMap } from 'react-map-gl/maplibre';
 import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
 import { CollapsibleSection } from '@/components/ui/collapsible-section';
@@ -50,6 +52,7 @@ export const SettingsPanel = () => {
   const resetSettings = useCommonStore((state) => state.resetSettings);
   const toggleSettings = useCommonStore((state) => state.toggleSettings);
   const [copied, setCopied] = useState(false);
+  const { mainMap: map } = useMap();
   const { refetch: refetchDirections } = useDirectionsQuery();
   const { refetch: refetchIsochrones } = useIsochronesQuery();
 
@@ -66,9 +69,10 @@ export const SettingsPanel = () => {
       const newLanguage = value as DirectionsLanguage;
       setDirectionsLanguage(newLanguage);
       setLanguage(newLanguage);
+      updateMapLabels(map?.getMap(), newLanguage);
       refetchDirections();
     },
-    [refetchDirections]
+    [refetchDirections, map]
   );
 
   const handleMakeRequest = useCallback(() => {
@@ -144,24 +148,22 @@ export const SettingsPanel = () => {
         <div className="px-3 space-y-3">
           <ServerSettings />
 
-          {activeTab === 'directions' && (
-            <CollapsibleSection
-              title="Directions Language"
-              icon={Languages}
-              open={languageSettingsOpen}
-              onOpenChange={setLanguageSettingsOpen}
-            >
-              <SelectSetting
-                id="directions-language"
-                label="Language"
-                description="The language used for turn-by-turn navigation instructions"
-                placeholder="Select Language"
-                value={language}
-                options={[...languageOptions]}
-                onValueChange={handleLanguageChange}
-              />
-            </CollapsibleSection>
-          )}
+          <CollapsibleSection
+            title="Language"
+            icon={Languages}
+            open={languageSettingsOpen}
+            onOpenChange={setLanguageSettingsOpen}
+          >
+            <SelectSetting
+              id="directions-language"
+              label="Language"
+              description="The language used for navigation instructions and map labels"
+              placeholder="Select Language"
+              value={language}
+              options={[...languageOptions]}
+              onValueChange={handleLanguageChange}
+            />
+          </CollapsibleSection>
 
           {hasProfileSettings && (
             <CollapsibleSection

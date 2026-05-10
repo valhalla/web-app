@@ -32,6 +32,7 @@ import OSMIcon from '@/images/osm_icon.png';
 import { ToolButton } from './parts/tool-button';
 
 import { MapStyleControl } from './map-style-control';
+import { updateMapLabels } from './map-language-control';
 import { getInitialMapStyle, getCustomStyle, getMapStyleUrl } from './utils';
 import {
   CLICK_DELAY_MS,
@@ -818,7 +819,19 @@ export const MapComponent = () => {
         {...viewState}
         onMove={(evt) => setViewState(evt.viewState)}
         onMoveEnd={handleMoveEnd}
-        onLoad={() => setMapReady(true)}
+        onLoad={() => {
+          setMapReady(true);
+          const lang = localStorage.getItem('directions_language');
+          if (lang) {
+            updateMapLabels(mapRef.current?.getMap(), lang);
+          }
+        }}
+        onStyleData={() => {
+          const lang = localStorage.getItem('directions_language');
+          if (lang) {
+            updateMapLabels(mapRef.current?.getMap(), lang);
+          }
+        }}
         onClick={handleMapClick}
         onDblClick={handleMapDblClick}
         onContextMenu={handleMapContextMenu}
