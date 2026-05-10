@@ -77,7 +77,7 @@ export const RoutePlanner = () => {
 
   const handleProfileChange = (value: Profile) => {
     navigate({
-      search: (prev) => ({ ...prev, profile: value }),
+      search: (prev) => ({ ...prev, profile: value, costing: undefined }),
       replace: true,
     });
 

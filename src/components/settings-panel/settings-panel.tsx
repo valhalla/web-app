@@ -35,6 +35,7 @@ import {
 import { useParams, useSearch } from '@tanstack/react-router';
 import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
+import { useSettingsUrlSync } from '@/hooks/use-settings-url-sync';
 import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import { ServerSettings } from '@/components/settings-panel/server-settings';
 import { MultiSelectSetting } from '../ui/multiselect-setting';
@@ -52,6 +53,8 @@ export const SettingsPanel = () => {
   const [copied, setCopied] = useState(false);
   const { refetch: refetchDirections } = useDirectionsQuery();
   const { refetch: refetchIsochrones } = useIsochronesQuery();
+
+  useSettingsUrlSync();
 
   const [language, setLanguage] = useState<DirectionsLanguage>(() =>
     getDirectionsLanguage()

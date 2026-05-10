@@ -32,10 +32,12 @@ const mockRefetchIsochrones = vi.fn();
 
 const mockUseParams = vi.fn(() => ({ activeTab: 'directions' }));
 const mockUseSearch = vi.fn(() => ({ profile: 'bicycle' }));
+const mockNavigate = vi.fn();
 
 vi.mock('@tanstack/react-router', () => ({
   useParams: () => mockUseParams(),
   useSearch: () => mockUseSearch(),
+  useNavigate: () => mockNavigate,
 }));
 
 vi.mock('@/stores/common-store', () => ({

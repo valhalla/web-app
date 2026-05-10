@@ -11,6 +11,7 @@ export const searchParamsSchema = z.object({
   generalize: z.number().optional(),
   denoise: z.number().optional(),
   style: mapStyleSchema.optional(),
+  costing: fallback(z.record(z.unknown()).optional(), undefined),
 });
 
 export type SearchParamsSchema = z.infer<typeof searchParamsSchema>;
