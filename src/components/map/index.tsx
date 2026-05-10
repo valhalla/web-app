@@ -574,9 +574,11 @@ export const MapComponent = () => {
         }
       }
 
-      // Check if click is on a route line
+      // Check if click is on a route line (hit-target layer is the wider,
+      // transparent stand-in for routes-line — same source/properties).
       const routeFeature = event.features?.find(
-        (f) => f.layer?.id === 'routes-line'
+        (f) =>
+          f.layer?.id === 'routes-line' || f.layer?.id === 'routes-hit-target'
       );
 
       if (
@@ -758,11 +760,10 @@ export const MapComponent = () => {
       if (!mapRef.current || showInfoPopup) return; // Don't show if click popup is visible
 
       const features = event.features;
-      // Check if we're hovering over the routes-line layer
+      // Check if we're hovering over the routes-line / hit-target layer
+      const topLayerId = features?.[0]?.layer?.id;
       const isOverRoute =
-        features &&
-        features.length > 0 &&
-        features[0]?.layer?.id === 'routes-line';
+        topLayerId === 'routes-line' || topLayerId === 'routes-hit-target';
 
       const isOverTiles =
         features &&
@@ -835,7 +836,7 @@ export const MapComponent = () => {
                 VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID,
                 VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID,
               ]
-            : ['routes-line']
+            : ['routes-line', 'routes-hit-target']
         }
         mapStyle={resolvedMapStyle}
         style={{ width: '100%', height: '100vh' }}
