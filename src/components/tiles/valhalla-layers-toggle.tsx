@@ -31,6 +31,7 @@ export const ValhallaLayersToggle = ({
       setEnabled(hasSource);
     };
 
+    handleStyleData();
     map.on('styledata', handleStyleData);
 
     return () => {
