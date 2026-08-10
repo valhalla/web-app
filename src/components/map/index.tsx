@@ -447,7 +447,7 @@ export const MapComponent = () => {
 
     //First Point
     const firstCoord = coordinates[0];
-    if (!firstCoord || !firstCoord[0] || !firstCoord[1]) return;
+    if (!firstCoord || firstCoord[0] == null || firstCoord[1] == null) return;
 
     //Last Point
     const lastCoord = coordinates[coordinates.length - 1]!;
@@ -464,14 +464,14 @@ export const MapComponent = () => {
       lastCoord[1];
     //Compare with what was last zoomed
     if (coordKey === lastZoomedCoordKeyRef.current) return;
-    //Store thr new Key
+    //Store the new Key
     lastZoomedCoordKeyRef.current = coordKey;
 
     const bounds: [[number, number], [number, number]] = coordinates.reduce<
       [[number, number], [number, number]]
     >(
       (acc, coord) => {
-        if (!coord || !coord[0] || !coord[1]) return acc;
+        if (!coord || coord[0] == null || coord[1] == null) return acc;
         return [
           [Math.min(acc[0][0], coord[1]), Math.min(acc[0][1], coord[0])],
           [Math.max(acc[1][0], coord[1]), Math.max(acc[1][1], coord[0])],
