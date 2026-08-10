@@ -467,7 +467,7 @@ export const MapComponent = () => {
     //Store the new Key
     lastZoomedCoordKeyRef.current = coordKey;
 
-    const bounds: [[number, number], [number, number]] = coordinates.reduce<
+    const routeBounds = coordinates.reduce<
       [[number, number], [number, number]]
     >(
       (acc, coord) => {
@@ -482,6 +482,20 @@ export const MapComponent = () => {
         [firstCoord[1], firstCoord[0]],
       ]
     );
+
+    //Markers sit on the geocoded address, which can be off the routed
+    //geometry - include the ones belonging to this tab so they stay in view
+    const activeTabMarkerType =
+      activeTab === 'isochrones' ? 'isocenter' : 'waypoint';
+    const bounds = markers
+      .filter((marker) => marker.type === activeTabMarkerType)
+      .reduce<[[number, number], [number, number]]>(
+        (acc, marker) => [
+          [Math.min(acc[0][0], marker.lng), Math.min(acc[0][1], marker.lat)],
+          [Math.max(acc[1][0], marker.lng), Math.max(acc[1][1], marker.lat)],
+        ],
+        routeBounds
+      );
 
     //Read panel from the store directly
     //avoids re-running the effect when panels open or close
@@ -507,9 +521,9 @@ export const MapComponent = () => {
       },
       maxZoom: coordinates.length === 1 ? 11 : 18,
     });
-    //only rerun when coordinates change
+    //the coordKey guard above keeps this to one fit per route
     //panel change no longer rerun this
-  }, [coordinates]);
+  }, [coordinates, markers, activeTab]);
 
   const handleMapTilesClick = useCallback(
     (event: maplibregl.MapLayerMouseEvent) => {
