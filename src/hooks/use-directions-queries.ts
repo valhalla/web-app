@@ -17,11 +17,17 @@ import { forward_geocode, parseGeocodeResponse } from '@/utils/nominatim';
 import { filterProfileSettings } from '@/utils/filter-profile-settings';
 import { getDirectionsLanguage } from '@/utils/directions-language';
 import { useCommonStore } from '@/stores/common-store';
-import { useDirectionsStore, type Waypoint } from '@/stores/directions-store';
+import {
+  createCoordinateAddress,
+  useDirectionsStore,
+  type Waypoint,
+} from '@/stores/directions-store';
 import { router } from '@/routes';
 
 const getActiveWaypoints = (waypoints: Waypoint[]): ActiveWaypoint[] =>
-  waypoints.flatMap((wp) => wp.geocodeResults.filter((r) => r.selected));
+  waypoints
+    .map((wp) => wp.selectedAddress)
+    .filter((address) => address !== null);
 
 async function fetchDirections() {
   const waypoints = useDirectionsStore.getState().waypoints;
@@ -126,15 +132,9 @@ export function useDirectionsQuery() {
 }
 
 export function useSetWaypointFromCoords() {
-  const receiveGeocodeResults = useDirectionsStore(
-    (state) => state.receiveGeocodeResults
-  );
-  const updateTextInput = useDirectionsStore((state) => state.updateTextInput);
+  const selectAddress = useDirectionsStore((state) => state.selectAddress);
   const addEmptyWaypointToEnd = useDirectionsStore(
     (state) => state.addEmptyWaypointToEnd
-  );
-  const updatePlaceholderAddressAtIndex = useDirectionsStore(
-    (state) => state.updatePlaceholderAddressAtIndex
   );
 
   const setWaypointFromCoords = async (
@@ -153,27 +153,9 @@ export function useSetWaypointFromCoords() {
       }
     }
 
-    // Set placeholder immediately
-    updatePlaceholderAddressAtIndex(index, lng, lat);
-
-    const lngLat: [number, number] = [lng, lat];
-    const address: ActiveWaypoint = {
-      title: `${lng.toFixed(6)}, ${lat.toFixed(6)}`,
-      key: 0,
-      selected: true,
-      addresslnglat: lngLat,
-      sourcelnglat: lngLat,
-      displaylnglat: lngLat,
-      addressindex: 0,
-    };
-    const addresses = [address];
-    receiveGeocodeResults({ addresses, index });
-    updateTextInput({
-      inputValue: address.title,
-      index,
-      addressindex: 0,
-    });
-    return addresses;
+    const address = createCoordinateAddress(lng, lat);
+    selectAddress({ index, address });
+    return [address];
   };
 
   return { setWaypointFromCoords };
@@ -188,7 +170,6 @@ async function fetchForwardGeocode(
       {
         title: lngLat.toString(),
         key: 0,
-        selected: false,
         addresslnglat: lngLat,
         sourcelnglat: lngLat,
         displaylnglat: lngLat,

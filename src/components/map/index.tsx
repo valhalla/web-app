@@ -383,7 +383,7 @@ export const MapComponent = () => {
   }, [directionResults, heightPayload, updateInclineDecline]);
 
   // Update markers when waypoints or isochrone centers change
-  const geocodeResults = useIsochronesStore((state) => state.geocodeResults);
+  const isochroneCenter = useIsochronesStore((state) => state.selectedAddress);
   const markers = useMemo(() => {
     const newMarkers: MarkerData[] = [];
 
@@ -397,40 +397,37 @@ export const MapComponent = () => {
         : isDestination
           ? 'red'
           : 'grey';
-      waypoint.geocodeResults.forEach((address) => {
-        if (address.selected) {
-          newMarkers.push({
-            id: `waypoint-${index}`,
-            lng: address.displaylnglat[0],
-            lat: address.displaylnglat[1],
-            type: 'waypoint',
-            index: index,
-            title: address.title,
-            color,
-            number: (index + 1).toString(),
-          });
-        }
-      });
-    });
-
-    // Add isochrone center marker
-    geocodeResults.forEach((address) => {
-      if (address.selected) {
+      const address = waypoint.selectedAddress;
+      if (address) {
         newMarkers.push({
-          id: 'iso-center',
+          id: `waypoint-${index}`,
           lng: address.displaylnglat[0],
           lat: address.displaylnglat[1],
-          type: 'isocenter',
+          type: 'waypoint',
+          index: index,
           title: address.title,
-          color: 'purple',
-          shape: 'star',
-          number: '1',
+          color,
+          number: (index + 1).toString(),
         });
       }
     });
 
+    // Add isochrone center marker
+    if (isochroneCenter) {
+      newMarkers.push({
+        id: 'iso-center',
+        lng: isochroneCenter.displaylnglat[0],
+        lat: isochroneCenter.displaylnglat[1],
+        type: 'isocenter',
+        title: isochroneCenter.title,
+        color: 'purple',
+        shape: 'star',
+        number: '1',
+      });
+    }
+
     return newMarkers;
-  }, [waypoints, geocodeResults]);
+  }, [waypoints, isochroneCenter]);
 
   //Stores the route content
   const lastZoomedCoordKeyRef = useRef<string | null>(null);

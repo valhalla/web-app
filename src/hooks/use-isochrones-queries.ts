@@ -24,13 +24,13 @@ import { useIsochronesStore } from '@/stores/isochrones-store';
 import { router } from '@/routes';
 
 async function fetchIsochrones() {
-  const { geocodeResults, maxRange, interval, denoise, generalize } =
+  const { selectedAddress, maxRange, interval, denoise, generalize } =
     useIsochronesStore.getState();
   const profile = router.state.location.search.profile;
   const { settings: rawSettings } = useCommonStore.getState();
 
   const settings = filterProfileSettings(profile || 'bicycle', rawSettings);
-  const center = geocodeResults.find((result) => result.selected);
+  const center = selectedAddress;
 
   if (!center) {
     return null;
@@ -142,7 +142,6 @@ export function useReverseGeocodeIsochrones() {
     // Set placeholder immediately
     const placeholderAddresses: ActiveWaypoint[] = [
       {
-        selected: true,
         title: '',
         displaylnglat: [lng, lat],
         sourcelnglat: [lng, lat],
@@ -184,7 +183,6 @@ async function fetchForwardGeocode(
       {
         title: lngLat.toString(),
         key: 0,
-        selected: false,
         addresslnglat: lngLat,
         sourcelnglat: lngLat,
         displaylnglat: lngLat,

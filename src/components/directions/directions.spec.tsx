@@ -19,8 +19,8 @@ vi.mock('@/utils/parse-url-params', () => ({
 }));
 
 const mockWaypoints = [
-  { id: '0', geocodeResults: [], userInput: '' },
-  { id: '1', geocodeResults: [], userInput: '' },
+  { id: '0', geocodeResults: [], selectedAddress: null, userInput: '' },
+  { id: '1', geocodeResults: [], selectedAddress: null, userInput: '' },
 ];
 
 const mockResults = {
@@ -54,8 +54,8 @@ vi.mock('@/stores/directions-store', () => {
   );
   return {
     defaultWaypoints: [
-      { id: '0', geocodeResults: [], userInput: '' },
-      { id: '1', geocodeResults: [], userInput: '' },
+      { id: '0', geocodeResults: [], selectedAddress: null, userInput: '' },
+      { id: '1', geocodeResults: [], selectedAddress: null, userInput: '' },
     ],
     useDirectionsStore,
   };
@@ -107,8 +107,8 @@ describe('DirectionsControl', () => {
     mockResults.data = null;
     mockWaypoints.length = 0;
     mockWaypoints.push(
-      { id: '0', geocodeResults: [], userInput: '' },
-      { id: '1', geocodeResults: [], userInput: '' }
+      { id: '0', geocodeResults: [], selectedAddress: null, userInput: '' },
+      { id: '1', geocodeResults: [], selectedAddress: null, userInput: '' }
     );
   });
 
@@ -160,12 +160,11 @@ describe('DirectionsControl', () => {
     mockWaypoints.push(
       {
         id: '0',
-        geocodeResults: [
-          { selected: true, sourcelnglat: [13.4, 52.5] },
-        ] as never[],
+        geocodeResults: [],
+        selectedAddress: { sourcelnglat: [13.4, 52.5] } as never,
         userInput: 'Berlin',
       },
-      { id: '1', geocodeResults: [], userInput: '' }
+      { id: '1', geocodeResults: [], selectedAddress: null, userInput: '' }
     );
 
     render(<DirectionsControl />);
@@ -222,16 +221,14 @@ describe('DirectionsControl', () => {
     mockWaypoints.push(
       {
         id: '0',
-        geocodeResults: [
-          { selected: true, sourcelnglat: [13.4, 52.5] },
-        ] as never[],
+        geocodeResults: [],
+        selectedAddress: { sourcelnglat: [13.4, 52.5] } as never,
         userInput: 'Berlin',
       },
       {
         id: '1',
-        geocodeResults: [
-          { selected: true, sourcelnglat: [10.0, 48.0] },
-        ] as never[],
+        geocodeResults: [],
+        selectedAddress: { sourcelnglat: [10.0, 48.0] } as never,
         userInput: 'Munich',
       }
     );
@@ -259,8 +256,8 @@ describe('DirectionsControl URL parsing', () => {
     mockResults.data = null;
     mockWaypoints.length = 0;
     mockWaypoints.push(
-      { id: '0', geocodeResults: [], userInput: '' },
-      { id: '1', geocodeResults: [], userInput: '' }
+      { id: '0', geocodeResults: [], selectedAddress: null, userInput: '' },
+      { id: '1', geocodeResults: [], selectedAddress: null, userInput: '' }
     );
   });
 
