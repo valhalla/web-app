@@ -1,14 +1,12 @@
 import { lazy, Suspense } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
 import { DirectionsControl } from './directions/directions';
 import { IsochronesControl } from './isochrones/isochrones';
+import { DataInfoTable } from './data-info-table';
 
 const TilesControl = lazy(() =>
   import('./tiles/tiles').then((module) => ({ default: module.TilesControl }))
 );
 import { useCommonStore } from '@/stores/common-store';
-import { getValhallaUrl, VALHALLA_CLIENT_HEADERS } from '@/utils/valhalla';
 import {
   Sheet,
   SheetContent,
@@ -52,23 +50,6 @@ export const RoutePlanner = () => {
   const toggleDirections = useCommonStore((state) => state.toggleDirections);
 
   const tabConfig = TAB_CONFIG[activeTab as keyof typeof TAB_CONFIG];
-
-  const {
-    data: lastUpdate,
-    isLoading: isLoadingLastUpdate,
-    isError: isErrorLastUpdate,
-  } = useQuery({
-    queryKey: ['lastUpdate'],
-    queryFn: async () => {
-      const response = await fetch(`${getValhallaUrl()}/status`, {
-        headers: VALHALLA_CLIENT_HEADERS,
-      });
-      const data = await response.json();
-      return new Date(data.tileset_last_modified * 1000);
-    },
-    staleTime: 1000 * 60 * 60,
-    refetchOnWindowFocus: false,
-  });
 
   const handleTabChange = (value: string) => {
     navigate({ params: { activeTab: value } });
@@ -161,22 +142,8 @@ export const RoutePlanner = () => {
           </TabsContent>
 
           {activeTab !== 'tiles' && (
-            <div className="flex p-2 text-sm">
-              {isLoadingLastUpdate && (
-                <span className="text-muted-foreground">
-                  Loading last update...
-                </span>
-              )}
-              {isErrorLastUpdate && (
-                <span className="text-destructive">
-                  Failed to load last update
-                </span>
-              )}
-              {lastUpdate && (
-                <span>
-                  Last Data Update: {format(lastUpdate, 'yyyy-MM-dd, HH:mm')}
-                </span>
-              )}
+            <div className="mt-auto border-t-2 p-2">
+              <DataInfoTable />
             </div>
           )}
         </SheetContent>
