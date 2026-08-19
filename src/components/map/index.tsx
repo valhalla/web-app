@@ -447,7 +447,7 @@ export const MapComponent = () => {
 
     //First Point
     const firstCoord = coordinates[0];
-    if (!firstCoord || !firstCoord[0] || !firstCoord[1]) return;
+    if (!firstCoord || firstCoord[0] == null || firstCoord[1] == null) return;
 
     //Last Point
     const lastCoord = coordinates[coordinates.length - 1]!;
@@ -464,14 +464,14 @@ export const MapComponent = () => {
       lastCoord[1];
     //Compare with what was last zoomed
     if (coordKey === lastZoomedCoordKeyRef.current) return;
-    //Store thr new Key
+    //Store the new Key
     lastZoomedCoordKeyRef.current = coordKey;
 
-    const bounds: [[number, number], [number, number]] = coordinates.reduce<
+    const routeBounds = coordinates.reduce<
       [[number, number], [number, number]]
     >(
       (acc, coord) => {
-        if (!coord || !coord[0] || !coord[1]) return acc;
+        if (!coord || coord[0] == null || coord[1] == null) return acc;
         return [
           [Math.min(acc[0][0], coord[1]), Math.min(acc[0][1], coord[0])],
           [Math.max(acc[1][0], coord[1]), Math.max(acc[1][1], coord[0])],
@@ -482,6 +482,20 @@ export const MapComponent = () => {
         [firstCoord[1], firstCoord[0]],
       ]
     );
+
+    //Markers sit on the geocoded address, which can be off the routed
+    //geometry - include the ones belonging to this tab so they stay in view
+    const activeTabMarkerType =
+      activeTab === 'isochrones' ? 'isocenter' : 'waypoint';
+    const bounds = markers
+      .filter((marker) => marker.type === activeTabMarkerType)
+      .reduce<[[number, number], [number, number]]>(
+        (acc, marker) => [
+          [Math.min(acc[0][0], marker.lng), Math.min(acc[0][1], marker.lat)],
+          [Math.max(acc[1][0], marker.lng), Math.max(acc[1][1], marker.lat)],
+        ],
+        routeBounds
+      );
 
     //Read panel from the store directly
     //avoids re-running the effect when panels open or close
@@ -507,9 +521,9 @@ export const MapComponent = () => {
       },
       maxZoom: coordinates.length === 1 ? 11 : 18,
     });
-    //only rerun when coordinates change
+    //the coordKey guard above keeps this to one fit per route
     //panel change no longer rerun this
-  }, [coordinates]);
+  }, [coordinates, markers, activeTab]);
 
   const handleMapTilesClick = useCallback(
     (event: maplibregl.MapLayerMouseEvent) => {
