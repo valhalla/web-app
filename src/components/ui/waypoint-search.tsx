@@ -86,7 +86,6 @@ export const WaypointSearch = ({
           {
             title: internalValue.trim(),
             description: '',
-            selected: false,
             addresslnglat: result.lngLat,
             sourcelnglat: result.lngLat,
             displaylnglat: result.lngLat,

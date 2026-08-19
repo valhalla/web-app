@@ -16,7 +16,7 @@ import {
 export const IsochronesControl = () => {
   const { mainMap } = useMap();
   const results = useIsochronesStore((state) => state.results);
-  const geocodeResults = useIsochronesStore((state) => state.geocodeResults);
+  const selectedAddress = useIsochronesStore((state) => state.selectedAddress);
   const initialUrlParams = useRef(parseUrlParams());
   const urlParamsProcessed = useRef(false);
   const navigate = useNavigate({ from: '/$activeTab' });
@@ -26,9 +26,8 @@ export const IsochronesControl = () => {
   useEffect(() => {
     if (urlParamsProcessed.current || !mainMap) return;
 
-    const alreadyHydrated = useIsochronesStore
-      .getState()
-      .geocodeResults.some((r) => r.selected);
+    const alreadyHydrated =
+      useIsochronesStore.getState().selectedAddress !== null;
     if (alreadyHydrated) {
       urlParamsProcessed.current = true;
       return;
@@ -61,19 +60,13 @@ export const IsochronesControl = () => {
 
   // Sync isochrone center to URL
   useEffect(() => {
-    let center: string | undefined;
-
-    for (const result of geocodeResults) {
-      if (result.selected && result.sourcelnglat) {
-        center = result.sourcelnglat.join(',');
-      }
-    }
+    const center = selectedAddress?.sourcelnglat?.join(',');
 
     navigate({
       search: (prev) => ({ ...prev, wps: center || undefined }),
       replace: true,
     });
-  }, [geocodeResults, navigate]);
+  }, [selectedAddress, navigate]);
 
   return (
     <>
