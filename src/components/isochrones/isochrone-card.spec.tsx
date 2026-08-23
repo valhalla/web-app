@@ -7,6 +7,10 @@ import type { ValhallaIsochroneResponse } from '@/components/types';
 const mockToggleShowOnMap = vi.fn();
 const mockExportDataAsJson = vi.fn();
 
+vi.mock('@tanstack/react-router', () => ({
+  useSearch: vi.fn(() => ({ profile: 'bicycle' })),
+}));
+
 vi.mock('@/stores/isochrones-store', () => ({
   useIsochronesStore: vi.fn((selector) =>
     selector({
@@ -136,6 +140,27 @@ describe('IsochroneCard', () => {
 
     expect(screen.getByText('10 minutes')).toBeInTheDocument();
     expect(screen.queryByText('15 minutes')).not.toBeInTheDocument();
+  });
+
+  it('should render Report Problem button linking to GitHub with prefilled issue params', () => {
+    const data = createMockData([{ properties: { contour: 10, area: 5 } }]);
+    render(<IsochroneCard data={data} showOnMap={true} />);
+
+    const reportButton = screen.getByRole('link', { name: /report problem/i });
+    expect(reportButton).toBeInTheDocument();
+    expect(reportButton).toHaveAttribute('target', '_blank');
+    expect(reportButton).toHaveAttribute('rel', 'noopener noreferrer');
+
+    const href = reportButton.getAttribute('href')!;
+    const parsed = new URL(href);
+    expect(parsed.origin).toBe('https://github.com');
+    expect(parsed.pathname).toBe('/valhalla/valhalla/issues/new');
+    expect(parsed.searchParams.get('title')).toBe(
+      '[Problem report] Isochrone issue'
+    );
+    expect(parsed.searchParams.get('body')).toContain('### Isochrone URL');
+    expect(parsed.searchParams.get('body')).toContain('- **Type**: isochrone');
+    expect(parsed.searchParams.get('body')).toContain('- **Profile**: bicycle');
   });
 
   it('should render Export button', () => {

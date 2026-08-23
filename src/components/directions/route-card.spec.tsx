@@ -7,6 +7,10 @@ import type { ParsedDirectionsGeometry } from '@/components/types';
 const mockExportDataAsJson = vi.fn();
 const mockDownloadFile = vi.fn();
 
+vi.mock('@tanstack/react-router', () => ({
+  useSearch: vi.fn(() => ({ profile: 'bicycle' })),
+}));
+
 vi.mock('@/utils/export', () => ({
   exportDataAsJson: (...args: unknown[]) => mockExportDataAsJson(...args),
 }));
@@ -174,6 +178,29 @@ describe('RouteCard', () => {
       screen.getByRole('button', { name: /show maneuvers/i })
     ).toBeInTheDocument();
     expect(screen.queryByTestId('mock-maneuvers-0')).not.toBeInTheDocument();
+  });
+
+  it('should render Report Problem button linking to GitHub with prefilled issue params', () => {
+    const data = createMockData();
+    render(
+      <RouteCard data={data} index={0} isActive={true} onSelect={vi.fn()} />
+    );
+
+    const reportButton = screen.getByRole('link', { name: /report problem/i });
+    expect(reportButton).toBeInTheDocument();
+    expect(reportButton).toHaveAttribute('target', '_blank');
+    expect(reportButton).toHaveAttribute('rel', 'noopener noreferrer');
+
+    const href = reportButton.getAttribute('href')!;
+    const parsed = new URL(href);
+    expect(parsed.origin).toBe('https://github.com');
+    expect(parsed.pathname).toBe('/valhalla/valhalla/issues/new');
+    expect(parsed.searchParams.get('title')).toBe(
+      '[Problem report] Route issue'
+    );
+    expect(parsed.searchParams.get('body')).toContain('### Route URL');
+    expect(parsed.searchParams.get('body')).toContain('- **Type**: route');
+    expect(parsed.searchParams.get('body')).toContain('- **Profile**: bicycle');
   });
 
   it('should render Export button', () => {

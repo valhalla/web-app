@@ -16,11 +16,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Download } from 'lucide-react';
+import { CircleAlert, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { exportDataAsJson } from '@/utils/export';
 import { getDateTimeString } from '@/utils/date-time';
+import { createGitHubIssueUrl } from '@/utils/github-issue';
+import { useSearch } from '@tanstack/react-router';
 
 interface RouteCardProps {
   data: ParsedDirectionsGeometry;
@@ -36,6 +38,8 @@ export const RouteCard = ({
   onSelect,
 }: RouteCardProps) => {
   const [showManeuvers, setShowManeuvers] = useState(false);
+  const { profile } = useSearch({ from: '/$activeTab' });
+  const reportIssueUrl = createGitHubIssueUrl({ type: 'route', profile });
 
   const exportToGeoJson = useCallback(() => {
     const coordinates = data?.decodedGeometry;
@@ -89,30 +93,45 @@ export const RouteCard = ({
           routeCoordinates={data.decodedGeometry ?? []}
         />
         <Collapsible open={showManeuvers} onOpenChange={setShowManeuvers}>
-          <div className="flex justify-between">
+          <div className="flex items-center justify-between gap-2">
             <CollapsibleTrigger asChild>
               <Button variant="outline" size="sm">
                 {showManeuvers ? 'Hide Maneuvers' : 'Show Maneuvers'}
               </Button>
             </CollapsibleTrigger>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Download className="size-4" />
-                  Export
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem
-                  onClick={() => exportDataAsJson(data, 'valhalla-directions')}
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <a
+                  href={reportIssueUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  JSON
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={exportToGeoJson}>
-                  GeoJSON
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <CircleAlert className="size-4" />
+                  Report Problem
+                </a>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="size-4" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      exportDataAsJson(data, 'valhalla-directions')
+                    }
+                  >
+                    JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportToGeoJson}>
+                    GeoJSON
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
           <CollapsibleContent>
             <Separator className="my-2" />

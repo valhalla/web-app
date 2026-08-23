@@ -1,12 +1,13 @@
 import { cn } from '@/lib/utils';
 import type { ValhallaIsochroneResponse } from '@/components/types';
-import { ClockIcon, MoveIcon } from 'lucide-react';
+import { CircleAlert, ClockIcon, Download, MoveIcon } from 'lucide-react';
 import { exportDataAsJson } from '@/utils/export';
+import { createGitHubIssueUrl } from '@/utils/github-issue';
+import { useSearch } from '@tanstack/react-router';
 
 import { useIsochronesStore } from '@/stores/isochrones-store';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Download } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +42,8 @@ export const IsochroneCard = ({ data, showOnMap }: IsochronesCardProps) => {
   const updateVisualization = useIsochronesStore(
     (state) => state.updateVisualization
   );
+  const { profile } = useSearch({ from: '/$activeTab' });
+  const reportIssueUrl = createGitHubIssueUrl({ type: 'isochrone', profile });
   const handleChange = (checked: boolean) => {
     toggleShowOnMap(checked);
   };
@@ -124,21 +127,35 @@ export const IsochroneCard = ({ data, showOnMap }: IsochronesCardProps) => {
                   </div>
                 );
               })}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Download className="size-4" />
-                  Export
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem
-                  onClick={() => exportDataAsJson(data, 'valhalla-directions')}
+            <div className="flex items-center justify-between gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <a
+                  href={reportIssueUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  JSON
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <CircleAlert className="size-4" />
+                  Report Problem
+                </a>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="size-4" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      exportDataAsJson(data, 'valhalla-directions')
+                    }
+                  >
+                    JSON
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </>
       ) : (
