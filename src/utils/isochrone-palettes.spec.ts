@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { getPaletteColor, DEFAULT_FILL } from './isochrone-palettes';
+import {
+  getPaletteColor,
+  DEFAULT_FILL,
+  ISOCHRONE_PALETTES,
+} from './isochrone-palettes';
 
 const BINARY = ['#000000', '#ffffff'];
 
@@ -44,5 +48,20 @@ describe('getPaletteColor', () => {
   it('largest contour is always palette end across different maxRange scenarios', () => {
     expect(getPaletteColor(VIRIDIS, 30 / 30)).toBe('#fde725');
     expect(getPaletteColor(VIRIDIS, 60 / 60)).toBe('#fde725');
+  });
+});
+
+describe('ISOCHRONE_PALETTES', () => {
+  it('includes colorblind-friendly palettes', () => {
+    const ids = ISOCHRONE_PALETTES.map((p) => p.id);
+    expect(ids).toContain('viridis');
+    expect(ids).toContain('cividis');
+  });
+
+  it('labels colorblind-friendly palettes correctly', () => {
+    const viridis = ISOCHRONE_PALETTES.find((p) => p.id === 'viridis');
+    const cividis = ISOCHRONE_PALETTES.find((p) => p.id === 'cividis');
+    expect(viridis?.label).toContain('colorblind-friendly');
+    expect(cividis?.label).toContain('colorblind-friendly');
   });
 });

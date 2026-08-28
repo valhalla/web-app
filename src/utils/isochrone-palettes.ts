@@ -1,4 +1,4 @@
-export type PaletteId = 'default' | 'viridis' | 'plasma' | 'blues';
+export type PaletteId = 'default' | 'viridis' | 'plasma' | 'blues' | 'cividis';
 
 export const DEFAULT_FILL = '#6200ea';
 
@@ -17,11 +17,6 @@ export const ISOCHRONE_PALETTES: IsochronePalette[] = [
     colors: null,
   },
   {
-    id: 'viridis',
-    label: 'Viridis (colorblind-friendly)',
-    colors: ['#440154', '#3b528b', '#21918c', '#5ec962', '#fde725'],
-  },
-  {
     id: 'plasma',
     label: 'Plasma',
     colors: ['#0d0887', '#7e03a8', '#cc4778', '#f89540', '#f0f921'],
@@ -30,6 +25,16 @@ export const ISOCHRONE_PALETTES: IsochronePalette[] = [
     id: 'blues',
     label: 'Blues',
     colors: ['#084594', '#2171b5', '#4292c6', '#9ecae1', '#deebf7'],
+  },
+  {
+    id: 'viridis',
+    label: 'Viridis (colorblind-friendly)',
+    colors: ['#440154', '#3b528b', '#21918c', '#5ec962', '#fde725'],
+  },
+  {
+    id: 'cividis',
+    label: 'Cividis (colorblind-friendly)',
+    colors: ['#00204d', '#31446b', '#666870', '#958f78', '#e4cf5b'],
   },
 ];
 
