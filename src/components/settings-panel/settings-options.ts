@@ -699,9 +699,9 @@ const walkwayFactor = {
     'A factor that modifies the cost when encountering roads classified as footway (no motorized vehicles allowed), which may be designated footpaths or designated sidewalks along residential roads. Pedestrian routes generally attempt to favor using these walkways and sidewalks. The default walkway_factor is 1.0.',
   unit: 'factor',
   settings: {
-    min: 1,
+    min: 0.1,
     max: 50,
-    step: 1,
+    step: 0.1,
   },
 };
 
@@ -712,9 +712,9 @@ const sidewalkFactor = {
     'A factor that modifies the cost when encountering roads with dedicated sidewalks. Pedestrian routes generally attempt to favor using sidewalks. The default sidewalk_factor is 1.0.',
   unit: 'factor',
   settings: {
-    min: 1,
+    min: 0.1,
     max: 50,
-    step: 1,
+    step: 0.1,
   },
 };
 
@@ -725,9 +725,9 @@ const alleyFactor = {
     ' A factor that modifies (multiplies) the cost when alleys are encountered. Pedestrian routes generally want to avoid alleys or narrow service roads between buildings. The default alley_factor is 2.0.',
   unit: 'factor',
   settings: {
-    min: 1,
+    min: 0.1,
     max: 50,
-    step: 1,
+    step: 0.1,
   },
 };
 
@@ -738,9 +738,9 @@ const drivewayFactor = {
     'A factor that modifies (multiplies) the cost when encountering a driveway, which is often a private, service road. Pedestrian routes generally want to avoid driveways (private). The default driveway factor is 5.0.',
   unit: 'factor',
   settings: {
-    min: 1,
+    min: 0.1,
     max: 50,
-    step: 1,
+    step: 0.1,
   },
 };
 
