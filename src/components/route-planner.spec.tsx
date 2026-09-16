@@ -13,12 +13,8 @@ vi.mock('@tanstack/react-router', () => ({
   useNavigate: vi.fn(() => mockNavigate),
 }));
 
-vi.mock('@tanstack/react-query', () => ({
-  useQuery: vi.fn(() => ({
-    data: new Date('2024-01-15T10:30:00'),
-    isLoading: false,
-    isError: false,
-  })),
+vi.mock('./data-info-table', () => ({
+  DataInfoTable: vi.fn(() => <div data-testid="data-info-table">info</div>),
 }));
 
 vi.mock('@/stores/common-store', () => ({
@@ -153,10 +149,9 @@ describe('RoutePlanner', () => {
     });
   });
 
-  it('should display last update date when loaded', () => {
+  it('should render the data info table', () => {
     render(<RoutePlanner />);
-    expect(screen.getByText(/Last Data Update:/)).toBeInTheDocument();
-    expect(screen.getByText(/2024-01-15/)).toBeInTheDocument();
+    expect(screen.getByTestId('data-info-table')).toBeInTheDocument();
   });
 
   it('should navigate to tiles tab when tiles tab button is clicked', async () => {
@@ -183,9 +178,9 @@ describe('RoutePlanner', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('should not display last update date on tiles tab', () => {
+    it('should not render the data info table on tiles tab', () => {
       render(<RoutePlanner />);
-      expect(screen.queryByText(/Last Data Update:/)).not.toBeInTheDocument();
+      expect(screen.queryByTestId('data-info-table')).not.toBeInTheDocument();
     });
   });
 });
