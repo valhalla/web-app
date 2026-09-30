@@ -344,6 +344,19 @@ const useHighways = {
     step: 0.1,
   },
 };
+
+const useDistance = {
+  name: 'Use Distance',
+  param: 'use_distance',
+  description: '',
+  unit: 'willingness',
+  settings: {
+    min: 0,
+    max: 1,
+    step: 0.1,
+  },
+};
+
 const useTollways = {
   name: 'Use Tollways',
   param: 'use_tolls',
@@ -983,6 +996,7 @@ const commonGeneralNumeric = [
   ...tollSettings,
   ...ferrySettings,
   useLivingStreets,
+  useDistance,
   useTracks,
 ] as const;
 
