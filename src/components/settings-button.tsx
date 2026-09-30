@@ -1,5 +1,6 @@
 import { Settings2 } from 'lucide-react';
 import { Button } from './ui/button';
+import { cn } from '@/lib/utils';
 import { useCommonStore } from '@/stores/common-store';
 
 interface SettingsButtonProps {
@@ -12,9 +13,12 @@ export const SettingsButton = ({ className }: SettingsButtonProps) => {
   return (
     <Button
       data-testid="show-hide-settings-btn"
-      variant="outline"
+      variant="default"
       onClick={toggleSettings}
-      className={className ?? 'w-full'}
+      className={cn(
+        'w-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900',
+        className
+      )}
     >
       <Settings2 className="size-4" />
       Advanced settings
