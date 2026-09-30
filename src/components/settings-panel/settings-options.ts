@@ -348,7 +348,8 @@ const useHighways = {
 const useDistance = {
   name: 'Use Distance',
   param: 'use_distance',
-  description: '',
+  description:
+    'A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account (default) and 1 only distance. A factor of 0.5 will weight them roughly equally.',
   unit: 'willingness',
   settings: {
     min: 0,
