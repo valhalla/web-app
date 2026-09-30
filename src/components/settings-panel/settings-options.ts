@@ -143,19 +143,6 @@ const countryCrossingCost = {
   },
 };
 
-const turnPenaltyCost = {
-  name: 'Turn Penalty',
-  param: 'maneuver_penalty',
-  description:
-    'A penalty applied when transitioning between roads that do not have consistent naming–in other words, no road names in common. This penalty can be used to create simpler routes that tend to have fewer maneuvers or narrative guidance instructions. The default maneuver penalty is five seconds.',
-  unit: 'sec',
-  settings: {
-    min: 0,
-    max: 20,
-    step: 1,
-  },
-};
-
 const maneuverPenalty = {
   name: 'Maneuver Penalty',
   param: 'maneuver_penalty',
@@ -978,7 +965,6 @@ const commonVehicleProfileBoolean = [
 ] as const;
 
 const commonGeneralNumeric = [
-  turnPenaltyCost,
   useHighways,
   ...tollSettings,
   ...ferrySettings,
@@ -1088,7 +1074,6 @@ export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
 
   bus: createSettings(
     [
-      turnPenaltyCost,
       useHighways,
       useLivingStreets,
       ...tollSettings,
@@ -1112,14 +1097,10 @@ export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
 
   motor_scooter: createSettings([useFerry, useTracks, servicePenalty], []),
 
-  bicycle: createSettings(
-    [useFerry, useLivingStreets, turnPenaltyCost, ...serviceSettings],
-    []
-  ),
+  bicycle: createSettings([useFerry, useLivingStreets, ...serviceSettings], []),
 
   motorcycle: createSettings(
     [
-      turnPenaltyCost,
       useHighways,
       useTrails,
       ...tollSettings,
