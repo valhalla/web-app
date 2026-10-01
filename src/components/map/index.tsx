@@ -136,6 +136,7 @@ export const MapComponent = () => {
     lat: number;
     summary: Summary;
   } | null>(null);
+  const isDraggingMarkerRef = useRef(false);
   const [tilesPopup, setTilesPopup] = useState<{
     lng: number;
     lat: number;
@@ -758,6 +759,9 @@ export const MapComponent = () => {
     (event: maplibregl.MapLayerMouseEvent) => {
       if (!mapRef.current || showInfoPopup) return; // Don't show if click popup is visible
 
+      //re-rendering mid-drag would reset the marker position.
+      if (isDraggingMarkerRef.current) return;
+
       const features = event.features;
       // Check if we're hovering over the routes-line / hit-target layer
       const topLayerId = features?.[0]?.layer?.id;
@@ -864,7 +868,12 @@ export const MapComponent = () => {
             longitude={marker.lng}
             latitude={marker.lat}
             draggable={true}
+            onDragStart={() => {
+              isDraggingMarkerRef.current = true;
+              setRouteHoverPopup(null);
+            }}
             onDragEnd={(e) => {
+              isDraggingMarkerRef.current = false;
               if (marker.type === 'waypoint') {
                 updateWaypointPosition({
                   latLng: { lat: e.lngLat.lat, lng: e.lngLat.lng },
