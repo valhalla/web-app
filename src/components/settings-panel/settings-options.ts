@@ -331,6 +331,20 @@ const useHighways = {
     step: 0.1,
   },
 };
+
+const useDistance = {
+  name: 'Use Distance',
+  param: 'use_distance',
+  description:
+    'A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account (default) and 1 only distance. A factor of 0.5 will weight them roughly equally.',
+  unit: 'willingness',
+  settings: {
+    min: 0,
+    max: 1,
+    step: 0.1,
+  },
+};
+
 const useTollways = {
   name: 'Use Tollways',
   param: 'use_tolls',
@@ -969,6 +983,7 @@ const commonGeneralNumeric = [
   ...tollSettings,
   ...ferrySettings,
   useLivingStreets,
+  useDistance,
   useTracks,
 ] as const;
 
