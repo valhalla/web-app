@@ -168,7 +168,6 @@ describe('valhalla.ts', () => {
       {
         title: 'Start',
         description: 'Starting point',
-        selected: true,
         addresslnglat: [-74.006, 40.7128],
         sourcelnglat: [-74.006, 40.7128],
         displaylnglat: [-74.006, 40.7128],
@@ -178,7 +177,6 @@ describe('valhalla.ts', () => {
       {
         title: 'Via',
         description: 'Via point',
-        selected: true,
         addresslnglat: [-118.2437, 34.0522],
         sourcelnglat: [-118.2437, 34.0522],
         displaylnglat: [-118.2437, 34.0522],
@@ -188,7 +186,6 @@ describe('valhalla.ts', () => {
       {
         title: 'End',
         description: 'Ending point',
-        selected: true,
         addresslnglat: [-87.6298, 41.8781],
         sourcelnglat: [-87.6298, 41.8781],
         displaylnglat: [-87.6298, 41.8781],
@@ -462,7 +459,6 @@ describe('valhalla.ts', () => {
       {
         title: 'Start',
         description: 'Starting point',
-        selected: true,
         addresslnglat: [-74.006, 40.7128],
         sourcelnglat: [-74.006, 40.7128],
         displaylnglat: [-74.006, 40.7128],
@@ -472,7 +468,6 @@ describe('valhalla.ts', () => {
       {
         title: 'Via 1',
         description: 'Via point 1',
-        selected: true,
         addresslnglat: [-73.99, 40.75],
         sourcelnglat: [-73.99, 40.75],
         displaylnglat: [-73.99, 40.75],
@@ -482,7 +477,6 @@ describe('valhalla.ts', () => {
       {
         title: 'Via 2',
         description: 'Via point 2',
-        selected: true,
         addresslnglat: [-73.98, 40.755],
         sourcelnglat: [-73.98, 40.755],
         displaylnglat: [-73.98, 40.755],
@@ -492,7 +486,6 @@ describe('valhalla.ts', () => {
       {
         title: 'End',
         description: 'Ending point',
-        selected: true,
         addresslnglat: [-87.6298, 41.8781],
         sourcelnglat: [-87.6298, 41.8781],
         displaylnglat: [-87.6298, 41.8781],
@@ -715,7 +708,6 @@ describe('valhalla.ts', () => {
     const mockCenter: import('@/components/types').Center = {
       title: 'Center',
       description: 'Center point',
-      selected: true,
       addresslnglat: [-118.2437, 34.0522],
       sourcelnglat: [-118.2437, 34.0522],
       displaylnglat: [-118.2437, 34.0522],
@@ -973,7 +965,6 @@ describe('valhalla.ts', () => {
       {
         title: 'Start',
         description: 'Starting point',
-        selected: true,
         addresslnglat: [-74.006, 40.7128],
         sourcelnglat: [-74.006, 40.7128],
         displaylnglat: [-74.006, 40.7128],
@@ -983,7 +974,6 @@ describe('valhalla.ts', () => {
       {
         title: 'Via 1',
         description: 'Via point 1',
-        selected: true,
         addresslnglat: [-118.2437, 34.0522],
         sourcelnglat: [-118.2437, 34.0522],
         displaylnglat: [-118.2437, 34.0522],
@@ -993,7 +983,6 @@ describe('valhalla.ts', () => {
       {
         title: 'Via 2',
         description: 'Via point 2',
-        selected: true,
         addresslnglat: [-87.6298, 41.8781],
         sourcelnglat: [-87.6298, 41.8781],
         displaylnglat: [-87.6298, 41.8781],
@@ -1003,7 +992,6 @@ describe('valhalla.ts', () => {
       {
         title: 'End',
         description: 'Ending point',
-        selected: true,
         addresslnglat: [-122.4194, 37.7749],
         sourcelnglat: [-122.4194, 37.7749],
         displaylnglat: [-122.4194, 37.7749],

@@ -51,7 +51,6 @@ export const parseGeocodeResponse = (
       processedResults.push({
         title: lngLat?.toString() || '',
         description: '',
-        selected: true,
         addresslnglat: '',
         sourcelnglat: lngLat,
         displaylnglat: lngLat,
@@ -65,7 +64,6 @@ export const parseGeocodeResponse = (
             ? result.display_name
             : lngLat?.toString() || '',
         description: `https://www.openstreetmap.org/${result.osm_type}/${result.osm_id}`,
-        selected: false,
         addresslnglat: [parseFloat(result.lon), parseFloat(result.lat)],
         sourcelnglat:
           lngLat === undefined

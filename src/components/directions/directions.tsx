@@ -52,7 +52,7 @@ export const DirectionsControl = () => {
 
     const alreadyHydrated = useDirectionsStore
       .getState()
-      .waypoints.some((wp) => wp.geocodeResults.some((r) => r.selected));
+      .waypoints.some((wp) => wp.selectedAddress);
     if (alreadyHydrated) {
       urlParamsProcessed.current = true;
       return;
@@ -83,10 +83,9 @@ export const DirectionsControl = () => {
     const wps: number[] = [];
 
     for (const wp of waypoints) {
-      for (const result of wp.geocodeResults) {
-        if (result.selected && result.sourcelnglat) {
-          wps.push(result.sourcelnglat[0], result.sourcelnglat[1]);
-        }
+      const lngLat = wp.selectedAddress?.sourcelnglat;
+      if (lngLat) {
+        wps.push(lngLat[0], lngLat[1]);
       }
     }
 
@@ -108,8 +107,8 @@ export const DirectionsControl = () => {
     clearRoutes();
   }, [clearWaypoints, clearRoutes]);
 
-  const activeWaypointsCount = waypoints.filter((wp) =>
-    wp.geocodeResults.some((r) => r.selected)
+  const activeWaypointsCount = waypoints.filter(
+    (wp) => wp.selectedAddress
   ).length;
 
   return (

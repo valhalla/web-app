@@ -37,7 +37,7 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
   const receiveGeocodeResults = useDirectionsStore(
     (state) => state.receiveGeocodeResults
   );
-  const updateTextInput = useDirectionsStore((state) => state.updateTextInput);
+  const selectAddress = useDirectionsStore((state) => state.selectAddress);
   const { refetch: refetchDirections } = useDirectionsQuery();
   const { setWaypointFromCoords } = useSetWaypointFromCoords();
   const doRemoveWaypoint = useDirectionsStore(
@@ -45,8 +45,8 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
   );
   const { mainMap } = useMap();
   const waypoint = waypoints[index];
-  const { userInput, geocodeResults } = waypoint!;
-  const selectedCoords = geocodeResults?.find((r) => r.selected)?.displaylnglat;
+  const { userInput, geocodeResults, selectedAddress } = waypoint!;
+  const selectedCoords = selectedAddress?.displaylnglat;
 
   const handleGeocodeResults = useCallback(
     (addresses: ActiveWaypoint[]) => {
@@ -87,15 +87,10 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
 
   const handleResultSelect = useCallback(
     (result: ActiveWaypoint) => {
-      updateTextInput({
-        inputValue: result.title,
-        index: index,
-        addressindex: result.addressindex,
-      });
-
+      selectAddress({ index, address: result });
       refetchDirections();
     },
-    [updateTextInput, index, refetchDirections]
+    [selectAddress, index, refetchDirections]
   );
 
   const style = {
@@ -185,10 +180,7 @@ export const Waypoint = ({ id, index }: WaypointProps) => {
                     refetchDirections();
                   }}
                   data-testid="remove-waypoint-button"
-                  disabled={
-                    waypoints.length < 3 &&
-                    !geocodeResults?.some((r) => r.selected)
-                  }
+                  disabled={waypoints.length < 3 && !selectedAddress}
                 >
                   <Trash className="size-3" />
                 </Button>

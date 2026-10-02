@@ -1,7 +1,6 @@
 export interface ActiveWaypoint {
   title: string;
   description?: string;
-  selected?: boolean;
   addresslnglat?: [number, number];
   sourcelnglat?: [number, number];
   displaylnglat: [number, number];
@@ -177,7 +176,6 @@ export interface IsochronesRequestParams {
 export interface Center {
   title: string;
   description: string;
-  selected: boolean;
   addresslnglat: number[];
   sourcelnglat: number[];
   displaylnglat: number[];

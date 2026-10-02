@@ -30,25 +30,16 @@ const mockResults = {
   show: true,
 };
 
-const mockGeocodeResults: {
-  selected: boolean;
-  sourcelnglat: [number, number];
-}[] = [];
+let mockSelectedAddress: { sourcelnglat: [number, number] } | null = null;
 
 vi.mock('@/stores/isochrones-store', () => {
+  const getState = () => ({
+    results: mockResults,
+    selectedAddress: mockSelectedAddress,
+  });
   const useIsochronesStore = Object.assign(
-    vi.fn((selector) =>
-      selector({
-        results: mockResults,
-        geocodeResults: mockGeocodeResults,
-      })
-    ),
-    {
-      getState: () => ({
-        results: mockResults,
-        geocodeResults: mockGeocodeResults,
-      }),
-    }
+    vi.fn((selector) => selector(getState())),
+    { getState }
   );
   return { useIsochronesStore };
 });
@@ -96,7 +87,7 @@ describe('IsochronesControl', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockResults.data = null;
-    mockGeocodeResults.length = 0;
+    mockSelectedAddress = null;
   });
 
   it('should render without crashing', () => {
@@ -143,10 +134,7 @@ describe('IsochronesControl', () => {
   });
 
   it('should sync geocode results to URL', () => {
-    mockGeocodeResults.push({
-      selected: true,
-      sourcelnglat: [13.4, 52.5],
-    });
+    mockSelectedAddress = { sourcelnglat: [13.4, 52.5] };
 
     render(<IsochronesControl />);
 
@@ -157,10 +145,7 @@ describe('IsochronesControl', () => {
   });
 
   it('should call navigate with wps parameter when center exists', () => {
-    mockGeocodeResults.push({
-      selected: true,
-      sourcelnglat: [13.4, 52.5],
-    });
+    mockSelectedAddress = { sourcelnglat: [13.4, 52.5] };
 
     render(<IsochronesControl />);
 
@@ -197,7 +182,7 @@ describe('IsochronesControl URL parsing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockResults.data = null;
-    mockGeocodeResults.length = 0;
+    mockSelectedAddress = null;
   });
 
   it('should process URL params with valid coordinates', async () => {

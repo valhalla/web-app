@@ -9,6 +9,7 @@ import { immer } from 'zustand/middleware/immer';
 export interface Waypoint {
   id: string;
   geocodeResults: ActiveWaypoint[];
+  selectedAddress: ActiveWaypoint | null;
   userInput: string;
 }
 
@@ -40,6 +41,7 @@ interface LatLng {
 const createEmptyWaypoint = (id: string): Waypoint => ({
   id,
   geocodeResults: [],
+  selectedAddress: null,
   userInput: '',
 });
 
@@ -48,23 +50,35 @@ export const defaultWaypoints: Waypoint[] = [
   createEmptyWaypoint('1'),
 ];
 
+/** An address for a raw coordinate pair, i.e. one that was never geocoded. */
+export const createCoordinateAddress = (
+  lng: number,
+  lat: number
+): ActiveWaypoint => {
+  const lngLat: [number, number] = [lng, lat];
+  return {
+    title: `${lng.toFixed(6)}, ${lat.toFixed(6)}`,
+    addresslnglat: lngLat,
+    sourcelnglat: lngLat,
+    displaylnglat: lngLat,
+    key: 0,
+    addressindex: 0,
+  };
+};
+
 const getNextWaypointId = (waypoints: Waypoint[]): string => {
   const maxIndex = Math.max(...waypoints.map((wp) => parseInt(wp.id, 10)));
   return (isFinite(maxIndex) ? maxIndex + 1 : 0).toString();
 };
 
 const hasActiveRoute = (waypoints: Waypoint[]): boolean =>
-  waypoints.filter(
-    (wp) =>
-      wp.geocodeResults.length > 0 && wp.geocodeResults.some((r) => r.selected)
-  ).length >= 2;
+  waypoints.filter((wp) => wp.selectedAddress).length >= 2;
 
 export interface DirectionsState {
   successful: boolean;
   highlightSegment: HighlightSegment;
   waypoints: Waypoint[];
   zoomObj: ZoomObj;
-  selectedAddresses: string | (Waypoint | null)[];
   results: RouteResult;
   inclineDeclineTotal?: InclineDeclineTotal;
   isOptimized: boolean;
@@ -80,11 +94,7 @@ interface DirectionsActions {
     index: number;
     addresses: ActiveWaypoint[];
   }) => void;
-  updateTextInput: (params: {
-    inputValue: string;
-    index: number;
-    addressindex?: number;
-  }) => void;
+  selectAddress: (params: { index: number; address: ActiveWaypoint }) => void;
   clearWaypoints: () => void;
   emptyWaypoint: (params: { index: number }) => void;
   setWaypoint: (waypoints: Waypoint[]) => void;
@@ -93,11 +103,6 @@ interface DirectionsActions {
   doRemoveWaypoint: (params: { index: number }) => void;
   highlightManeuver: (fromTo: HighlightSegment) => void;
   zoomToManeuver: (zoomObj: ZoomObj) => void;
-  updatePlaceholderAddressAtIndex: (
-    index: number,
-    lng: number,
-    lat: number
-  ) => void;
   setIsOptimized: (isOptimized: boolean) => void;
   setActiveRouteIndex: (index: number) => void;
 }
@@ -111,7 +116,6 @@ export const useDirectionsStore = create<DirectionsStore>()(
       highlightSegment: { startIndex: -1, endIndex: -1, alternate: -1 },
       waypoints: defaultWaypoints,
       zoomObj: { index: -1, timeNow: -1 },
-      selectedAddresses: '',
       results: { data: null, show: { '0': true } },
       isOptimized: false,
       activeRouteIndex: 0,
@@ -173,26 +177,17 @@ export const useDirectionsStore = create<DirectionsStore>()(
           'receiveGeocodeResults'
         ),
 
-      updateTextInput: ({ inputValue, index, addressindex }) =>
+      selectAddress: ({ index, address }) =>
         set(
           (state) => {
-            state.selectedAddresses = state.waypoints.flatMap((wp) =>
-              wp.geocodeResults.map((_, i) => (i === addressindex ? wp : null))
-            );
-
             if (state.waypoints[index]) {
-              state.waypoints[index].userInput = inputValue;
-              state.waypoints[index].geocodeResults = state.waypoints[
-                index
-              ].geocodeResults.map((result, j) => ({
-                ...result,
-                selected: j === addressindex,
-              }));
+              state.waypoints[index].selectedAddress = address;
+              state.waypoints[index].userInput = address.title;
               state.isOptimized = false;
             }
           },
           undefined,
-          'updateTextInput'
+          'selectAddress'
         ),
 
       clearWaypoints: () =>
@@ -211,6 +206,7 @@ export const useDirectionsStore = create<DirectionsStore>()(
             if (state.waypoints[index]) {
               state.waypoints[index].userInput = '';
               state.waypoints[index].geocodeResults = [];
+              state.waypoints[index].selectedAddress = null;
               state.isOptimized = false;
             }
           },
@@ -230,23 +226,18 @@ export const useDirectionsStore = create<DirectionsStore>()(
       addWaypointAtIndex: ({ index, placeholder }) =>
         set(
           (state) => {
-            const id = getNextWaypointId(state.waypoints);
+            const newWaypoint = createEmptyWaypoint(
+              getNextWaypointId(state.waypoints)
+            );
 
-            const newWaypoint: Waypoint = placeholder
-              ? {
-                  id,
-                  geocodeResults: [
-                    {
-                      title: '',
-                      displaylnglat: [placeholder.lng, placeholder.lat],
-                      sourcelnglat: [placeholder.lng, placeholder.lat],
-                      key: index,
-                      addressindex: index,
-                    },
-                  ],
-                  userInput: `${placeholder.lng.toFixed(6)}, ${placeholder.lat.toFixed(6)}`,
-                }
-              : createEmptyWaypoint(id);
+            if (placeholder) {
+              const address = createCoordinateAddress(
+                placeholder.lng,
+                placeholder.lat
+              );
+              newWaypoint.selectedAddress = address;
+              newWaypoint.userInput = address.title;
+            }
 
             state.waypoints.splice(index, 0, newWaypoint);
             state.isOptimized = false;
@@ -259,7 +250,7 @@ export const useDirectionsStore = create<DirectionsStore>()(
         set(
           (state) => {
             state.waypoints.push(
-              createEmptyWaypoint((state.waypoints.length + 1).toString())
+              createEmptyWaypoint(getNextWaypointId(state.waypoints))
             );
             state.isOptimized = false;
           },
@@ -275,6 +266,7 @@ export const useDirectionsStore = create<DirectionsStore>()(
             } else if (state.waypoints[index]) {
               state.waypoints[index].userInput = '';
               state.waypoints[index].geocodeResults = [];
+              state.waypoints[index].selectedAddress = null;
             }
 
             state.isOptimized = false;
@@ -311,29 +303,6 @@ export const useDirectionsStore = create<DirectionsStore>()(
           },
           undefined,
           'zoomToManeuver'
-        ),
-
-      updatePlaceholderAddressAtIndex: (index, lng, lat) =>
-        set(
-          (state) => {
-            if (state.waypoints[index]) {
-              state.waypoints[index].geocodeResults = [
-                {
-                  title: '',
-                  displaylnglat: [lng, lat],
-                  sourcelnglat: [lng, lat],
-                  key: index,
-                  addressindex: index,
-                  selected: true,
-                },
-              ];
-              state.waypoints[index].userInput =
-                `${lng.toFixed(6)}, ${lat.toFixed(6)}`;
-              state.isOptimized = false;
-            }
-          },
-          undefined,
-          'updatePlaceholderAddressAtIndex'
         ),
 
       setIsOptimized: (isOptimized) =>

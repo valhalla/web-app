@@ -94,10 +94,6 @@ export const useIsochronesStore = create<IsochroneStore>()(
               state.geocodeResults[addressIndex]
             ) {
               state.selectedAddress = state.geocodeResults[addressIndex];
-              state.geocodeResults = state.geocodeResults.map((result, i) => ({
-                ...result,
-                selected: i === addressIndex,
-              }));
             }
           },
           undefined,

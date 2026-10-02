@@ -66,7 +66,7 @@ The Vite `base` is derived from `package.json` `homepage` (see `vite.config.ts �
 Three Zustand stores, each with `immer` + `devtools`:
 
 - `src/stores/common-store.ts` — settings panel/directions panel open state, costing settings, dateTime, map-ready flag. `Profile` enum and `profileEnum` zod schema live here.
-- `src/stores/directions-store.ts` — waypoints (with geocode results), route results, highlighted maneuver, optimized-route flag, active-route index.
+- `src/stores/directions-store.ts` — waypoints (each with a selected address + geocode candidates), route results, highlighted maneuver, optimized-route flag, active-route index.
 - `src/stores/isochrones-store.ts` — input/result, range/interval/denoise/generalize, color palette, opacity.
 
 Server-state lives in TanStack Query. The global `QueryClient` (`src/lib/tanstack-query/root-provider.tsx`) sets `refetchOnWindowFocus: false`, `retry: 1`, `staleTime: 5min`, `gcTime: 10min`. Query hooks are in `src/hooks/use-*-queries.ts`. They read inputs directly from Zustand stores via `useStore.getState()` and from the router via `router.state.location.search` rather than parameters — keep that pattern when adding new queries.

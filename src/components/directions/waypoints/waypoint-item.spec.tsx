@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { Waypoint } from './waypoint-item';
 
 const mockReceiveGeocodeResults = vi.fn();
-const mockUpdateTextInput = vi.fn();
+const mockSelectAddress = vi.fn();
 const mockDoRemoveWaypoint = vi.fn();
 const mockRefetchDirections = vi.fn();
 const mockSetWaypointFromCoords = vi.fn().mockResolvedValue([]);
@@ -45,29 +45,38 @@ vi.mock('@/stores/directions-store', () => ({
         {
           id: 'wp-1',
           userInput: 'Berlin',
-          geocodeResults: [
-            {
-              title: 'Berlin, Germany',
-              addressindex: 0,
-              displaylnglat: [13.4, 52.5],
-              selected: true,
-            },
-          ],
+          geocodeResults: [],
+          selectedAddress: {
+            title: 'Berlin, Germany',
+            addressindex: 0,
+            displaylnglat: [13.4, 52.5],
+          },
         },
         {
           id: 'wp-2',
           userInput: 'Munich',
           geocodeResults: [],
+          selectedAddress: null,
         },
       ],
       receiveGeocodeResults: mockReceiveGeocodeResults,
-      updateTextInput: mockUpdateTextInput,
+      selectAddress: mockSelectAddress,
       doRemoveWaypoint: mockDoRemoveWaypoint,
     })
   ),
   defaultWaypoints: [
-    { id: 'default-1', userInput: '', geocodeResults: [] },
-    { id: 'default-2', userInput: '', geocodeResults: [] },
+    {
+      id: 'default-1',
+      userInput: '',
+      geocodeResults: [],
+      selectedAddress: null,
+    },
+    {
+      id: 'default-2',
+      userInput: '',
+      geocodeResults: [],
+      selectedAddress: null,
+    },
   ],
 }));
 
@@ -171,16 +180,15 @@ describe('Waypoint', () => {
     });
   });
 
-  it('should call updateTextInput and refetchDirections when result is selected', async () => {
+  it('should call selectAddress and refetchDirections when result is selected', async () => {
     const user = userEvent.setup();
     render(<Waypoint id="wp-1" index={0} />);
 
     await user.click(screen.getByTestId('select-result'));
 
-    expect(mockUpdateTextInput).toHaveBeenCalledWith({
-      inputValue: 'Selected',
+    expect(mockSelectAddress).toHaveBeenCalledWith({
       index: 0,
-      addressindex: 0,
+      address: { title: 'Selected', addressindex: 0, lngLat: [0, 0] },
     });
     expect(mockRefetchDirections).toHaveBeenCalled();
   });

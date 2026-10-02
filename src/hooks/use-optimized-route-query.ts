@@ -27,15 +27,12 @@ export function useOptimizedRouteQuery() {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const relevantWaypoints: Waypoint[] = [];
-
-      const activeWaypoints = waypoints.flatMap((wp) => {
-        const selected = wp.geocodeResults.filter((r) => r.selected);
-        if (selected.length > 0) {
-          relevantWaypoints.push(wp);
-        }
-        return selected;
-      });
+      const relevantWaypoints: Waypoint[] = waypoints.filter(
+        (wp) => wp.selectedAddress
+      );
+      const activeWaypoints = relevantWaypoints.map(
+        (wp) => wp.selectedAddress!
+      );
 
       if (activeWaypoints.length < 4) {
         throw new Error('Not enough waypoints to optimize');

@@ -160,7 +160,7 @@ vi.mock('@/stores/directions-store', () => ({
 vi.mock('@/stores/isochrones-store', () => ({
   useIsochronesStore: vi.fn((selector) => {
     const state = {
-      geocodeResults: [],
+      selectedAddress: null,
     };
     return selector(state);
   }),
