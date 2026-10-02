@@ -1,5 +1,9 @@
 name: PR Preview Build
 
+# Runs the PR's (untrusted) code with no secrets and a read-only token. The
+# deploy happens in preview-deploy.yml, which never executes anything from
+# this artifact — it only ships the static files.
+
 on:
   pull_request:
     types: [opened, reopened, synchronize]
@@ -10,6 +14,13 @@ on:
       - 'docker*'
       - 'Docker*'
 
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-build-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,10 +28,16 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: 📝 Save PR number
-        run: echo "${{ github.event.pull_request.number }}" > pr_number.txt
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: echo "$PR_NUMBER" > pr_number.txt
 
-      - name: 🏠 Replace homepage URL
-        run: sed -i "s/https:\/\/valhalla.openstreetmap.de/https:\/\/valhalla-app-tests.gis-ops.com\/${{ github.event.pull_request.number }}/g" package.json
+      # Served at https://<preview host>/<org>/<repo>/<pr>/ — vite's base only
+      # needs the path (see getBaseUrl in vite.config.ts).
+      - name: 🏠 Set preview base path
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: npm pkg set homepage="/${GITHUB_REPOSITORY}/${PR_NUMBER}/"
 
       - uses: actions/setup-node@v4
         with:
