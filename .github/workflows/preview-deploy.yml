@@ -1,116 +1,150 @@
 name: PR Preview Deploy
 
+# Privileged half of the preview pipeline: has the deploy key and a write
+# token, and runs from master — never from the PR. The artifact it consumes
+# was produced by PR-controlled code, so it is treated as data only:
+#   - pr_number.txt is validated and cross-checked against this run's head
+#     SHA, so a build can only ever deploy to its own PR's slot.
+#   - build/ is tarred and shipped, never executed.
+#   - nothing from the artifact is interpolated into a script; values reach
+#     run/script steps through env vars only.
+#
+# Receiving end: a forced-command SSH account on valhalla1 that only accepts
+# `deploy <pr>` / `delete <pr>` for this repo (FOSSGIS valhalla ansible role,
+# roles/valhalla/tasks/preview.yml). Serves
+# https://ci.routing-valhalla.earth/<org>/<repo>/<pr>/.
+#
+# Repo settings this needs:
+#   secrets.PREVIEW_SSH_PRIVATE_KEY   ed25519 key, pubkey listed in the role
+#   vars.PREVIEW_SSH_TARGET           valhalla-preview@valhalla1.openstreetmap.de
+#   vars.PREVIEW_SSH_KNOWN_HOSTS      valhalla1's host keys (ssh-keyscan output)
+#   environment `preview-fork`        WITH required reviewers — gates fork PRs
+
 on:
   workflow_run:
     workflows: ['PR Preview Build']
     types: [completed]
 
+permissions:
+  actions: read # download the artifact from the build run
+  pull-requests: write # preview comment
+  statuses: write # commit status
+
+concurrency:
+  group: preview-deploy-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
+    # Same-repo PRs deploy straight away; fork PRs wait for a maintainer to
+    # approve the `preview-fork` environment (anyone can open a fork PR, and
+    # the preview serves their JS).
+    environment:
+      name: ${{ github.event.workflow_run.head_repository.full_name == github.repository && 'preview' || 'preview-fork' }}
+      url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: 📥 Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: preview-build
-          path: .
+          path: artifact
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 📖 Read PR number
+      - name: 🔎 Resolve and verify PR number
         id: pr
-        run: echo "number=$(cat pr_number.txt)" >> $GITHUB_OUTPUT
-
-      - name: 📝 Create .htaccess for SPA routing
-        run: |
-          cat > ./build/.htaccess << 'EOF'
-          <IfModule mod_rewrite.c>
-            RewriteEngine On
-            RewriteBase /${{ steps.pr.outputs.number }}/
-
-            RewriteCond %{REQUEST_FILENAME} !-f
-            RewriteCond %{REQUEST_FILENAME} !-d
-            RewriteRule ^ index.html [L]
-          </IfModule>
-          EOF
-
-      - name: 🚀 Deploy preview
-        env:
-          PULL_NUMBER: ${{ steps.pr.outputs.number }}
-        run: |
-          eval $(ssh-agent -s)
-          ssh-add - <<< "${{ secrets.PREVIEW_SSH_PRIVATE_KEY }}"
-          rsync -r --delete --rsync-path="mkdir -p ${{ vars.PREVIEW_HOST_TARGET_DIR }}/$PULL_NUMBER && rsync" -e "ssh -o StrictHostKeyChecking=no" ./build/ ${{ vars.PREVIEW_HOST_USERNAME }}@${{ vars.PREVIEW_HOST_IP }}:${{ vars.PREVIEW_HOST_TARGET_DIR }}/$PULL_NUMBER
-
-      - name: ✅ Update PR status check
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const prNumber = parseInt('${{ steps.pr.outputs.number }}');
+            const fs = require('fs');
+            const raw = fs.readFileSync('artifact/pr_number.txt', 'utf8').trim();
+            if (!/^[1-9][0-9]{0,6}$/.test(raw)) {
+              throw new Error(`pr_number.txt is not a PR number: ${JSON.stringify(raw.slice(0, 40))}`);
+            }
+            const run = context.payload.workflow_run;
             const { data: pr } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: prNumber
+              pull_number: Number(raw),
             });
+            if (pr.head.sha !== run.head_sha) {
+              throw new Error(`PR #${raw} head is ${pr.head.sha}, but this build is ${run.head_sha} — stale build or spoofed PR number`);
+            }
+            if (pr.state !== 'open') {
+              throw new Error(`PR #${raw} is ${pr.state}`);
+            }
+            core.setOutput('number', raw);
+
+      - name: 🚀 Deploy preview
+        id: deploy
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          SSH_KEY: ${{ secrets.PREVIEW_SSH_PRIVATE_KEY }}
+          SSH_TARGET: ${{ vars.PREVIEW_SSH_TARGET }}
+          KNOWN_HOSTS: ${{ vars.PREVIEW_SSH_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/preview_key
+          chmod 600 ~/.ssh/preview_key
+          # The receiver prints the public URL on success.
+          url=$(tar -C artifact/build -czf - . \
+            | ssh -i ~/.ssh/preview_key -o IdentitiesOnly=yes -o BatchMode=yes \
+                  -o StrictHostKeyChecking=yes "$SSH_TARGET" deploy "$PR_NUMBER")
+          case "$url" in https://*) ;; *) echo "unexpected receiver output: $url" >&2; exit 1 ;; esac
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: ✅ Report preview
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+        with:
+          script: |
+            const prNumber = Number(process.env.PR_NUMBER);
+            const url = process.env.PREVIEW_URL;
+            const sha = context.payload.workflow_run.head_sha;
+            const { owner, repo } = context.repo;
+
             await github.rest.repos.createCommitStatus({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              sha: pr.head.sha,
+              owner, repo, sha,
               state: 'success',
-              target_url: `https://valhalla-app-tests.gis-ops.com/${prNumber}`,
+              target_url: url,
               description: 'Preview deployed successfully',
-              context: 'PR Preview Deploy'
+              context: 'PR Preview Deploy',
             });
+
+            // One comment per PR, updated in place. Also matches the
+            // marker-less comments of the old gis-ops preview host.
+            const marker = '<!-- pr-preview -->';
+            const body = `${marker}\nPreview is ready! 🚀 You can view it here: ${url}\n\n<sub>Built from ${sha.slice(0, 7)}.</sub>`;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number: prNumber,
+            });
+            const existing = comments.find(c =>
+              c.user?.login === 'github-actions[bot]' &&
+              (c.body?.includes(marker) || c.body?.includes('Preview is ready! 🚀')));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body });
+            }
 
       - name: ❌ Update PR status on failure
         if: failure()
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const prNumber = parseInt('${{ steps.pr.outputs.number }}');
-            if (!prNumber) {
-              console.log('PR number not available, skipping status update');
-              return;
-            }
-            const { data: pr } = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber
-            });
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha: pr.head.sha,
+              sha: context.payload.workflow_run.head_sha,
               state: 'failure',
               target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               description: 'Preview deployment failed',
-              context: 'PR Preview Deploy'
+              context: 'PR Preview Deploy',
             });
-
-      - name: 🌐 Comment preview URL
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const prNumber = parseInt('${{ steps.pr.outputs.number }}');
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber
-            });
-            const existingComment = comments.find(comment => comment.body.includes('Preview is ready! 🚀'));
-            if (!existingComment) {
-              const body = `Preview is ready! 🚀 You can view it here: https://valhalla-app-tests.gis-ops.com/${prNumber}`;
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-                body: body
-              });
-              console.log('Comment created successfully');
-            } else {
-              console.log('Comment already exists');
-            }
