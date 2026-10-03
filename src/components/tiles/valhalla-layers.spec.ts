@@ -1,14 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type {
-  LineLayerSpecification,
-  CircleLayerSpecification,
-  VectorSourceSpecification,
-} from 'maplibre-gl';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { VectorSourceSpecification } from 'maplibre-gl';
 import {
   VALHALLA_SOURCE_ID,
   VALHALLA_EDGES_LAYER_ID,
   VALHALLA_SHORTCUTS_LAYER_ID,
   VALHALLA_NODES_LAYER_ID,
+  VALHALLA_LAYER_IDS,
+  VALHALLA_DEFAULT_STYLE_URL,
   VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID,
   VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID,
   VALHALLA_EDGES_LAYER,
@@ -19,6 +17,7 @@ import {
   VALHALLA_LAYERS,
   getValhallaTileUrl,
   getValhallaSourceSpec,
+  getValhallaLayers,
 } from './valhalla-layers';
 
 vi.mock('@/utils/base-url', () => ({
@@ -29,6 +28,10 @@ vi.mock('@/utils/base-url', () => ({
 describe('valhalla-layers', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   describe('constants', () => {
@@ -48,6 +51,12 @@ describe('valhalla-layers', () => {
       );
     });
 
+    it('should export app layer IDs in expected order', () => {
+      expect(VALHALLA_LAYER_IDS).toEqual([
+        VALHALLA_EDGES_LAYER_ID,
+        VALHALLA_SHORTCUTS_LAYER_ID,
+        VALHALLA_NODES_LAYER_ID,
+      ]);
     it('should export VALHALLA_LAYERS array with all layers', () => {
       expect(VALHALLA_LAYERS).toHaveLength(5);
       expect(VALHALLA_LAYERS).toContain(VALHALLA_EDGES_LAYER);
@@ -81,81 +90,10 @@ describe('valhalla-layers', () => {
       expect(edgesLayer['source-layer']).toBe('edges');
     });
 
-    it('should have correct zoom range', () => {
-      expect(edgesLayer.minzoom).toBe(7);
-      expect(edgesLayer.maxzoom).toBe(22);
-    });
-
-    it('should have visible layout', () => {
-      expect(edgesLayer.layout).toEqual({ visibility: 'visible' });
-    });
-
-    it('should have paint properties', () => {
-      expect(edgesLayer.paint).toBeDefined();
-      expect(edgesLayer.paint).toHaveProperty('line-color');
-      expect(edgesLayer.paint).toHaveProperty('line-width');
-      expect(edgesLayer.paint).toHaveProperty('line-opacity');
-    });
-  });
-
-  //Shortcut is now a separate map layer.
-  //It uses the same styling as edges.
-  describe('VALHALLA_SHORTCUTS_LAYER', () => {
-    const shortcutsLayer = VALHALLA_SHORTCUTS_LAYER as LineLayerSpecification;
-
-    it('should have correct id', () => {
-      expect(shortcutsLayer.id).toBe(VALHALLA_SHORTCUTS_LAYER_ID);
-    });
-
-    it('should be a line type layer', () => {
-      expect(shortcutsLayer.type).toBe('line');
-    });
-
-    it('should reference correct source', () => {
-      expect(shortcutsLayer.source).toBe(VALHALLA_SOURCE_ID);
-    });
-
-    it('should have shortcuts source-layer', () => {
-      expect(shortcutsLayer['source-layer']).toBe('shortcuts');
-    });
-
-    it('should clone edges paint and layout styling', () => {
-      expect(shortcutsLayer.paint).toEqual(VALHALLA_EDGES_LAYER.paint);
-      expect(shortcutsLayer.layout).toEqual(VALHALLA_EDGES_LAYER.layout);
-    });
-  });
-
-  describe('VALHALLA_NODES_LAYER', () => {
-    const nodesLayer = VALHALLA_NODES_LAYER as CircleLayerSpecification;
-
-    it('should have correct id', () => {
-      expect(nodesLayer.id).toBe(VALHALLA_NODES_LAYER_ID);
-    });
-
-    it('should be a circle type layer', () => {
-      expect(nodesLayer.type).toBe('circle');
-    });
-
-    it('should reference correct source', () => {
-      expect(nodesLayer.source).toBe(VALHALLA_SOURCE_ID);
-    });
-
-    it('should have nodes source-layer', () => {
-      expect(nodesLayer['source-layer']).toBe('nodes');
-    });
-
-    it('should have correct zoom range', () => {
-      expect(nodesLayer.minzoom).toBe(16);
-      expect(nodesLayer.maxzoom).toBe(22);
-    });
-
-    it('should have paint properties', () => {
-      expect(nodesLayer.paint).toBeDefined();
-      expect(nodesLayer.paint).toHaveProperty('circle-radius');
-      expect(nodesLayer.paint).toHaveProperty('circle-color');
-      expect(nodesLayer.paint).toHaveProperty('circle-stroke-color');
-      expect(nodesLayer.paint).toHaveProperty('circle-stroke-width');
-      expect(nodesLayer.paint).toHaveProperty('circle-opacity');
+    it('should export hosted default style url', () => {
+      expect(VALHALLA_DEFAULT_STYLE_URL).toContain(
+        'raw.githubusercontent.com/valhalla/valhalla/master/docs/docs/api/tile/default_style.json'
+      );
     });
   });
 
@@ -275,6 +213,82 @@ describe('valhalla-layers', () => {
       const spec = getValhallaSourceSpec() as VectorSourceSpecification;
 
       expect(spec.scheme).toBe('xyz');
+    });
+  });
+
+  describe('getValhallaLayers', () => {
+    const makeStyleResponse = () => ({
+      layers: [
+        {
+          id: 'edges',
+          type: 'line',
+          source: 'valhalla',
+          'source-layer': 'edges',
+          paint: { 'line-color': '#ff0000' },
+        },
+        {
+          id: 'shortcuts',
+          type: 'line',
+          source: 'valhalla',
+          'source-layer': 'shortcuts',
+          paint: { 'line-color': '#ff8800' },
+        },
+        {
+          id: 'nodes',
+          type: 'circle',
+          source: 'valhalla',
+          'source-layer': 'nodes',
+          paint: { 'circle-color': '#0088ff' },
+        },
+        {
+          id: 'background',
+          type: 'background',
+          paint: { 'background-color': '#fff' },
+        },
+      ],
+    });
+
+    it('should fetch hosted default style and map layer ids/source', async () => {
+      const fetchMock = vi.fn(async () => ({
+        ok: true,
+        json: async () => makeStyleResponse(),
+      }));
+      vi.stubGlobal('fetch', fetchMock);
+
+      const layers = await getValhallaLayers();
+
+      expect(fetchMock).toHaveBeenCalledWith(VALHALLA_DEFAULT_STYLE_URL);
+      expect(layers).toHaveLength(3);
+      expect(layers.map((l) => l.id)).toEqual([
+        VALHALLA_EDGES_LAYER_ID,
+        VALHALLA_SHORTCUTS_LAYER_ID,
+        VALHALLA_NODES_LAYER_ID,
+      ]);
+      expect(
+        layers.every((l) => 'source' in l && l.source === VALHALLA_SOURCE_ID)
+      ).toBe(true);
+    });
+
+    it('should fetch on each call', async () => {
+      const fetchMock = vi.fn(async () => ({
+        ok: true,
+        json: async () => makeStyleResponse(),
+      }));
+      vi.stubGlobal('fetch', fetchMock);
+
+      await getValhallaLayers();
+      await getValhallaLayers();
+
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('should throw when fetch fails', async () => {
+      const fetchMock = vi.fn(async () => ({ ok: false, status: 500 }));
+      vi.stubGlobal('fetch', fetchMock);
+
+      await expect(getValhallaLayers()).rejects.toThrow(
+        'Failed to fetch Valhalla default style: 500'
+      );
     });
   });
 });
