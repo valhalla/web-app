@@ -143,19 +143,6 @@ const countryCrossingCost = {
   },
 };
 
-const turnPenaltyCost = {
-  name: 'Turn Penalty',
-  param: 'maneuver_penalty',
-  description:
-    'A penalty applied when transitioning between roads that do not have consistent naming–in other words, no road names in common. This penalty can be used to create simpler routes that tend to have fewer maneuvers or narrative guidance instructions. The default maneuver penalty is five seconds.',
-  unit: 'sec',
-  settings: {
-    min: 0,
-    max: 20,
-    step: 1,
-  },
-};
-
 const maneuverPenalty = {
   name: 'Maneuver Penalty',
   param: 'maneuver_penalty',
@@ -344,6 +331,20 @@ const useHighways = {
     step: 0.1,
   },
 };
+
+const useDistance = {
+  name: 'Use Distance',
+  param: 'use_distance',
+  description:
+    'A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account (default) and 1 only distance. A factor of 0.5 will weight them roughly equally.',
+  unit: 'willingness',
+  settings: {
+    min: 0,
+    max: 1,
+    step: 0.1,
+  },
+};
+
 const useTollways = {
   name: 'Use Tollways',
   param: 'use_tolls',
@@ -978,11 +979,11 @@ const commonVehicleProfileBoolean = [
 ] as const;
 
 const commonGeneralNumeric = [
-  turnPenaltyCost,
   useHighways,
   ...tollSettings,
   ...ferrySettings,
   useLivingStreets,
+  useDistance,
   useTracks,
 ] as const;
 
@@ -1088,7 +1089,6 @@ export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
 
   bus: createSettings(
     [
-      turnPenaltyCost,
       useHighways,
       useLivingStreets,
       ...tollSettings,
@@ -1112,14 +1112,10 @@ export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
 
   motor_scooter: createSettings([useFerry, useTracks, servicePenalty], []),
 
-  bicycle: createSettings(
-    [useFerry, useLivingStreets, turnPenaltyCost, ...serviceSettings],
-    []
-  ),
+  bicycle: createSettings([useFerry, useLivingStreets, ...serviceSettings], []),
 
   motorcycle: createSettings(
     [
-      turnPenaltyCost,
       useHighways,
       useTrails,
       ...tollSettings,

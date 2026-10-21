@@ -423,7 +423,7 @@ test.describe('Map interactions with URL parameters', () => {
   });
 });
 
-https: test.describe('Left drawer', () => {
+test.describe('Left drawer', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:3000/');
     await closeDirectionsPanelIfOpen(page);
@@ -433,17 +433,19 @@ https: test.describe('Left drawer', () => {
   test('add/remove waypoint behaviour should work correctly', async ({
     page,
   }) => {
+    const thirdWaypoint = page.getByTestId('waypoint-input-2');
+
     // Add waypoint
-    await expect(page.getByRole('button', { name: '3' })).not.toBeVisible();
+    await expect(thirdWaypoint).not.toBeVisible();
 
     await page.getByTestId('add-waypoint-button').click();
 
-    await expect(page.getByRole('button', { name: '3' }).first()).toBeVisible();
+    await expect(thirdWaypoint).toBeVisible();
 
     // Remove waypoint
     await page.getByTestId('reset-waypoints-button').click();
 
-    await expect(page.getByRole('button', { name: '3' })).not.toBeVisible();
+    await expect(thirdWaypoint).not.toBeVisible();
   });
 
   test('should make Nominatim request when entering address in search box', async ({
