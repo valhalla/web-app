@@ -22,6 +22,8 @@ import { ProfilePicker } from './profile-picker';
 import type { Profile } from '@/stores/common-store';
 import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
+import { useDirectionsPermalink } from '@/hooks/use-directions-permalink';
+import { useIsochronesPermalink } from '@/hooks/use-isochrones-permalink';
 
 const TAB_CONFIG = {
   directions: {
@@ -48,6 +50,10 @@ export const RoutePlanner = () => {
   const { refetch: refetchIsochrones } = useIsochronesQuery();
   const loading = useCommonStore((state) => state.loading);
   const toggleDirections = useCommonStore((state) => state.toggleDirections);
+
+  // Lives here rather than in the tab panels, which unmount with the sidebar
+  useDirectionsPermalink(activeTab === 'directions');
+  useIsochronesPermalink(activeTab === 'isochrones');
 
   const tabConfig = TAB_CONFIG[activeTab as keyof typeof TAB_CONFIG];
 

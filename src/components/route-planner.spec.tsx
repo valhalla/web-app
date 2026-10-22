@@ -39,6 +39,14 @@ vi.mock('@/hooks/use-isochrones-queries', () => ({
   })),
 }));
 
+vi.mock('@/hooks/use-directions-permalink', () => ({
+  useDirectionsPermalink: vi.fn(),
+}));
+
+vi.mock('@/hooks/use-isochrones-permalink', () => ({
+  useIsochronesPermalink: vi.fn(),
+}));
+
 vi.mock('./directions/directions', () => ({
   DirectionsControl: vi.fn(() => (
     <div data-testid="mock-directions-control">Directions Control</div>

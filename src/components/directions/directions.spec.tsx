@@ -3,20 +3,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DirectionsControl } from './directions';
 
-const mockNavigate = vi.fn();
-const mockRefetchDirections = vi.fn();
-const mockSetWaypointFromCoords = vi.fn().mockResolvedValue([]);
 const mockAddEmptyWaypointToEnd = vi.fn();
 const mockClearWaypoints = vi.fn();
 const mockClearRoutes = vi.fn();
-
-vi.mock('@tanstack/react-router', () => ({
-  useNavigate: vi.fn(() => mockNavigate),
-}));
-
-vi.mock('@/utils/parse-url-params', () => ({
-  parseUrlParams: vi.fn(() => ({})),
-}));
 
 const mockWaypoints = [
   { id: '0', geocodeResults: [], userInput: '' },
@@ -60,15 +49,6 @@ vi.mock('@/stores/directions-store', () => {
     useDirectionsStore,
   };
 });
-
-vi.mock('@/hooks/use-directions-queries', () => ({
-  useDirectionsQuery: vi.fn(() => ({
-    refetch: mockRefetchDirections,
-  })),
-  useSetWaypointFromCoords: vi.fn(() => ({
-    setWaypointFromCoords: mockSetWaypointFromCoords,
-  })),
-}));
 
 vi.mock('@/hooks/use-optimized-route-query', () => ({
   useOptimizedRouteQuery: vi.fn(() => ({
@@ -215,126 +195,5 @@ describe('DirectionsControl', () => {
     expect(screen.getByTestId('mock-route-card-0')).toBeInTheDocument();
     expect(screen.getByTestId('mock-route-card-1')).toBeInTheDocument();
     expect(screen.getByTestId('mock-route-card-2')).toBeInTheDocument();
-  });
-
-  it('should sync waypoints to URL', () => {
-    mockWaypoints.length = 0;
-    mockWaypoints.push(
-      {
-        id: '0',
-        geocodeResults: [
-          { selected: true, sourcelnglat: [13.4, 52.5] },
-        ] as never[],
-        userInput: 'Berlin',
-      },
-      {
-        id: '1',
-        geocodeResults: [
-          { selected: true, sourcelnglat: [10.0, 48.0] },
-        ] as never[],
-        userInput: 'Munich',
-      }
-    );
-
-    render(<DirectionsControl />);
-
-    expect(mockNavigate).toHaveBeenCalledWith({
-      search: expect.any(Function),
-      replace: true,
-    });
-
-    const navigateCall = mockNavigate.mock.calls[0]?.[0] as {
-      search: (prev: Record<string, unknown>) => Record<string, unknown>;
-    };
-    const searchFn = navigateCall.search;
-    const result = searchFn({});
-
-    expect(result.wps).toBe('13.4,52.5,10,48');
-  });
-});
-
-describe('DirectionsControl URL parsing', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockResults.data = null;
-    mockWaypoints.length = 0;
-    mockWaypoints.push(
-      { id: '0', geocodeResults: [], userInput: '' },
-      { id: '1', geocodeResults: [], userInput: '' }
-    );
-  });
-
-  it('should process URL params with valid coordinates (Berlin)', async () => {
-    const parseUrlParams = await import('@/utils/parse-url-params');
-    vi.mocked(parseUrlParams.parseUrlParams).mockReturnValue({
-      wps: '13.365016850476763,52.483706198952575,13.422421655040836,52.49336042169804',
-    });
-
-    render(<DirectionsControl />);
-
-    expect(mockSetWaypointFromCoords).toHaveBeenCalledTimes(2);
-    expect(mockSetWaypointFromCoords).toHaveBeenCalledWith(
-      13.365016850476763,
-      52.483706198952575,
-      0,
-      { isPermalink: true }
-    );
-    expect(mockSetWaypointFromCoords).toHaveBeenCalledWith(
-      13.422421655040836,
-      52.49336042169804,
-      1,
-      { isPermalink: true }
-    );
-  });
-
-  it('should process URL params with valid coordinates where lng > 90 (Singapore)', async () => {
-    const parseUrlParams = await import('@/utils/parse-url-params');
-    vi.mocked(parseUrlParams.parseUrlParams).mockReturnValue({
-      wps: '103.66492937866911,1.4827280571964963,103.66421854954496,1.4840285187178779',
-    });
-
-    render(<DirectionsControl />);
-
-    expect(mockSetWaypointFromCoords).toHaveBeenCalledTimes(2);
-    expect(mockSetWaypointFromCoords).toHaveBeenCalledWith(
-      103.66492937866911,
-      1.4827280571964963,
-      0,
-      { isPermalink: true }
-    );
-    expect(mockSetWaypointFromCoords).toHaveBeenCalledWith(
-      103.66421854954496,
-      1.4840285187178779,
-      1,
-      { isPermalink: true }
-    );
-  });
-
-  it('should skip truly invalid coordinates from URL', async () => {
-    const parseUrlParams = await import('@/utils/parse-url-params');
-    vi.mocked(parseUrlParams.parseUrlParams).mockReturnValue({
-      wps: '999,999',
-    });
-
-    render(<DirectionsControl />);
-
-    expect(mockSetWaypointFromCoords).not.toHaveBeenCalled();
-  });
-
-  it('should handle coordinates near edge of valid range', async () => {
-    const parseUrlParams = await import('@/utils/parse-url-params');
-    vi.mocked(parseUrlParams.parseUrlParams).mockReturnValue({
-      wps: '179.9,89,-179.9,-89',
-    });
-
-    render(<DirectionsControl />);
-
-    expect(mockSetWaypointFromCoords).toHaveBeenCalledTimes(2);
-    expect(mockSetWaypointFromCoords).toHaveBeenCalledWith(179.9, 89, 0, {
-      isPermalink: true,
-    });
-    expect(mockSetWaypointFromCoords).toHaveBeenCalledWith(-179.9, -89, 1, {
-      isPermalink: true,
-    });
   });
 });
