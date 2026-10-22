@@ -1,20 +1,33 @@
 name: PR Preview Cleanup
 
+# pull_request_target: runs from master with secrets, so it must never check
+# out or execute PR code — it only sends `delete <pr>` to the receiver (see
+# preview-deploy.yml). The PR number comes from the event, not an artifact.
+# Missed cleanups are pruned server-side after 30 days.
+
 on:
   pull_request_target:
     types: [closed]
     branches:
       - 'master'
 
+permissions: {}
+
 jobs:
   clean-up:
     runs-on: ubuntu-latest
     steps:
-      - name: 🧹 Remove preview directory
+      - name: 🧹 Remove preview
         env:
-          PULL_NUMBER: ${{ github.event.pull_request.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SSH_KEY: ${{ secrets.PREVIEW_SSH_PRIVATE_KEY }}
+          SSH_TARGET: ${{ vars.PREVIEW_SSH_TARGET }}
+          KNOWN_HOSTS: ${{ vars.PREVIEW_SSH_KNOWN_HOSTS }}
         run: |
-          eval $(ssh-agent -s)
-          ssh-add - <<< "${{ secrets.PREVIEW_SSH_PRIVATE_KEY }}"
-          ssh -o StrictHostKeyChecking=no ${{ vars.PREVIEW_HOST_USERNAME }}@${{ vars.PREVIEW_HOST_IP }} "rm -rf ${{ vars.PREVIEW_HOST_TARGET_DIR }}/$PULL_NUMBER"
-          echo "🧹 Cleaned up preview for PR #$PULL_NUMBER"
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/preview_key
+          chmod 600 ~/.ssh/preview_key
+          ssh -i ~/.ssh/preview_key -o IdentitiesOnly=yes -o BatchMode=yes \
+              -o StrictHostKeyChecking=yes "$SSH_TARGET" delete "$PR_NUMBER" < /dev/null
+          echo "🧹 Cleaned up preview for PR #$PR_NUMBER"
