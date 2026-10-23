@@ -105,7 +105,7 @@ export function TilesProperty({
 
   if (
     propertyKey.includes('speed') &&
-    !(propertyKey.includes('congestion') || propertyKey.includes('breakpoint'))
+    !(propertyKey.includes('congestion') || propertyKey.includes('bp'))
   ) {
     return (
       <span className="font-mono text-xs">
