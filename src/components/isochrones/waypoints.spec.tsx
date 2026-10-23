@@ -133,20 +133,13 @@ describe('Waypoints (Isochrones)', () => {
     expect(mockClearIsos).toHaveBeenCalled();
   });
 
-  it('should render Isochrones Settings button', () => {
+  it('should render Isochrone settings section', () => {
     render(<Waypoints />);
-    expect(
-      screen.getByRole('button', { name: /Isochrones Settings/i })
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Isochrone settings/i)).toBeInTheDocument();
   });
 
-  it('should expand settings when Isochrones Settings is clicked', async () => {
-    const user = userEvent.setup();
+  it('should render all isochrone setting sliders by default', () => {
     render(<Waypoints />);
-
-    await user.click(
-      screen.getByRole('button', { name: /Isochrones Settings/i })
-    );
 
     expect(screen.getByTestId('slider-maxRange')).toBeInTheDocument();
     expect(screen.getByTestId('slider-interval')).toBeInTheDocument();
@@ -154,47 +147,23 @@ describe('Waypoints (Isochrones)', () => {
     expect(screen.getByTestId('slider-generalize')).toBeInTheDocument();
   });
 
-  it('should render Maximum Range slider with correct label', async () => {
-    const user = userEvent.setup();
+  it('should render Maximum Range slider with correct label', () => {
     render(<Waypoints />);
-
-    await user.click(
-      screen.getByRole('button', { name: /Isochrones Settings/i })
-    );
-
     expect(screen.getByText('Maximum Range')).toBeInTheDocument();
   });
 
-  it('should render Interval Step slider', async () => {
-    const user = userEvent.setup();
+  it('should render Interval Step slider', () => {
     render(<Waypoints />);
-
-    await user.click(
-      screen.getByRole('button', { name: /Isochrones Settings/i })
-    );
-
     expect(screen.getByText('Interval Step')).toBeInTheDocument();
   });
 
-  it('should render Denoise slider', async () => {
-    const user = userEvent.setup();
+  it('should render Denoise slider', () => {
     render(<Waypoints />);
-
-    await user.click(
-      screen.getByRole('button', { name: /Isochrones Settings/i })
-    );
-
     expect(screen.getByText('Denoise')).toBeInTheDocument();
   });
 
-  it('should render Generalize slider', async () => {
-    const user = userEvent.setup();
+  it('should render Generalize slider', () => {
     render(<Waypoints />);
-
-    await user.click(
-      screen.getByRole('button', { name: /Isochrones Settings/i })
-    );
-
     expect(screen.getByText('Generalize')).toBeInTheDocument();
   });
 
@@ -224,10 +193,6 @@ describe('Waypoints (Isochrones)', () => {
   it('should call updateSettings when slider value changes', async () => {
     const user = userEvent.setup();
     render(<Waypoints />);
-
-    await user.click(
-      screen.getByRole('button', { name: /Isochrones Settings/i })
-    );
 
     await user.click(screen.getByTestId('slider-commit-maxRange'));
 

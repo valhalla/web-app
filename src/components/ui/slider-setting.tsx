@@ -81,7 +81,7 @@ export const SliderSetting = ({
   return (
     <div className="flex flex-col gap-1 py-1">
       {/* Header row: Label + help icon ... value + unit */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <Label htmlFor={id} className="text-sm font-medium">
             {label}
@@ -92,7 +92,7 @@ export const SliderSetting = ({
                 type="button"
                 variant="ghost"
                 size="icon-xs"
-                className="text-muted-foreground/70 hover:text-muted-foreground hover:bg-transparent"
+                className="text-muted-foreground hover:text-foreground hover:bg-transparent"
               >
                 <AccessibleIcon label={`More info about ${label}`}>
                   <HelpCircle className="size-3.5" />

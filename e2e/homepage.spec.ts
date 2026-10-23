@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { setupStatusMock } from './helpers';
+import { closeDirectionsPanelIfOpen, setupStatusMock } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('http://localhost:3000/');
+  await closeDirectionsPanelIfOpen(page);
 });
 
 test('has title', async ({ page }) => {
@@ -45,6 +46,7 @@ test('should retain profile when switching between tabs', async ({ page }) => {
 
 test('has default elements in the page', async ({ page }) => {
   await page.goto('http://localhost:3000/');
+  await closeDirectionsPanelIfOpen(page);
 
   await setupStatusMock(page);
 
@@ -70,8 +72,7 @@ test('has default elements in the page', async ({ page }) => {
   await expect(page.getByTestId('add-waypoint-button')).toBeVisible();
   await expect(page.getByTestId('reset-waypoints-button')).toBeVisible();
 
-  await expect(page.getByText('Non-specific time')).toBeVisible();
-  await expect(page.getByTestId('date-time-picker')).toBeVisible();
+  await expect(page.getByTestId('date-time-button')).toBeVisible();
 
   await expect(
     page.getByText(/^Calculations by Valhalla • Visualized with Valhalla App$/)
@@ -81,9 +82,7 @@ test('has default elements in the page', async ({ page }) => {
 
   await page.getByTestId('remove-waypoint-button').click();
 
-  await expect(page.getByText(/^Isochrones Settings$/)).toBeVisible();
-
-  await page.getByText(/^Isochrones Settings$/).click();
+  await expect(page.getByText(/^Isochrone settings$/)).toBeVisible();
 
   await expect(page.getByText('Maximum Range', { exact: true })).toBeVisible();
   await expect(page.getByText('Interval Step', { exact: true })).toBeVisible();

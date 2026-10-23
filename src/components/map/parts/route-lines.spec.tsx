@@ -82,7 +82,7 @@ describe('RouteLines', () => {
     );
   });
 
-  it('should render two layers (outline and line)', () => {
+  it('should render three layers (outline, line, hit-target)', () => {
     mockUseDirectionsStore.mockImplementation((selector) => {
       const state = createMockState();
       return selector(state);
@@ -90,7 +90,10 @@ describe('RouteLines', () => {
 
     render(<RouteLines />);
 
-    expect(mockLayer).toHaveBeenCalledTimes(2);
+    expect(mockLayer).toHaveBeenCalledTimes(3);
+    expect(mockLayer).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'routes-hit-target' })
+    );
   });
 
   it('should render outline layer with white color', () => {

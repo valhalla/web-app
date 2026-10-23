@@ -3,14 +3,9 @@ import { Button } from '@/components/ui/button';
 import {
   profileSettings,
   generalSettings,
-  languageOptions,
-  type DirectionsLanguage,
+  QUICK_SETTING_PARAMS,
 } from './settings-options';
 import { filterProfileSettings } from '@/utils/filter-profile-settings';
-import {
-  getDirectionsLanguage,
-  setDirectionsLanguage,
-} from '@/utils/directions-language';
 import type { PossibleSettings } from '@/components/types';
 
 import { SliderSetting } from '@/components/ui/slider-setting';
@@ -24,14 +19,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import {
-  X,
-  Copy,
-  RotateCcw,
-  Languages,
-  SlidersHorizontal,
-  Settings2,
-} from 'lucide-react';
+import { X, Copy, RotateCcw, SlidersHorizontal, Settings2 } from 'lucide-react';
 import { useParams, useSearch } from '@tanstack/react-router';
 import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
@@ -40,6 +28,8 @@ import { ServerSettings } from '@/components/settings-panel/server-settings';
 import { MultiSelectSetting } from '../ui/multiselect-setting';
 
 type ProfileWithSettings = Exclude<Profile, 'auto'>;
+
+const QUICK_SETTING_PARAM_SET: Set<string> = new Set(QUICK_SETTING_PARAMS);
 
 export const SettingsPanel = () => {
   const { profile } = useSearch({ from: '/$activeTab' });
@@ -53,23 +43,8 @@ export const SettingsPanel = () => {
   const { refetch: refetchDirections } = useDirectionsQuery();
   const { refetch: refetchIsochrones } = useIsochronesQuery();
 
-  const [language, setLanguage] = useState<DirectionsLanguage>(() =>
-    getDirectionsLanguage()
-  );
-
-  const [languageSettingsOpen, setLanguageSettingsOpen] = useState(true);
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(true);
   const [generalSettingsOpen, setGeneralSettingsOpen] = useState(true);
-
-  const handleLanguageChange = useCallback(
-    (value: string) => {
-      const newLanguage = value as DirectionsLanguage;
-      setDirectionsLanguage(newLanguage);
-      setLanguage(newLanguage);
-      refetchDirections();
-    },
-    [refetchDirections]
-  );
 
   const handleMakeRequest = useCallback(() => {
     if (activeTab === 'directions') {
@@ -143,25 +118,6 @@ export const SettingsPanel = () => {
         </SheetHeader>
         <div className="px-3 space-y-3">
           <ServerSettings />
-
-          {activeTab === 'directions' && (
-            <CollapsibleSection
-              title="Directions Language"
-              icon={Languages}
-              open={languageSettingsOpen}
-              onOpenChange={setLanguageSettingsOpen}
-            >
-              <SelectSetting
-                id="directions-language"
-                label="Language"
-                description="The language used for turn-by-turn navigation instructions"
-                placeholder="Select Language"
-                value={language}
-                options={[...languageOptions]}
-                onValueChange={handleLanguageChange}
-              />
-            </CollapsibleSection>
-          )}
 
           {hasProfileSettings && (
             <CollapsibleSection
@@ -270,8 +226,9 @@ export const SettingsPanel = () => {
             onOpenChange={setGeneralSettingsOpen}
           >
             <div className="space-y-1.25">
-              {generalSettings[profile as ProfileWithSettings].numeric.map(
-                (option, key) => (
+              {generalSettings[profile as ProfileWithSettings].numeric
+                .filter((option) => !QUICK_SETTING_PARAM_SET.has(option.param))
+                .map((option, key) => (
                   <SliderSetting
                     key={key}
                     id={option.param}
@@ -299,8 +256,7 @@ export const SettingsPanel = () => {
                       });
                     }}
                   />
-                )
-              )}
+                ))}
               {generalSettings[profile as ProfileWithSettings].boolean.map(
                 (option, key) => (
                   <CheckboxSetting
@@ -333,35 +289,37 @@ export const SettingsPanel = () => {
                   }}
                 />
               ))}
-              {generalSettings.all.numeric.map((option, key) => (
-                <SliderSetting
-                  key={key}
-                  id={option.param}
-                  label={option.name}
-                  description={option.description}
-                  min={option.settings.min}
-                  max={option.settings.max}
-                  step={option.settings.step}
-                  value={(settings[option.param] as number) ?? 0}
-                  unit={option.unit}
-                  onValueChange={(values) => {
-                    updateSettings(option.param, values[0] ?? 0);
-                  }}
-                  onValueCommit={handleMakeRequest}
-                  onInputChange={(values) => {
-                    let value = values[0] ?? 0;
-                    if (isNaN(value)) value = option.settings.min;
-                    value = Math.max(
-                      option.settings.min,
-                      Math.min(value, option.settings.max)
-                    );
-                    handleUpdateSettings({
-                      name: option.param,
-                      value,
-                    });
-                  }}
-                />
-              ))}
+              {generalSettings.all.numeric
+                .filter((option) => !QUICK_SETTING_PARAM_SET.has(option.param))
+                .map((option, key) => (
+                  <SliderSetting
+                    key={key}
+                    id={option.param}
+                    label={option.name}
+                    description={option.description}
+                    min={option.settings.min}
+                    max={option.settings.max}
+                    step={option.settings.step}
+                    value={(settings[option.param] as number) ?? 0}
+                    unit={option.unit}
+                    onValueChange={(values) => {
+                      updateSettings(option.param, values[0] ?? 0);
+                    }}
+                    onValueCommit={handleMakeRequest}
+                    onInputChange={(values) => {
+                      let value = values[0] ?? 0;
+                      if (isNaN(value)) value = option.settings.min;
+                      value = Math.max(
+                        option.settings.min,
+                        Math.min(value, option.settings.max)
+                      );
+                      handleUpdateSettings({
+                        name: option.param,
+                        value,
+                      });
+                    }}
+                  />
+                ))}
             </div>
           </CollapsibleSection>
 

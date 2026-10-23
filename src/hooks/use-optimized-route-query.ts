@@ -1,5 +1,4 @@
 import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
 import { toast } from 'sonner';
 import { useDirectionsStore } from '@/stores/directions-store';
 import {
@@ -7,6 +6,7 @@ import {
   buildOptimizedRouteRequest,
   parseDirectionsGeometry,
   showValhallaWarnings,
+  VALHALLA_CLIENT_HEADERS,
 } from '@/utils/valhalla';
 import { filterProfileSettings } from '@/utils/filter-profile-settings';
 import { useCommonStore } from '@/stores/common-store';
@@ -51,10 +51,22 @@ export function useOptimizedRouteQuery() {
         settings,
         language,
       });
-      const { data } = await axios.get<ValhallaOptimizedRouteResponse>(
-        `${getValhallaUrl()}/optimized_route`,
-        { params: { json: JSON.stringify(request.json) } }
+      const params = new URLSearchParams({
+        json: JSON.stringify(request.json),
+      });
+
+      const response = await fetch(
+        `${getValhallaUrl()}/optimized_route?${params}`,
+        {
+          headers: VALHALLA_CLIENT_HEADERS,
+        }
       );
+
+      if (!response.ok) {
+        throw new Error(`Could not fetch resource`);
+      }
+
+      const data: ValhallaOptimizedRouteResponse = await response.json();
 
       const processedData = {
         ...data,

@@ -1,4 +1,5 @@
 import type { BicycleType, PedestrianType } from '@/components/types';
+import type { Profile } from '@/stores/common-store';
 
 interface NumericSetting {
   name: string;
@@ -139,19 +140,6 @@ const countryCrossingCost = {
     min: 0,
     max: 5000,
     step: 100,
-  },
-};
-
-const turnPenaltyCost = {
-  name: 'Turn Penalty',
-  param: 'maneuver_penalty',
-  description:
-    'A penalty applied when transitioning between roads that do not have consistent naming–in other words, no road names in common. This penalty can be used to create simpler routes that tend to have fewer maneuvers or narrative guidance instructions. The default maneuver penalty is five seconds.',
-  unit: 'sec',
-  settings: {
-    min: 0,
-    max: 20,
-    step: 1,
   },
 };
 
@@ -343,6 +331,20 @@ const useHighways = {
     step: 0.1,
   },
 };
+
+const useDistance = {
+  name: 'Use Distance',
+  param: 'use_distance',
+  description:
+    'A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account (default) and 1 only distance. A factor of 0.5 will weight them roughly equally.',
+  unit: 'willingness',
+  settings: {
+    min: 0,
+    max: 1,
+    step: 0.1,
+  },
+};
+
 const useTollways = {
   name: 'Use Tollways',
   param: 'use_tolls',
@@ -858,6 +860,26 @@ export type DirectionsLanguage = (typeof languageOptions)[number]['value'];
 export const DEFAULT_DIRECTIONS_LANGUAGE: DirectionsLanguage = 'en-US';
 export const DIRECTIONS_LANGUAGE_STORAGE_KEY = 'directions_language';
 
+// Settings surfaced in the QuickSettings (left sidebar) panel rather than the
+// advanced (right) panel. Keep this list in sync with what QuickSettings renders
+// — settings-panel.tsx reads it to skip these in the advanced view.
+export const QUICK_SETTING_PARAMS = [
+  'use_highways',
+  'use_tolls',
+  'use_ferry',
+  'alternates',
+] as const;
+
+// Profiles where use_highways / use_tolls are meaningful costing options.
+// Pedestrian, bicycle, motor_scooter ignore them, so the QuickSettings panel
+// only renders those two controls when the active profile is in this list.
+export const HIGHWAY_TOLL_PROFILES = [
+  'car',
+  'truck',
+  'bus',
+  'motorcycle',
+] as const satisfies readonly Profile[];
+
 export const settingsInit = {
   maneuver_penalty: 5,
   country_crossing_penalty: 0,
@@ -868,9 +890,9 @@ export const settingsInit = {
   weight: 21.77,
   axle_load: 9,
   hazmat: false,
-  use_highways: 1,
-  use_tolls: 1,
-  use_ferry: 1,
+  use_highways: 0.5,
+  use_tolls: 0.5,
+  use_ferry: 0,
   ferry_cost: 300,
   use_living_streets: 0.5,
   use_tracks: 0,
@@ -919,7 +941,7 @@ export const settingsInit = {
   use_trails: 0,
   denoise: 0.1,
   generalize: 0,
-  alternates: 0,
+  alternates: 2,
   speed_types: ['current', 'freeflow', 'predicted', 'constrained'],
 };
 
@@ -957,11 +979,11 @@ const commonVehicleProfileBoolean = [
 ] as const;
 
 const commonGeneralNumeric = [
-  turnPenaltyCost,
   useHighways,
   ...tollSettings,
   ...ferrySettings,
   useLivingStreets,
+  useDistance,
   useTracks,
 ] as const;
 
@@ -1067,7 +1089,6 @@ export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
 
   bus: createSettings(
     [
-      turnPenaltyCost,
       useHighways,
       useLivingStreets,
       ...tollSettings,
@@ -1091,14 +1112,10 @@ export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
 
   motor_scooter: createSettings([useFerry, useTracks, servicePenalty], []),
 
-  bicycle: createSettings(
-    [useFerry, useLivingStreets, turnPenaltyCost, ...serviceSettings],
-    []
-  ),
+  bicycle: createSettings([useFerry, useLivingStreets, ...serviceSettings], []),
 
   motorcycle: createSettings(
     [
-      turnPenaltyCost,
       useHighways,
       useTrails,
       ...tollSettings,

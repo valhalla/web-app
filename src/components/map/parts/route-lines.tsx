@@ -106,6 +106,18 @@ export function RouteLines() {
           ],
         }}
       />
+      {/* Transparent wide line on top — used purely as a hit target so hover
+          and click trigger when the cursor is near the route. ~5px of extra
+          padding on each side of the visible 5px stroke. */}
+      <Layer
+        id="routes-hit-target"
+        type="line"
+        paint={{
+          'line-color': '#000',
+          'line-width': 15,
+          'line-opacity': 0,
+        }}
+      />
     </Source>
   );
 }

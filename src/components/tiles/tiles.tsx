@@ -96,10 +96,9 @@ export const TilesControl = () => {
 
     return style.layers
       .filter((layer) => {
-        if (layer.id.startsWith('maplibregl-inspect-')) return false;
-        if (layer.id.startsWith('td-')) return false;
         if (customLayerIds.has(layer.id)) return false;
-        return true;
+        const source = 'source' in layer ? layer.source : undefined;
+        return source === VALHALLA_SOURCE_ID;
       })
       .map((layer) => ({
         id: layer.id,
@@ -287,11 +286,6 @@ export const TilesControl = () => {
                   <span className="text-xs text-muted-foreground ml-1">
                     ({groupLayers.length})
                   </span>
-                  {isValhallaGroup(sourceLayer) && (
-                    <span className="text-xs bg-green-600 text-white px-1.5 py-0.5 rounded ml-2">
-                      Valhalla
-                    </span>
-                  )}
                 </CollapsibleTrigger>
                 <Switch
                   checked={isGroupVisible(sourceLayer)}

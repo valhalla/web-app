@@ -1,14 +1,12 @@
 import { lazy, Suspense } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
 import { DirectionsControl } from './directions/directions';
 import { IsochronesControl } from './isochrones/isochrones';
+import { DataInfoTable } from './data-info-table';
 
 const TilesControl = lazy(() =>
   import('./tiles/tiles').then((module) => ({ default: module.TilesControl }))
 );
 import { useCommonStore } from '@/stores/common-store';
-import { getValhallaUrl } from '@/utils/valhalla';
 import {
   Sheet,
   SheetContent,
@@ -21,10 +19,11 @@ import { X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useParams, useNavigate } from '@tanstack/react-router';
 import { ProfilePicker } from './profile-picker';
-import { SettingsButton } from './settings-button';
 import type { Profile } from '@/stores/common-store';
 import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
+import { useDirectionsPermalink } from '@/hooks/use-directions-permalink';
+import { useIsochronesPermalink } from '@/hooks/use-isochrones-permalink';
 
 const TAB_CONFIG = {
   directions: {
@@ -52,22 +51,11 @@ export const RoutePlanner = () => {
   const loading = useCommonStore((state) => state.loading);
   const toggleDirections = useCommonStore((state) => state.toggleDirections);
 
-  const tabConfig = TAB_CONFIG[activeTab as keyof typeof TAB_CONFIG];
+  // Lives here rather than in the tab panels, which unmount with the sidebar
+  useDirectionsPermalink(activeTab === 'directions');
+  useIsochronesPermalink(activeTab === 'isochrones');
 
-  const {
-    data: lastUpdate,
-    isLoading: isLoadingLastUpdate,
-    isError: isErrorLastUpdate,
-  } = useQuery({
-    queryKey: ['lastUpdate'],
-    queryFn: async () => {
-      const response = await fetch(`${getValhallaUrl()}/status`);
-      const data = await response.json();
-      return new Date(data.tileset_last_modified * 1000);
-    },
-    staleTime: 1000 * 60 * 60,
-    refetchOnWindowFocus: false,
-  });
+  const tabConfig = TAB_CONFIG[activeTab as keyof typeof TAB_CONFIG];
 
   const handleTabChange = (value: string) => {
     navigate({ params: { activeTab: value } });
@@ -136,12 +124,11 @@ export const RoutePlanner = () => {
           </SheetHeader>
 
           {activeTab !== 'tiles' && (
-            <div className="flex justify-between px-2 mb-1">
+            <div className="px-2 mb-1">
               <ProfilePicker
                 loading={loading}
                 onProfileChange={handleProfileChange}
               />
-              <SettingsButton />
             </div>
           )}
 
@@ -161,22 +148,8 @@ export const RoutePlanner = () => {
           </TabsContent>
 
           {activeTab !== 'tiles' && (
-            <div className="flex p-2 text-sm">
-              {isLoadingLastUpdate && (
-                <span className="text-muted-foreground">
-                  Loading last update...
-                </span>
-              )}
-              {isErrorLastUpdate && (
-                <span className="text-destructive">
-                  Failed to load last update
-                </span>
-              )}
-              {lastUpdate && (
-                <span>
-                  Last Data Update: {format(lastUpdate, 'yyyy-MM-dd, HH:mm')}
-                </span>
-              )}
+            <div className="mt-auto border-t-2 p-2">
+              <DataInfoTable />
             </div>
           )}
         </SheetContent>

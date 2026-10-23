@@ -31,6 +31,7 @@ export const ValhallaLayersToggle = ({
       setEnabled(hasSource);
     };
 
+    handleStyleData();
     map.on('styledata', handleStyleData);
 
     return () => {
@@ -104,7 +105,7 @@ export const ValhallaLayersToggle = ({
         htmlFor="valhalla-layers-toggle"
         className="text-sm font-medium cursor-pointer"
       >
-        Append Valhalla layers
+        Show Valhalla layers
       </Label>
       <Switch
         id="valhalla-layers-toggle"

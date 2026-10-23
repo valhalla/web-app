@@ -624,6 +624,18 @@ export const mockSearchResponse = [
   },
 ];
 
+/**
+ * The directions panel auto-opens on desktop viewports. Close it so tests
+ * that interact with the floating panel-shortcut buttons (or expect the panel
+ * to start closed) behave the same as before that default-open change.
+ */
+export async function closeDirectionsPanelIfOpen(page: Page) {
+  const closeBtn = page.getByTestId('close-directions-button');
+  if (await closeBtn.isVisible().catch(() => false)) {
+    await closeBtn.click();
+  }
+}
+
 export async function setupStatusMock(
   page: Page,
   response = mockStatusResponse

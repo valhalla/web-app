@@ -170,8 +170,8 @@ vi.mock('@/hooks/use-directions-queries', () => ({
   useDirectionsQuery: vi.fn(() => ({
     refetch: vi.fn(),
   })),
-  useReverseGeocodeDirections: vi.fn(() => ({
-    reverseGeocode: vi.fn().mockResolvedValue([]),
+  useSetWaypointFromCoords: vi.fn(() => ({
+    setWaypointFromCoords: vi.fn().mockResolvedValue([]),
   })),
 }));
 

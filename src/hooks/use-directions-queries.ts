@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { toast } from 'sonner';
 
 import type {
@@ -12,6 +11,7 @@ import {
   buildDirectionsRequest,
   parseDirectionsGeometry,
   showValhallaWarnings,
+  VALHALLA_CLIENT_HEADERS,
 } from '@/utils/valhalla';
 import { forward_geocode, parseGeocodeResponse } from '@/utils/nominatim';
 import { filterProfileSettings } from '@/utils/filter-profile-settings';
@@ -44,14 +44,30 @@ async function fetchDirections() {
     dateTime,
     language,
   });
+  const params = new URLSearchParams({
+    json: JSON.stringify(valhallaRequest.json),
+  });
 
-  const { data } = await axios.get<ValhallaRouteResponse>(
-    getValhallaUrl() + '/route',
-    {
-      params: { json: JSON.stringify(valhallaRequest.json) },
-      headers: { 'Content-Type': 'application/json' },
+  const response = await fetch(`${getValhallaUrl()}/route?${params}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...VALHALLA_CLIENT_HEADERS,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    let error_msg = errorData.error || 'Could not fetch resource';
+
+    // Append context for route-specific error
+    if (errorData.error_code === 154) {
+      error_msg += ` for route.`;
     }
-  );
+
+    throw new Error(error_msg);
+  }
+
+  const data: ValhallaRouteResponse = await response.json();
 
   // Parse geometry for main route
   (data as ParsedDirectionsGeometry).decodedGeometry =
@@ -91,14 +107,9 @@ export function useDirectionsQuery() {
         return data;
       } catch (error) {
         clearRoutes();
-        if (axios.isAxiosError(error) && error.response) {
-          const response = error.response;
-          let error_msg = response.data.error;
-          if (response.data.error_code === 154) {
-            error_msg += ` for route.`;
-          }
-          toast.warning(`${response.data.status}`, {
-            description: `${error_msg}`,
+        if (error instanceof Error) {
+          toast.warning('Error', {
+            description: error.message,
             position: 'bottom-center',
             duration: 5000,
             closeButton: true,
@@ -114,7 +125,7 @@ export function useDirectionsQuery() {
   });
 }
 
-export function useReverseGeocodeDirections() {
+export function useSetWaypointFromCoords() {
   const receiveGeocodeResults = useDirectionsStore(
     (state) => state.receiveGeocodeResults
   );
@@ -126,7 +137,7 @@ export function useReverseGeocodeDirections() {
     (state) => state.updatePlaceholderAddressAtIndex
   );
 
-  const reverseGeocode = async (
+  const setWaypointFromCoords = async (
     lng: number,
     lat: number,
     index: number,
@@ -145,7 +156,6 @@ export function useReverseGeocodeDirections() {
     // Set placeholder immediately
     updatePlaceholderAddressAtIndex(index, lng, lat);
 
-    // Use raw coordinates directly — no reverse geocoding
     const lngLat: [number, number] = [lng, lat];
     const address: ActiveWaypoint = {
       title: `${lng.toFixed(6)}, ${lat.toFixed(6)}`,
@@ -166,7 +176,7 @@ export function useReverseGeocodeDirections() {
     return addresses;
   };
 
-  return { reverseGeocode };
+  return { setWaypointFromCoords };
 }
 
 async function fetchForwardGeocode(

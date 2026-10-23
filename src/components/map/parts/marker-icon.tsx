@@ -1,7 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
-export type MarkerColor = 'green' | 'purple' | 'blue';
+export type MarkerColor = 'green' | 'purple' | 'blue' | 'red' | 'grey';
 
 const markerIconVariants = cva('relative cursor-pointer w-[35px] h-[45px]', {
   variants: {
@@ -9,6 +9,8 @@ const markerIconVariants = cva('relative cursor-pointer w-[35px] h-[45px]', {
       green: '[&_path]:fill-[#28a745]',
       purple: '[&_path]:fill-[#6f42c1]',
       blue: '[&_path]:fill-[#007bff]',
+      red: '[&_path]:fill-[#dc3545]',
+      grey: '[&_path]:fill-[#6c757d]',
     },
   },
   defaultVariants: {

@@ -12,6 +12,10 @@ import { getBaseUrl } from './base-url';
 
 export const getValhallaUrl = () => getBaseUrl();
 
+export const VALHALLA_CLIENT_HEADERS = {
+  'X-Client-Id': import.meta.env.VITE_CLIENT_ID ?? 'unknown-web-app',
+} as const;
+
 export const buildLocateRequest = (
   latLng: { lat: number; lng: number },
   profile: Profile

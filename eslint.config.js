@@ -65,6 +65,7 @@ export default defineConfig([
         'error',
         { props: 'never', children: 'ignore' },
       ],
+      'react/prop-types': 'off',
     },
     settings: {
       react: {
@@ -122,5 +123,5 @@ export default defineConfig([
     rules: {
       'check-file/filename-naming-convention': 'off',
     },
-  }
+  },
 ]);

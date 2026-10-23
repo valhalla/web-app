@@ -14,9 +14,12 @@ import type { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
 import type maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import axios from 'axios';
 import { throttle } from 'throttle-debounce';
-import { getValhallaUrl, buildHeightRequest } from '@/utils/valhalla';
+import {
+  getValhallaUrl,
+  buildHeightRequest,
+  VALHALLA_CLIENT_HEADERS,
+} from '@/utils/valhalla';
 import { buildHeightgraphData } from '@/utils/heightgraph';
 import HeightGraph from '@/components/heightgraph';
 import { DrawControl } from './draw-control';
@@ -61,7 +64,7 @@ import { useDirectionsStore } from '@/stores/directions-store';
 import { useIsochronesStore } from '@/stores/isochrones-store';
 import {
   useDirectionsQuery,
-  useReverseGeocodeDirections,
+  useSetWaypointFromCoords,
 } from '@/hooks/use-directions-queries';
 import {
   useIsochronesQuery,
@@ -122,8 +125,7 @@ export const MapComponent = () => {
 
   const { refetch: refetchDirections } = useDirectionsQuery();
   const { refetch: refetchIsochrones } = useIsochronesQuery();
-  const { reverseGeocode: reverseGeocodeDirections } =
-    useReverseGeocodeDirections();
+  const { setWaypointFromCoords } = useSetWaypointFromCoords();
   const { reverseGeocode: reverseGeocodeIsochrones } =
     useReverseGeocodeIsochrones();
   const [heightgraphHoverDistance, setHeightgraphHoverDistance] = useState<
@@ -134,6 +136,7 @@ export const MapComponent = () => {
     lat: number;
     summary: Summary;
   } | null>(null);
+  const isDraggingMarkerRef = useRef(false);
   const [tilesPopup, setTilesPopup] = useState<{
     lng: number;
     lat: number;
@@ -244,7 +247,7 @@ export const MapComponent = () => {
 
   const updateWaypointPosition = useCallback(
     (object: { latLng: { lat: number; lng: number }; index: number }) => {
-      reverseGeocodeDirections(
+      setWaypointFromCoords(
         object.latLng.lng,
         object.latLng.lat,
         object.index
@@ -252,7 +255,7 @@ export const MapComponent = () => {
         refetchDirections();
       });
     },
-    [reverseGeocodeDirections, refetchDirections]
+    [setWaypointFromCoords, refetchDirections]
   );
 
   const updateIsoPosition = useCallback(
@@ -282,25 +285,33 @@ export const MapComponent = () => {
     [directionsPanelOpen, toggleDirections, navigate]
   );
 
-  const getHeight = useCallback((lng: number, lat: number) => {
+  const getHeight = useCallback(async (lng: number, lat: number) => {
     setIsHeightLoading(true);
-    axios
-      .post(getValhallaUrl() + '/height', buildHeightRequest([[lat, lng]]), {
+
+    try {
+      const response = await fetch(`${getValhallaUrl()}/height`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...VALHALLA_CLIENT_HEADERS,
         },
-      })
-      .then(({ data }) => {
-        if ('height' in data) {
-          setElevation(data.height[0] + ' m');
-        }
-      })
-      .catch(({ response }) => {
-        console.log(response);
-      })
-      .finally(() => {
-        setIsHeightLoading(false);
+        body: JSON.stringify(buildHeightRequest([[lat, lng]])),
       });
+
+      if (!response.ok) {
+        throw new Error('Could not fetch resource');
+      }
+
+      const data = await response.json();
+
+      if ('height' in data) {
+        setElevation(data.height[0] + ' m');
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsHeightLoading(false);
+    }
   }, []);
 
   const handleAddWaypoint = useCallback(
@@ -322,7 +333,7 @@ export const MapComponent = () => {
     updateIsoPosition(popupLngLat.lng, popupLngLat.lat);
   }, [popupLngLat, updateIsoPosition]);
 
-  const getHeightData = useCallback(() => {
+  const getHeightData = useCallback(async () => {
     if (!directionResults.data?.decodedGeometry) return;
 
     const heightPayloadNew = buildHeightRequest(
@@ -332,35 +343,43 @@ export const MapComponent = () => {
     if (JSON.stringify(heightPayload) !== JSON.stringify(heightPayloadNew)) {
       setIsHeightLoading(true);
       setHeightPayload(heightPayloadNew);
-      axios
-        .post(getValhallaUrl() + '/height', heightPayloadNew, {
+
+      try {
+        const response = await fetch(`${getValhallaUrl()}/height`, {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...VALHALLA_CLIENT_HEADERS,
           },
-        })
-        .then(({ data }) => {
-          const reversedGeometry = JSON.parse(
-            JSON.stringify(directionResults.data?.decodedGeometry)
-          ).map((pair: number[]) => {
-            return [...pair.reverse()];
-          });
-          const heightData = buildHeightgraphData(
-            reversedGeometry,
-            data.range_height
-          );
-          const { inclineTotal, declineTotal } = heightData[0]!.properties;
-          updateInclineDecline({
-            inclineTotal,
-            declineTotal,
-          });
-          setHeightgraphData(heightData);
-        })
-        .catch(({ response }) => {
-          console.log(response);
-        })
-        .finally(() => {
-          setIsHeightLoading(false);
+          body: JSON.stringify(heightPayloadNew),
         });
+
+        if (!response.ok) {
+          throw new Error('Could not fetch resource');
+        }
+
+        const data = await response.json();
+
+        const reversedGeometry = JSON.parse(
+          JSON.stringify(directionResults.data?.decodedGeometry)
+        ).map((pair: number[]) => {
+          return [...pair.reverse()];
+        });
+        const heightData = buildHeightgraphData(
+          reversedGeometry,
+          data.range_height
+        );
+        const { inclineTotal, declineTotal } = heightData[0]!.properties;
+        updateInclineDecline({
+          inclineTotal,
+          declineTotal,
+        });
+        setHeightgraphData(heightData);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsHeightLoading(false);
+      }
     }
   }, [directionResults, heightPayload, updateInclineDecline]);
 
@@ -371,6 +390,14 @@ export const MapComponent = () => {
 
     // Add waypoint markers
     waypoints.forEach((waypoint, index) => {
+      const isOrigin = index === 0;
+      const isDestination =
+        index === waypoints.length - 1 && waypoints.length > 1;
+      const color: MarkerColor = isOrigin
+        ? 'green'
+        : isDestination
+          ? 'red'
+          : 'grey';
       waypoint.geocodeResults.forEach((address) => {
         if (address.selected) {
           newMarkers.push({
@@ -380,7 +407,7 @@ export const MapComponent = () => {
             type: 'waypoint',
             index: index,
             title: address.title,
-            color: 'green',
+            color,
             number: (index + 1).toString(),
           });
         }
@@ -421,7 +448,7 @@ export const MapComponent = () => {
 
     //First Point
     const firstCoord = coordinates[0];
-    if (!firstCoord || !firstCoord[0] || !firstCoord[1]) return;
+    if (!firstCoord || firstCoord[0] == null || firstCoord[1] == null) return;
 
     //Last Point
     const lastCoord = coordinates[coordinates.length - 1]!;
@@ -438,14 +465,14 @@ export const MapComponent = () => {
       lastCoord[1];
     //Compare with what was last zoomed
     if (coordKey === lastZoomedCoordKeyRef.current) return;
-    //Store thr new Key
+    //Store the new Key
     lastZoomedCoordKeyRef.current = coordKey;
 
-    const bounds: [[number, number], [number, number]] = coordinates.reduce<
+    const routeBounds = coordinates.reduce<
       [[number, number], [number, number]]
     >(
       (acc, coord) => {
-        if (!coord || !coord[0] || !coord[1]) return acc;
+        if (!coord || coord[0] == null || coord[1] == null) return acc;
         return [
           [Math.min(acc[0][0], coord[1]), Math.min(acc[0][1], coord[0])],
           [Math.max(acc[1][0], coord[1]), Math.max(acc[1][1], coord[0])],
@@ -456,6 +483,20 @@ export const MapComponent = () => {
         [firstCoord[1], firstCoord[0]],
       ]
     );
+
+    //Markers sit on the geocoded address, which can be off the routed
+    //geometry - include the ones belonging to this tab so they stay in view
+    const activeTabMarkerType =
+      activeTab === 'isochrones' ? 'isocenter' : 'waypoint';
+    const bounds = markers
+      .filter((marker) => marker.type === activeTabMarkerType)
+      .reduce<[[number, number], [number, number]]>(
+        (acc, marker) => [
+          [Math.min(acc[0][0], marker.lng), Math.min(acc[0][1], marker.lat)],
+          [Math.max(acc[1][0], marker.lng), Math.max(acc[1][1], marker.lat)],
+        ],
+        routeBounds
+      );
 
     //Read panel from the store directly
     //avoids re-running the effect when panels open or close
@@ -481,9 +522,9 @@ export const MapComponent = () => {
       },
       maxZoom: coordinates.length === 1 ? 11 : 18,
     });
-    //only rerun when coordinates change
+    //the coordKey guard above keeps this to one fit per route
     //panel change no longer rerun this
-  }, [coordinates]);
+  }, [coordinates, markers, activeTab]);
 
   const handleMapTilesClick = useCallback(
     (event: maplibregl.MapLayerMouseEvent) => {
@@ -547,9 +588,11 @@ export const MapComponent = () => {
         }
       }
 
-      // Check if click is on a route line
+      // Check if click is on a route line (hit-target layer is the wider,
+      // transparent stand-in for routes-line — same source/properties).
       const routeFeature = event.features?.find(
-        (f) => f.layer?.id === 'routes-line'
+        (f) =>
+          f.layer?.id === 'routes-line' || f.layer?.id === 'routes-hit-target'
       );
 
       if (
@@ -730,12 +773,14 @@ export const MapComponent = () => {
     (event: maplibregl.MapLayerMouseEvent) => {
       if (!mapRef.current || showInfoPopup) return; // Don't show if click popup is visible
 
+      //re-rendering mid-drag would reset the marker position.
+      if (isDraggingMarkerRef.current) return;
+
       const features = event.features;
-      // Check if we're hovering over the routes-line layer
+      // Check if we're hovering over the routes-line / hit-target layer
+      const topLayerId = features?.[0]?.layer?.id;
       const isOverRoute =
-        features &&
-        features.length > 0 &&
-        features[0]?.layer?.id === 'routes-line';
+        topLayerId === 'routes-line' || topLayerId === 'routes-hit-target';
 
       const isOverTiles =
         features &&
@@ -808,7 +853,7 @@ export const MapComponent = () => {
                 VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID,
                 VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID,
               ]
-            : ['routes-line']
+            : ['routes-line', 'routes-hit-target']
         }
         mapStyle={resolvedMapStyle}
         style={{ width: '100%', height: '100vh' }}
@@ -837,7 +882,12 @@ export const MapComponent = () => {
             longitude={marker.lng}
             latitude={marker.lat}
             draggable={true}
+            onDragStart={() => {
+              isDraggingMarkerRef.current = true;
+              setRouteHoverPopup(null);
+            }}
             onDragEnd={(e) => {
+              isDraggingMarkerRef.current = false;
               if (marker.type === 'waypoint') {
                 updateWaypointPosition({
                   latLng: { lat: e.lngLat.lat, lng: e.lngLat.lng },

@@ -1,26 +1,37 @@
 import type { NominationResponse } from '@/components/types';
-import axios from 'axios';
 
 export const NOMINATIM_URL = `${import.meta.env.VITE_NOMINATIM_URL}/search`;
 export const NOMINATIME_URL_REVERSE = `${import.meta.env.VITE_NOMINATIM_URL}/reverse`;
 
-export const forward_geocode = (userInput: string) =>
-  axios.get<NominationResponse>(NOMINATIM_URL, {
-    params: {
-      q: userInput,
-      format: 'json',
-      limit: 5,
-    },
+export const forward_geocode = async (userInput: string) => {
+  const params = new URLSearchParams({
+    q: userInput,
+    format: 'json',
+    limit: '5',
   });
+  const response = await fetch(`${NOMINATIM_URL}?${params}`);
 
-export const reverse_geocode = (lon: number, lat: number) =>
-  axios.get<NominationResponse>(NOMINATIME_URL_REVERSE, {
-    params: {
-      lon: lon,
-      lat: lat,
-      format: 'json',
-    },
+  if (!response.ok) {
+    throw new Error(`Could not fetch resource`);
+  }
+  const data: NominationResponse = await response.json();
+  return { data };
+};
+export const reverse_geocode = async (lon: number, lat: number) => {
+  const params = new URLSearchParams({
+    lon: lon.toString(),
+    lat: lat.toString(),
+    format: 'json',
   });
+  const response = await fetch(`${NOMINATIME_URL_REVERSE}?${params}`);
+
+  if (!response.ok) {
+    throw new Error(`Could not fetch resource`);
+  }
+
+  const data: NominationResponse = await response.json();
+  return { data };
+};
 
 export const parseGeocodeResponse = (
   results: NominationResponse | NominationResponse[],

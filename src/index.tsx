@@ -9,6 +9,13 @@ const TanStackQueryProviderContext = TanStackQueryProvider.getContext();
 
 const rootElement = document.getElementById('valhalla-app-root');
 
+const clientId = import.meta.env.VITE_CLIENT_ID;
+if (!clientId || clientId === 'unknown-web-app') {
+  console.warn(
+    `VITE_CLIENT_ID is not configured (current value: ${clientId ? `"${clientId}"` : 'unset'}). Valhalla requests will be sent with a generic X-Client-Id — set VITE_CLIENT_ID in .env to identify this deployment.`
+  );
+}
+
 if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(

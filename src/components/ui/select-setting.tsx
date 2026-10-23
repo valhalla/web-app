@@ -29,6 +29,8 @@ interface SelectSettingProps {
   value: string;
   options: SelectOption[];
   onValueChange: (value: string) => void;
+  /** When true, lay out label + select on a single row. */
+  inline?: boolean;
 }
 
 export const SelectSetting = ({
@@ -39,43 +41,61 @@ export const SelectSetting = ({
   value,
   options,
   onValueChange,
+  inline = false,
 }: SelectSettingProps) => {
+  const labelBlock = (
+    <div className="flex items-center gap-1.5">
+      <Label htmlFor={id} className="text-sm font-medium">
+        {label}
+      </Label>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            className="text-muted-foreground hover:text-foreground hover:bg-transparent"
+          >
+            <AccessibleIcon label={`More info about ${label}`}>
+              <HelpCircle className="size-3.5" />
+            </AccessibleIcon>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent side="top" className="w-64 p-3">
+          <p className="text-xs text-muted-foreground">{description}</p>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+
+  const selectControl = (
+    <Select value={value} onValueChange={onValueChange}>
+      <SelectTrigger id={id} className={inline ? 'w-auto' : 'w-full'}>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent align={inline ? 'end' : 'start'}>
+        {options.map((option) => (
+          <SelectItem key={option.key} value={option.value}>
+            {option.text}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
+  if (inline) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-2 py-1">
+        {labelBlock}
+        {selectControl}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-1 py-1">
-      <div className="flex items-center gap-1.5">
-        <Label htmlFor={id} className="text-sm font-medium">
-          {label}
-        </Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              className="text-muted-foreground/70 hover:text-muted-foreground hover:bg-transparent"
-            >
-              <AccessibleIcon label={`More info about ${label}`}>
-                <HelpCircle className="size-3.5" />
-              </AccessibleIcon>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent side="top" className="w-64 p-3">
-            <p className="text-xs text-muted-foreground">{description}</p>
-          </PopoverContent>
-        </Popover>
-      </div>
-      <Select value={value} onValueChange={onValueChange}>
-        <SelectTrigger id={id} className="w-full">
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.key} value={option.value}>
-              {option.text}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {labelBlock}
+      {selectControl}
     </div>
   );
 };

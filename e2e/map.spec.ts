@@ -1,5 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { setupHeightMock, setupRouteMock, setupSearchMock } from './helpers';
+import {
+  closeDirectionsPanelIfOpen,
+  setupHeightMock,
+  setupRouteMock,
+  setupSearchMock,
+} from './helpers';
 import { customRouteResponse } from './mocks';
 
 interface RouteApiRequest {
@@ -19,6 +24,7 @@ function validateRouteApiRequest(request: RouteApiRequest): void {
 test.describe('Map interactions with right context menu', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:3000/');
+    await closeDirectionsPanelIfOpen(page);
     await page.getByTestId('tab-directions-button').click();
   });
 
@@ -299,6 +305,7 @@ test.describe('Map interactions with right context menu', () => {
 test.describe('Map interactions with left context menu', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:3000/');
+    await closeDirectionsPanelIfOpen(page);
   });
 
   test('should show left-click context menu', async ({ page }) => {
@@ -377,6 +384,7 @@ test.describe('Map interactions with URL parameters', () => {
     );
 
     await page.waitForTimeout(2000);
+    await closeDirectionsPanelIfOpen(page);
     await page.getByTestId('tab-directions-button').click();
 
     // Check that waypoint inputs 0 to 1 and waypoint markers 1 to 2 are visible
@@ -400,6 +408,7 @@ test.describe('Map interactions with URL parameters', () => {
     );
 
     await page.waitForTimeout(2000);
+    await closeDirectionsPanelIfOpen(page);
     await page.getByTestId('tab-directions-button').click();
 
     // Check that waypoint inputs 0 to 7 and waypoint markers 1 to 8 are visible
@@ -414,26 +423,29 @@ test.describe('Map interactions with URL parameters', () => {
   });
 });
 
-https: test.describe('Left drawer', () => {
+test.describe('Left drawer', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:3000/');
+    await closeDirectionsPanelIfOpen(page);
     await page.getByTestId('tab-directions-button').click();
   });
 
   test('add/remove waypoint behaviour should work correctly', async ({
     page,
   }) => {
+    const thirdWaypoint = page.getByTestId('waypoint-input-2');
+
     // Add waypoint
-    await expect(page.getByRole('button', { name: '3' })).not.toBeVisible();
+    await expect(thirdWaypoint).not.toBeVisible();
 
     await page.getByTestId('add-waypoint-button').click();
 
-    await expect(page.getByRole('button', { name: '3' }).first()).toBeVisible();
+    await expect(thirdWaypoint).toBeVisible();
 
     // Remove waypoint
     await page.getByTestId('reset-waypoints-button').click();
 
-    await expect(page.getByRole('button', { name: '3' })).not.toBeVisible();
+    await expect(thirdWaypoint).not.toBeVisible();
   });
 
   test('should make Nominatim request when entering address in search box', async ({
