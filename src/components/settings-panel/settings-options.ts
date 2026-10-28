@@ -319,11 +319,11 @@ const hazardousMaterials = {
   param: 'hazmat',
 };
 
-const useHighways = {
+export const useHighways = {
   name: 'Use Highways',
   param: 'use_highways',
   description:
-    'This value indicates the willingness to take highways. Checking this will favor highways whilse unchecking it will try to avoid highways. Note that sometimes highways are required to complete a route so unchecking this does not guarantee to avoid highways entirely.',
+    'This value indicates the willingness to take highways. This is a range of values between 0 and 1. Values near 0 attempt to avoid highways and values near 1 will favor highways. Note that sometimes highways are required to complete a route so values of 0 are not guaranteed to avoid highways entirely.',
   unit: 'willingness',
   settings: {
     min: 0,
@@ -345,11 +345,11 @@ const useDistance = {
   },
 };
 
-const useTollways = {
+export const useTollways = {
   name: 'Use Tollways',
   param: 'use_tolls',
   description:
-    'This value indicates the willingness to take roads with tolls. Checking this option will not attempt to avoid them whilst unchecking this will attempt to avoid toll ways. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely.',
+    'This value indicates the willingness to take roads with tolls. This is a range of values between 0 and 1. Values near 0 attempt to avoid toll roads and values near 1 will favor them. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely.',
   unit: 'willingness',
   settings: {
     min: 0,
@@ -357,7 +357,7 @@ const useTollways = {
     step: 0.1,
   },
 };
-const useFerry = {
+export const useFerry = {
   name: 'Use Ferries',
   param: 'use_ferry',
   description:
