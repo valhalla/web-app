@@ -16,6 +16,11 @@ export const VALHALLA_CLIENT_HEADERS = {
   'X-Client-Id': import.meta.env.VITE_CLIENT_ID ?? 'unknown-web-app',
 } as const;
 
+export const HIERARCHY_LIMITS = {
+  1: { max_up_transitions: 1000, expand_within_distance: 35000 },
+  2: { max_up_transitions: 525, expand_within_distance: 8000 },
+} as const;
+
 export const buildLocateRequest = (
   latLng: { lat: number; lng: number },
   profile: Profile
@@ -65,7 +70,10 @@ export const buildDirectionsRequest = ({
     json: {
       costing: valhalla_profile,
       costing_options: {
-        [valhalla_profile]: { ...settings.costing },
+        [valhalla_profile]: {
+          ...settings.costing,
+          hierarchy_limits: HIERARCHY_LIMITS,
+        },
       },
       exclude_polygons: settings.directions.exclude_polygons,
       locations: makeLocations(activeWaypoints),
@@ -102,7 +110,10 @@ export const buildOptimizedRouteRequest = ({
     json: {
       costing: valhalla_profile,
       costing_options: {
-        [valhalla_profile]: { ...settings.costing },
+        [valhalla_profile]: {
+          ...settings.costing,
+          hierarchy_limits: HIERARCHY_LIMITS,
+        },
       },
       locations: makeLocations(activeWaypoints),
       units: 'kilometers',
@@ -148,7 +159,10 @@ export const buildIsochronesRequest = ({
       show_locations: true,
       costing: valhalla_profile,
       costing_options: {
-        [valhalla_profile]: { ...settings.costing },
+        [valhalla_profile]: {
+          ...settings.costing,
+          hierarchy_limits: HIERARCHY_LIMITS,
+        },
       },
       contours: makeContours({ maxRange, interval }),
       locations: makeLocations([center as ActiveWaypoint]),
