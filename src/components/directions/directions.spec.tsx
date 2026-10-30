@@ -67,9 +67,9 @@ vi.mock('@/components/settings-footer', () => ({
   ),
 }));
 
-vi.mock('@/components/quick-settings', () => ({
-  QuickSettings: () => (
-    <div data-testid="mock-quick-settings">Quick Settings</div>
+vi.mock('@/components/general-settings', () => ({
+  GeneralSettings: () => (
+    <div data-testid="mock-general-settings">General Settings</div>
   ),
 }));
 
@@ -106,9 +106,9 @@ describe('DirectionsControl', () => {
     expect(screen.getByTestId('mock-settings-footer')).toBeInTheDocument();
   });
 
-  it('should render QuickSettings component', () => {
+  it('should render GeneralSettings component', () => {
     render(<DirectionsControl />);
-    expect(screen.getByTestId('mock-quick-settings')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-general-settings')).toBeInTheDocument();
   });
 
   it('should render Add Waypoint button', () => {
