@@ -49,9 +49,9 @@ vi.mock('./isochrone-card', () => ({
   ),
 }));
 
-vi.mock('@/components/quick-settings', () => ({
-  QuickSettings: () => (
-    <div data-testid="mock-quick-settings">Quick Settings</div>
+vi.mock('@/components/general-settings', () => ({
+  GeneralSettings: () => (
+    <div data-testid="mock-general-settings">General Settings</div>
   ),
 }));
 
@@ -104,8 +104,8 @@ describe('IsochronesControl', () => {
     expect(card).toHaveAttribute('data-show-on-map', 'false');
   });
 
-  it('should render QuickSettings component', () => {
+  it('should render GeneralSettings component', () => {
     render(<IsochronesControl />);
-    expect(screen.getByTestId('mock-quick-settings')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-general-settings')).toBeInTheDocument();
   });
 });
