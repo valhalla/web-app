@@ -12,15 +12,21 @@ import {
 } from '@/components/ui/collapsible';
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Download } from 'lucide-react';
+import { ChevronDown, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { exportDataAsJson } from '@/utils/export';
 import { getDateTimeString } from '@/utils/date-time';
+import { fetchHeight } from '@/utils/height';
+import { toast } from 'sonner';
 
 interface RouteCardProps {
   data: ParsedDirectionsGeometry;
@@ -36,6 +42,11 @@ export const RouteCard = ({
   onSelect,
 }: RouteCardProps) => {
   const [showManeuvers, setShowManeuvers] = useState(false);
+  const [includeElevation, setIncludeElevation] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'geojson' | 'json'>(
+    'geojson'
+  );
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
 
   const exportToGeoJson = useCallback(() => {
     const coordinates = data?.decodedGeometry;
@@ -59,6 +70,109 @@ export const RouteCard = ({
       fileType: 'text/json',
     });
   }, [data]);
+
+  const exportWithElevation = useCallback(
+    async (isGeoJson: boolean = false) => {
+      const coordinates = data?.decodedGeometry;
+      if (!coordinates) return;
+
+      let elevationResults: Awaited<ReturnType<typeof fetchHeight>>;
+      try {
+        elevationResults = await fetchHeight({
+          coordinates: coordinates as [number, number][],
+        });
+      } catch {
+        toast.error('Failed to fetch elevation data.', {
+          position: 'bottom-center',
+          duration: 5000,
+          closeButton: true,
+        });
+        return;
+      }
+
+      if (!elevationResults.height) {
+        toast.error('Failed to fetch elevation data.', {
+          position: 'bottom-center',
+          duration: 5000,
+          closeButton: true,
+        });
+        return;
+      }
+
+      if (!isGeoJson) {
+        const dataWithElevation = {
+          ...data,
+          trip: {
+            ...data.trip,
+            legs: (data.trip.legs ?? []).map((leg) => ({
+              ...leg,
+              elevation_interval: 30,
+              elevation: elevationResults.height,
+            })),
+          },
+        };
+        const formattedData = JSON.stringify(dataWithElevation, null, 2);
+        downloadFile({
+          data: formattedData,
+          fileName:
+            'valhalla-directions_' +
+            getDateTimeString() +
+            '_with_elevation.json',
+          fileType: 'text/json',
+        });
+        return;
+      }
+
+      const geoJsonCoordinates = coordinates.map(([lat, lng]) => [lng, lat]);
+
+      const geoJson = {
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: geoJsonCoordinates,
+        },
+        properties: {
+          elevation_interval: 30,
+          elevation: elevationResults.height,
+        },
+      };
+      const formattedData = JSON.stringify(geoJson, null, 2);
+      downloadFile({
+        data: formattedData,
+        fileName:
+          'valhalla-directions_' +
+          getDateTimeString() +
+          '_with_elevation.geojson',
+        fileType: 'text/json',
+      });
+    },
+    [data]
+  );
+
+  const handleExport = useCallback(async () => {
+    if (exportFormat === 'json') {
+      if (includeElevation) {
+        await exportWithElevation();
+      } else {
+        exportDataAsJson(data, 'valhalla-directions');
+      }
+      setIsExportMenuOpen(false);
+      return;
+    }
+
+    if (includeElevation) {
+      await exportWithElevation(true);
+    } else {
+      exportToGeoJson();
+    }
+    setIsExportMenuOpen(false);
+  }, [
+    data,
+    exportFormat,
+    includeElevation,
+    exportToGeoJson,
+    exportWithElevation,
+  ]);
 
   if (!data.trip) {
     return null;
@@ -95,22 +209,63 @@ export const RouteCard = ({
                 {showManeuvers ? 'Hide Maneuvers' : 'Show Maneuvers'}
               </Button>
             </CollapsibleTrigger>
-            <DropdownMenu>
+            <DropdownMenu
+              open={isExportMenuOpen}
+              onOpenChange={setIsExportMenuOpen}
+            >
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
                   <Download className="size-4" />
                   Export
+                  <ChevronDown className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem
-                  onClick={() => exportDataAsJson(data, 'valhalla-directions')}
+              <DropdownMenuContent className="w-56 p-2" align="end">
+                <DropdownMenuLabel className="text-xs text-muted-foreground font-semibold uppercase tracking-wide px-2 py-1">
+                  Format
+                </DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={exportFormat}
+                  onValueChange={(value) =>
+                    setExportFormat(value as 'geojson' | 'json')
+                  }
                 >
-                  JSON
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={exportToGeoJson}>
-                  GeoJSON
-                </DropdownMenuItem>
+                  <DropdownMenuRadioItem
+                    value="geojson"
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    GeoJSON
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem
+                    value="json"
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    JSON
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs text-muted-foreground font-semibold uppercase tracking-wide px-2 py-1">
+                  Options
+                </DropdownMenuLabel>
+                <DropdownMenuCheckboxItem
+                  checked={includeElevation}
+                  onCheckedChange={(checked) => setIncludeElevation(!!checked)}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  Include elevation
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator />
+                <div className="px-1 pt-1">
+                  <Button
+                    data-testid="export-action-button"
+                    size="sm"
+                    className="w-full"
+                    onClick={handleExport}
+                  >
+                    <Download className="size-4" />
+                    Export
+                  </Button>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
