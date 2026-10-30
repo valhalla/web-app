@@ -80,6 +80,7 @@ export interface PossibleSettings {
   transit_transfer_max_distance: number;
   disable_hierarchy_pruning: boolean;
   use_trails: number;
+  use_curvature: number;
   denoise: number;
   generalize: number;
   alternates: number;

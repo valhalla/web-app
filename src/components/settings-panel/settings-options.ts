@@ -783,6 +783,18 @@ const useTrails = {
   },
 };
 
+const useCurvature = {
+  name: 'Use Curvature',
+  param: 'use_curvature',
+  unit: 'willingness',
+  description: `A rider's desire for curvy roads. This is a range of values from 0 to 1, where values towards 0 will prefer straighter roads and values towards 1 will favor curvier roads. The default value is 0.5.`,
+  settings: {
+    min: 0,
+    max: 1,
+    step: 0.1,
+  },
+};
+
 const useTruckRoutes = {
   name: 'Use Truck Routes',
   param: 'use_truck_route',
@@ -939,6 +951,7 @@ export const settingsInit = {
   transit_transfer_max_distance: 800,
   disable_hierarchy_pruning: false,
   use_trails: 0,
+  use_curvature: 0.5,
   denoise: 0.1,
   generalize: 0,
   alternates: 2,
@@ -1118,6 +1131,7 @@ export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
     [
       useHighways,
       useTrails,
+      useCurvature,
       ...tollSettings,
       ...ferrySettings,
       useLivingStreets,
