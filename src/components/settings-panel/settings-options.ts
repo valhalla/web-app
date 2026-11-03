@@ -1115,14 +1115,7 @@ export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
   bicycle: createSettings([useFerry, useLivingStreets, ...serviceSettings], []),
 
   motorcycle: createSettings(
-    [
-      useHighways,
-      useTrails,
-      ...tollSettings,
-      ...ferrySettings,
-      useLivingStreets,
-      useTracks,
-    ],
+    [...commonGeneralNumeric, useTrails],
     [...ignoreFlags, excludeCashOnlyTolls]
   ),
 
