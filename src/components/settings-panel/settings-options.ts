@@ -896,6 +896,7 @@ export const settingsInit = {
   ferry_cost: 300,
   use_living_streets: 0.5,
   use_tracks: 0,
+  use_distance: 0,
   private_access_penalty: 450,
   destination_only_penalty: 300,
   elevator_penalty: 120,
