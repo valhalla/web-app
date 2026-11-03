@@ -125,7 +125,7 @@ const countryCrossingPenalty = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 1000,
+    max: 43200,
     step: 60,
   },
 };
@@ -138,7 +138,7 @@ const countryCrossingCost = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 5000,
+    max: 43200,
     step: 100,
   },
 };
@@ -151,7 +151,7 @@ const maneuverPenalty = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 60,
+    max: 43200,
     step: 1,
   },
 };
@@ -164,7 +164,7 @@ const gateCost = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 300,
+    max: 43200,
     step: 10,
   },
 };
@@ -177,7 +177,7 @@ const gatePenalty = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 600,
+    max: 43200,
     step: 30,
   },
 };
@@ -190,7 +190,7 @@ const destinationOnlyPenalty = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 600,
+    max: 43200,
     step: 30,
   },
 };
@@ -203,7 +203,7 @@ const elevatorPenalty = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 600,
+    max: 43200,
     step: 30,
   },
 };
@@ -216,7 +216,7 @@ const tollBoothCost = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 120,
+    max: 43200,
     step: 5,
   },
 };
@@ -229,7 +229,7 @@ const tollBoothPenalty = {
   unit: '',
   settings: {
     min: 0,
-    max: 1000,
+    max: 43200,
     step: 10,
   },
 };
@@ -391,7 +391,7 @@ const ferryCost = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 5000,
+    max: 43200,
     step: 100,
   },
 };
@@ -430,7 +430,7 @@ const privateAccessPenalty = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 5000,
+    max: 43200,
     step: 100,
   },
 };
@@ -477,7 +477,7 @@ const servicePenalty = {
   unit: 'penalty',
   settings: {
     min: 0,
-    max: 100,
+    max: 43200,
     step: 5,
   },
 };
@@ -489,9 +489,9 @@ const serviceFactor = {
     'A factor that modifies (multiplies) the cost when generic service roads are encountered. The default service_factor is 1.',
   unit: 'factor',
   settings: {
-    min: 1,
-    max: 50,
-    step: 1,
+    min: 0.1,
+    max: 100000,
+    step: 0.1,
   },
 };
 
@@ -610,7 +610,7 @@ const cyclingSpeed = {
   unit: 'kph',
   settings: {
     min: 5,
-    max: 50,
+    max: 60,
     step: 1,
   },
 };
@@ -700,9 +700,9 @@ const walkwayFactor = {
     'A factor that modifies the cost when encountering roads classified as footway (no motorized vehicles allowed), which may be designated footpaths or designated sidewalks along residential roads. Pedestrian routes generally attempt to favor using these walkways and sidewalks. The default walkway_factor is 1.0.',
   unit: 'factor',
   settings: {
-    min: 1,
-    max: 50,
-    step: 1,
+    min: 0.1,
+    max: 100000,
+    step: 0.1,
   },
 };
 
@@ -713,9 +713,9 @@ const sidewalkFactor = {
     'A factor that modifies the cost when encountering roads with dedicated sidewalks. Pedestrian routes generally attempt to favor using sidewalks. The default sidewalk_factor is 1.0.',
   unit: 'factor',
   settings: {
-    min: 1,
-    max: 50,
-    step: 1,
+    min: 0.1,
+    max: 100000,
+    step: 0.1,
   },
 };
 
@@ -726,9 +726,9 @@ const alleyFactor = {
     ' A factor that modifies (multiplies) the cost when alleys are encountered. Pedestrian routes generally want to avoid alleys or narrow service roads between buildings. The default alley_factor is 2.0.',
   unit: 'factor',
   settings: {
-    min: 1,
-    max: 50,
-    step: 1,
+    min: 0.1,
+    max: 100000,
+    step: 0.1,
   },
 };
 
@@ -739,9 +739,9 @@ const drivewayFactor = {
     'A factor that modifies (multiplies) the cost when encountering a driveway, which is often a private, service road. Pedestrian routes generally want to avoid driveways (private). The default driveway factor is 5.0.',
   unit: 'factor',
   settings: {
-    min: 1,
-    max: 50,
-    step: 1,
+    min: 0.1,
+    max: 100000,
+    step: 0.1,
   },
 };
 
@@ -753,7 +753,7 @@ const stepPenalty = {
   unit: 'penalty',
   settings: {
     min: 0,
-    max: 500,
+    max: 43200,
     step: 5,
   },
 };
