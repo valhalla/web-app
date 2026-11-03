@@ -37,6 +37,7 @@ export interface PossibleSettings {
   ferry_cost: number;
   use_living_streets: number;
   use_tracks: number;
+  use_distance: number;
   private_access_penalty: number;
   destination_only_penalty: number;
   elevator_penalty: number;
