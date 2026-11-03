@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { Waypoints } from './waypoints/waypoint-list';
 
 import { SettingsFooter } from '@/components/settings-footer';
-import { QuickSettings } from '@/components/quick-settings';
+import { GeneralSettings } from '@/components/general-settings';
 
 import type { ParsedDirectionsGeometry } from '@/components/types';
 import { Button } from '@/components/ui/button';
@@ -96,7 +96,7 @@ export const DirectionsControl = () => {
           </TooltipContent>
         </Tooltip>
       </div>
-      <QuickSettings />
+      <GeneralSettings />
       <SettingsFooter />
       {results.data && (
         <div>
