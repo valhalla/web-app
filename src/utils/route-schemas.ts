@@ -10,13 +10,7 @@ const languageValues = languageOptions.map((opt) => opt.value) as [
 ];
 const languageEnum = z.enum(languageValues);
 
-const willingness = z
-  .number()
-  .min(0)
-  .max(1)
-  .refine((v) => [0, 0.5, 1].includes(v), {
-    message: 'must be 0, 0.5, or 1',
-  });
+const willingness = z.number().min(0).max(1);
 
 export const searchParamsSchema = z.object({
   profile: fallback(profileEnum.optional(), 'bicycle'),
