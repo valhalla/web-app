@@ -145,17 +145,20 @@ vi.mock('@/stores/common-store', () => ({
   }),
 }));
 
+const mockUseDirectionsStore = vi.fn();
+
 vi.mock('@/stores/directions-store', () => ({
-  useDirectionsStore: vi.fn((selector) => {
-    const state = {
-      waypoints: [],
-      results: { data: null, show: {} },
-      successful: false,
-      updateInclineDecline: vi.fn(),
-    };
-    return selector(state);
-  }),
+  useDirectionsStore: (selector: (state: unknown) => unknown) =>
+    mockUseDirectionsStore(selector),
 }));
+
+const createMockDirectionsState = (overrides = {}) => ({
+  waypoints: [],
+  results: { data: null, show: {} },
+  successful: false,
+  updateInclineDecline: vi.fn(),
+  ...overrides,
+});
 
 vi.mock('@/stores/isochrones-store', () => ({
   useIsochronesStore: vi.fn((selector) => {
@@ -305,6 +308,9 @@ describe('MapComponent', () => {
     );
 
     vi.clearAllMocks();
+    mockUseDirectionsStore.mockImplementation((selector) =>
+      selector(createMockDirectionsState())
+    );
   });
 
   afterEach(() => {
@@ -478,6 +484,70 @@ describe('MapComponent', () => {
     const toggle = screen.getByTestId('heightgraph-toggle');
     expect(toggle).toBeInTheDocument();
     expect(toggle).toBeDisabled();
+  });
+
+  it('should refetch height data when the route changes while the heightgraph is expanded', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          range_height: [
+            [0, 100],
+            [10, 110],
+            [20, 120],
+          ],
+        }),
+    });
+    mockUseDirectionsStore.mockImplementation((selector) =>
+      selector(
+        createMockDirectionsState({
+          results: {
+            data: {
+              decodedGeometry: [
+                [52.5, 13.4],
+                [52.51, 13.41],
+                [52.52, 13.42],
+              ],
+            },
+            show: {},
+          },
+          successful: true,
+        })
+      )
+    );
+
+    const { rerender } = render(<MapComponent />);
+    fireEvent.click(screen.getByTestId('heightgraph-toggle'));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    mockUseDirectionsStore.mockImplementation((selector) =>
+      selector(
+        createMockDirectionsState({
+          results: {
+            data: {
+              decodedGeometry: [
+                [52.5, 13.4],
+                [52.53, 13.43],
+                [52.54, 13.44],
+              ],
+            },
+            show: {},
+          },
+          successful: true,
+        })
+      )
+    );
+    rerender(<MapComponent />);
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+    expect(vi.mocked(global.fetch).mock.calls[1]?.[1]?.body).toContain(
+      '"lat":52.54'
+    );
   });
 
   it('should set initial view state from getInitialMapPosition', () => {
