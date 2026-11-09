@@ -12,7 +12,7 @@ name: PR Preview Deploy
 # Receiving end: a forced-command SSH account on valhalla1 that only accepts
 # `deploy <pr>` / `delete <pr>` for this repo (FOSSGIS valhalla ansible role,
 # roles/valhalla/tasks/preview.yml). Serves
-# https://ci.routing-valhalla.earth/<org>/<repo>/<pr>/.
+# https://ci.valhalla-routing.earth/<org>/<repo>/<pr>/.
 #
 # Repo settings this needs:
 #   secrets.PREVIEW_SSH_PRIVATE_KEY   ed25519 key, pubkey listed in the role
