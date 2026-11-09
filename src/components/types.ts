@@ -37,6 +37,7 @@ export interface PossibleSettings {
   ferry_cost: number;
   use_living_streets: number;
   use_tracks: number;
+  use_distance: number;
   private_access_penalty: number;
   destination_only_penalty: number;
   elevator_penalty: number;
@@ -84,6 +85,11 @@ export interface PossibleSettings {
   generalize: number;
   alternates: number;
   speed_types: string[];
+  use_hierarchy_limits?: boolean;
+  hierarchy_limits_1_max_up_transitions?: number;
+  hierarchy_limits_1_expand_within_distance?: number;
+  hierarchy_limits_2_max_up_transitions?: number;
+  hierarchy_limits_2_expand_within_distance?: number;
   [key: string]:
     | string
     | string[]
@@ -91,6 +97,11 @@ export interface PossibleSettings {
     | boolean
     | GeoJSON.GeoJSON[]
     | undefined;
+}
+
+export interface HierarchyLimits {
+  max_up_transitions?: number;
+  expand_within_distance?: number;
 }
 
 export interface ParsedDirectionsGeometry {
