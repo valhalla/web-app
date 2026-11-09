@@ -236,7 +236,6 @@ describe('SettingsPanel', () => {
     renderWithQueryClient(<SettingsPanel />);
 
     expect(screen.getByText('Use Living Streets')).toBeInTheDocument();
-    expect(screen.getByText('Turn Penalty')).toBeInTheDocument();
   });
 
   describe('Server Settings', () => {

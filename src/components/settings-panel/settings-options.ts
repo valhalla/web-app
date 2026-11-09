@@ -125,7 +125,7 @@ const countryCrossingPenalty = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 1000,
+    max: 43200,
     step: 60,
   },
 };
@@ -138,21 +138,8 @@ const countryCrossingCost = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 5000,
+    max: 43200,
     step: 100,
-  },
-};
-
-const turnPenaltyCost = {
-  name: 'Turn Penalty',
-  param: 'maneuver_penalty',
-  description:
-    'A penalty applied when transitioning between roads that do not have consistent naming–in other words, no road names in common. This penalty can be used to create simpler routes that tend to have fewer maneuvers or narrative guidance instructions. The default maneuver penalty is five seconds.',
-  unit: 'sec',
-  settings: {
-    min: 0,
-    max: 20,
-    step: 1,
   },
 };
 
@@ -164,7 +151,7 @@ const maneuverPenalty = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 60,
+    max: 43200,
     step: 1,
   },
 };
@@ -177,7 +164,7 @@ const gateCost = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 300,
+    max: 43200,
     step: 10,
   },
 };
@@ -190,7 +177,7 @@ const gatePenalty = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 600,
+    max: 43200,
     step: 30,
   },
 };
@@ -203,7 +190,7 @@ const destinationOnlyPenalty = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 600,
+    max: 43200,
     step: 30,
   },
 };
@@ -216,7 +203,7 @@ const elevatorPenalty = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 600,
+    max: 43200,
     step: 30,
   },
 };
@@ -229,7 +216,7 @@ const tollBoothCost = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 120,
+    max: 43200,
     step: 5,
   },
 };
@@ -242,7 +229,7 @@ const tollBoothPenalty = {
   unit: '',
   settings: {
     min: 0,
-    max: 1000,
+    max: 43200,
     step: 10,
   },
 };
@@ -332,11 +319,11 @@ const hazardousMaterials = {
   param: 'hazmat',
 };
 
-const useHighways = {
+export const useHighways = {
   name: 'Use Highways',
   param: 'use_highways',
   description:
-    'This value indicates the willingness to take highways. Checking this will favor highways whilse unchecking it will try to avoid highways. Note that sometimes highways are required to complete a route so unchecking this does not guarantee to avoid highways entirely.',
+    'This value indicates the willingness to take highways. This is a range of values between 0 and 1. Values near 0 attempt to avoid highways and values near 1 will favor highways. Note that sometimes highways are required to complete a route so values of 0 are not guaranteed to avoid highways entirely.',
   unit: 'willingness',
   settings: {
     min: 0,
@@ -344,11 +331,25 @@ const useHighways = {
     step: 0.1,
   },
 };
-const useTollways = {
+
+const useDistance = {
+  name: 'Use Distance',
+  param: 'use_distance',
+  description:
+    'A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account (default) and 1 only distance. A factor of 0.5 will weight them roughly equally.',
+  unit: 'willingness',
+  settings: {
+    min: 0,
+    max: 1,
+    step: 0.1,
+  },
+};
+
+export const useTollways = {
   name: 'Use Tollways',
   param: 'use_tolls',
   description:
-    'This value indicates the willingness to take roads with tolls. Checking this option will not attempt to avoid them whilst unchecking this will attempt to avoid toll ways. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely.',
+    'This value indicates the willingness to take roads with tolls. This is a range of values between 0 and 1. Values near 0 attempt to avoid toll roads and values near 1 will favor them. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely.',
   unit: 'willingness',
   settings: {
     min: 0,
@@ -356,7 +357,7 @@ const useTollways = {
     step: 0.1,
   },
 };
-const useFerry = {
+export const useFerry = {
   name: 'Use Ferries',
   param: 'use_ferry',
   description:
@@ -390,7 +391,7 @@ const ferryCost = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 5000,
+    max: 43200,
     step: 100,
   },
 };
@@ -429,7 +430,7 @@ const privateAccessPenalty = {
   unit: 'sec',
   settings: {
     min: 0,
-    max: 5000,
+    max: 43200,
     step: 100,
   },
 };
@@ -476,7 +477,7 @@ const servicePenalty = {
   unit: 'penalty',
   settings: {
     min: 0,
-    max: 100,
+    max: 43200,
     step: 5,
   },
 };
@@ -488,9 +489,9 @@ const serviceFactor = {
     'A factor that modifies (multiplies) the cost when generic service roads are encountered. The default service_factor is 1.',
   unit: 'factor',
   settings: {
-    min: 1,
-    max: 50,
-    step: 1,
+    min: 0.1,
+    max: 100000,
+    step: 0.1,
   },
 };
 
@@ -609,7 +610,7 @@ const cyclingSpeed = {
   unit: 'kph',
   settings: {
     min: 5,
-    max: 50,
+    max: 60,
     step: 1,
   },
 };
@@ -700,7 +701,7 @@ const walkwayFactor = {
   unit: 'factor',
   settings: {
     min: 0.1,
-    max: 50,
+    max: 100000,
     step: 0.1,
   },
 };
@@ -713,7 +714,7 @@ const sidewalkFactor = {
   unit: 'factor',
   settings: {
     min: 0.1,
-    max: 50,
+    max: 100000,
     step: 0.1,
   },
 };
@@ -726,7 +727,7 @@ const alleyFactor = {
   unit: 'factor',
   settings: {
     min: 0.1,
-    max: 50,
+    max: 100000,
     step: 0.1,
   },
 };
@@ -739,7 +740,7 @@ const drivewayFactor = {
   unit: 'factor',
   settings: {
     min: 0.1,
-    max: 50,
+    max: 100000,
     step: 0.1,
   },
 };
@@ -752,7 +753,7 @@ const stepPenalty = {
   unit: 'penalty',
   settings: {
     min: 0,
-    max: 500,
+    max: 43200,
     step: 5,
   },
 };
@@ -859,8 +860,8 @@ export type DirectionsLanguage = (typeof languageOptions)[number]['value'];
 export const DEFAULT_DIRECTIONS_LANGUAGE: DirectionsLanguage = 'en-US';
 export const DIRECTIONS_LANGUAGE_STORAGE_KEY = 'directions_language';
 
-// Settings surfaced in the QuickSettings (left sidebar) panel rather than the
-// advanced (right) panel. Keep this list in sync with what QuickSettings renders
+// Settings surfaced in the GeneralSettings (left sidebar) panel rather than the
+// advanced (right) panel. Keep this list in sync with what GeneralSettings renders
 // — settings-panel.tsx reads it to skip these in the advanced view.
 export const QUICK_SETTING_PARAMS = [
   'use_highways',
@@ -870,7 +871,7 @@ export const QUICK_SETTING_PARAMS = [
 ] as const;
 
 // Profiles where use_highways / use_tolls are meaningful costing options.
-// Pedestrian, bicycle, motor_scooter ignore them, so the QuickSettings panel
+// Pedestrian, bicycle, motor_scooter ignore them, so the GeneralSettings panel
 // only renders those two controls when the active profile is in this list.
 export const HIGHWAY_TOLL_PROFILES = [
   'car',
@@ -978,11 +979,11 @@ const commonVehicleProfileBoolean = [
 ] as const;
 
 const commonGeneralNumeric = [
-  turnPenaltyCost,
   useHighways,
   ...tollSettings,
   ...ferrySettings,
   useLivingStreets,
+  useDistance,
   useTracks,
 ] as const;
 
@@ -1088,7 +1089,6 @@ export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
 
   bus: createSettings(
     [
-      turnPenaltyCost,
       useHighways,
       useLivingStreets,
       ...tollSettings,
@@ -1112,14 +1112,10 @@ export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
 
   motor_scooter: createSettings([useFerry, useTracks, servicePenalty], []),
 
-  bicycle: createSettings(
-    [useFerry, useLivingStreets, turnPenaltyCost, ...serviceSettings],
-    []
-  ),
+  bicycle: createSettings([useFerry, useLivingStreets, ...serviceSettings], []),
 
   motorcycle: createSettings(
     [
-      turnPenaltyCost,
       useHighways,
       useTrails,
       ...tollSettings,

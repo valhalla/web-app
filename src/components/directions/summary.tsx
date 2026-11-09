@@ -56,12 +56,12 @@ export const Summary = ({
     if (!mainMap || routeCoordinates.length === 0) return;
 
     const firstCoord = routeCoordinates[0];
-    if (!firstCoord || !firstCoord[0] || !firstCoord[1]) return;
+    if (!firstCoord || firstCoord[0] == null || firstCoord[1] == null) return;
 
     const bounds: [[number, number], [number, number]] =
       routeCoordinates.reduce<[[number, number], [number, number]]>(
         (acc, coord) => {
-          if (!coord || !coord[0] || !coord[1]) return acc;
+          if (!coord || coord[0] == null || coord[1] == null) return acc;
           return [
             [Math.min(acc[0][0], coord[1]), Math.min(acc[0][1], coord[0])],
             [Math.max(acc[1][0], coord[1]), Math.max(acc[1][1], coord[0])],
