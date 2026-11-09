@@ -40,6 +40,7 @@ export const filterProfileSettings = (
       | string[]
       | GeoJSON.GeoJSON[]
       | Record<1 | 2, HierarchyLimits>
+      | Record<string, number>
       | undefined
     >;
     directions: {
@@ -53,6 +54,14 @@ export const filterProfileSettings = (
       exclude_polygons: settings.exclude_polygons,
     },
   };
+
+  // Omitted at 0 (neutral) so servers without the extract sidecar aren't sent
+  // an attribute they don't know.
+  if (settings.riser_score !== 0) {
+    filteredSettings.costing.use_custom_attributes = {
+      riser_score: settings.riser_score,
+    };
+  }
 
   // Skip filtering if profile is 'auto' since it doesn't exist in settings
   if (!isValidSettingsProfile(profile)) {

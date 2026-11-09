@@ -82,6 +82,7 @@ export interface PossibleSettings {
   disable_hierarchy_pruning: boolean;
   use_trails: number;
   use_curvature: number;
+  riser_score: number;
   denoise: number;
   generalize: number;
   alternates: number;

@@ -35,4 +35,24 @@ describe('filterProfileSettings', () => {
       /use_hierarchy_limits|hierarchy_limits_/
     );
   });
+
+  it('does not send custom attributes when riser_score is neutral', () => {
+    const { costing } = filterProfileSettings('car', defaultSettings);
+
+    expect(costing).not.toHaveProperty('use_custom_attributes');
+    expect(costing).not.toHaveProperty('riser_score');
+  });
+
+  it.each(['car', 'pedestrian', 'bicycle', 'motorcycle'] as const)(
+    'nests riser_score under use_custom_attributes for %s',
+    (profile) => {
+      const { costing } = filterProfileSettings(profile, {
+        ...defaultSettings,
+        riser_score: -0.5,
+      });
+
+      expect(costing.use_custom_attributes).toEqual({ riser_score: -0.5 });
+      expect(costing).not.toHaveProperty('riser_score');
+    }
+  );
 });

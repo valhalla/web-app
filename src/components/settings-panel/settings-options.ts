@@ -850,6 +850,20 @@ const useCurvature = {
   },
 };
 
+// Custom attribute provided by Valhalla's extract sidecar. Sent nested under
+// costing_options.<profile>.use_custom_attributes, see filter-profile-settings.ts.
+const riserScore = {
+  name: 'Riser Score',
+  param: 'riser_score',
+  unit: 'weight',
+  description: `Weight of the "riser_score" custom attribute (requires a Valhalla server whose extract sidecar provides it). Ranges from -1 to 1, where negative values avoid and positive values favor edges with a high riser score. The default value 0 ignores the attribute.`,
+  settings: {
+    min: -1,
+    max: 1,
+    step: 0.1,
+  },
+};
+
 const useTruckRoutes = {
   name: 'Use Truck Routes',
   param: 'use_truck_route',
@@ -1008,6 +1022,7 @@ export const settingsInit = {
   disable_hierarchy_pruning: false,
   use_trails: 0,
   use_curvature: 0.5,
+  riser_score: 0,
   denoise: 0.1,
   generalize: 0,
   alternates: 2,
@@ -1195,6 +1210,6 @@ export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
 
   all: {
     boolean: [useGeocoding],
-    numeric: [alternates],
+    numeric: [alternates, riserScore],
   },
 };
