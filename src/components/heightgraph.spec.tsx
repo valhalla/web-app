@@ -46,8 +46,6 @@ const createMockData = (): Parameters<typeof HeightGraph>[0]['data'] =>
       ],
       properties: {
         summary: 'steepness',
-        inclineTotal: 15,
-        declineTotal: 20,
       },
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -156,7 +156,7 @@ const createMockDirectionsState = (overrides = {}) => ({
   waypoints: [],
   results: { data: null, show: {} },
   successful: false,
-  updateInclineDecline: vi.fn(),
+  activeRouteIndex: 0,
   ...overrides,
 });
 
@@ -547,6 +547,67 @@ describe('MapComponent', () => {
     });
     expect(vi.mocked(global.fetch).mock.calls[1]?.[1]?.body).toContain(
       '"lat":52.54'
+    );
+  });
+
+  it('should refetch height data when the active route changes while the heightgraph is expanded', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          range_height: [
+            [0, 100],
+            [10, 110],
+            [20, 120],
+          ],
+        }),
+    });
+    const results = {
+      data: {
+        decodedGeometry: [
+          [52.5, 13.4],
+          [52.51, 13.41],
+          [52.52, 13.42],
+        ],
+        alternates: [
+          {
+            decodedGeometry: [
+              [52.5, 13.4],
+              [52.55, 13.45],
+              [52.56, 13.46],
+            ],
+          },
+        ],
+      },
+      show: {},
+    };
+    mockUseDirectionsStore.mockImplementation((selector) =>
+      selector(createMockDirectionsState({ results, successful: true }))
+    );
+
+    const { rerender } = render(<MapComponent />);
+    fireEvent.click(screen.getByTestId('heightgraph-toggle'));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    mockUseDirectionsStore.mockImplementation((selector) =>
+      selector(
+        createMockDirectionsState({
+          results,
+          successful: true,
+          activeRouteIndex: 1,
+        })
+      )
+    );
+    rerender(<MapComponent />);
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+    expect(vi.mocked(global.fetch).mock.calls[1]?.[1]?.body).toContain(
+      '"lat":52.56'
     );
   });
 
