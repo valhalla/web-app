@@ -19,8 +19,6 @@ describe('buildHeightgraphData', () => {
     expect(result[0]!.type).toBe('FeatureCollection');
     expect(result[0]!.features).toHaveLength(0);
     expect(result[0]!.properties.summary).toBe('steepness');
-    expect(result[0]!.properties.inclineTotal).toBe(0);
-    expect(result[0]!.properties.declineTotal).toBe(0);
   });
 
   it('should handle single point data', () => {
@@ -31,8 +29,6 @@ describe('buildHeightgraphData', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]!.features).toHaveLength(0);
-    expect(result[0]!.properties.inclineTotal).toBe(0);
-    expect(result[0]!.properties.declineTotal).toBe(0);
   });
 
   it('should calculate flat terrain (slope 0%)', () => {
@@ -51,8 +47,6 @@ describe('buildHeightgraphData', () => {
 
     expect(result[0]!.features).toHaveLength(1);
     expect(result[0]!.features[0]!.properties.attributeType).toBe(0); // flat terrain
-    expect(result[0]!.properties.inclineTotal).toBe(0);
-    expect(result[0]!.properties.declineTotal).toBe(0);
   });
 
   it('should calculate steep uphill terrain (slope > 15%)', () => {
@@ -71,8 +65,6 @@ describe('buildHeightgraphData', () => {
 
     expect(result[0]!.features).toHaveLength(1); // One feature created when height class is first calculated
     expect(result[0]!.features[0]!.properties.attributeType).toBe(0); // Previous height class (undefined becomes 0)
-    expect(result[0]!.properties.inclineTotal).toBe(40); // total rise
-    expect(result[0]!.properties.declineTotal).toBe(0);
   });
 
   it('should calculate steep downhill terrain (slope < -15%)', () => {
@@ -91,8 +83,6 @@ describe('buildHeightgraphData', () => {
 
     expect(result[0]!.features).toHaveLength(1); // One feature created when height class is first calculated
     expect(result[0]!.features[0]!.properties.attributeType).toBe(0); // Previous height class (undefined becomes 0)
-    expect(result[0]!.properties.inclineTotal).toBe(0);
-    expect(result[0]!.properties.declineTotal).toBe(40); // total drop
   });
 
   it('should handle different slope ranges correctly', () => {
@@ -117,8 +107,6 @@ describe('buildHeightgraphData', () => {
 
     // Features are created when height class changes, not based on total unique classes
     expect(result[0]!.features.length).toBeGreaterThan(0);
-    expect(result[0]!.properties.inclineTotal).toBe(16); // total rise
-    expect(result[0]!.properties.declineTotal).toBe(0);
   });
 
   it('should create separate features for different height classes', () => {
@@ -146,10 +134,6 @@ describe('buildHeightgraphData', () => {
       (f) => f.properties.attributeType
     );
     expect(new Set(heightClasses).size).toBeGreaterThan(1);
-
-    // Verify incline and decline totals
-    expect(result[0]!.properties.inclineTotal).toBe(15); // 10 + 5
-    expect(result[0]!.properties.declineTotal).toBe(7); // 3 + 4
   });
 
   it('should handle NaN slope values gracefully', () => {

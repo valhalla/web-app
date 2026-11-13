@@ -19,8 +19,6 @@ interface HeightGraphFeatureCollection {
   features: HeightGraphFeature[];
   properties: {
     summary: 'steepness';
-    inclineTotal: number;
-    declineTotal: number;
   };
 }
 
@@ -76,9 +74,6 @@ export const buildHeightgraphData = (
   let LineStringCoordinates: LineStringCoordinate[] = [];
   let previousHeightClass: HeightClass | undefined;
 
-  let inclineTotal = 0;
-  let declineTotal = 0;
-
   rangeHeightData.forEach((item, index) => {
     if (index < rangeHeightData.length - 1) {
       const riseThis = item[1];
@@ -90,12 +85,6 @@ export const buildHeightgraphData = (
       const heightClass: HeightClass = isNaN(slope)
         ? 0
         : deriveHeightClass(slope);
-
-      if (rise > 0) {
-        inclineTotal += rise;
-      } else if (rise < 0) {
-        declineTotal += rise * -1;
-      }
 
       // IDEA FOR BUILDING GEOJSON FOR HEIGHTGRAPH:
       // Basic idea is keepon adding points to current LineString as long as they have same heightClass
@@ -147,8 +136,6 @@ export const buildHeightgraphData = (
       features: features,
       properties: {
         summary: 'steepness',
-        inclineTotal,
-        declineTotal,
       },
     } as HeightGraphFeatureCollection,
   ];
