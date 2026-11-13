@@ -6,6 +6,7 @@ import {
   DollarSign,
   Ship,
   Settings,
+  SlidersHorizontal,
   type LucideIcon,
 } from 'lucide-react';
 import { CollapsibleSection } from '@/components/ui/collapsible-section';
@@ -34,7 +35,7 @@ import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
 import type { PossibleSettings } from '@/components/types';
 
-type IconState = 'no' | 'yes' | 'preferred';
+type IconState = 'no' | 'yes' | 'preferred' | 'custom';
 
 const StateIcon = ({ Base, state }: { Base: LucideIcon; state: IconState }) => (
   <span className="relative inline-block size-5 shrink-0">
@@ -55,8 +56,21 @@ const StateIcon = ({ Base, state }: { Base: LucideIcon; state: IconState }) => (
         className="absolute -top-1 -right-1 size-2.5 fill-amber-400 text-amber-500"
       />
     )}
+    {state === 'custom' && (
+      <SlidersHorizontal
+        aria-hidden
+        className="absolute -top-1 -right-1.5 size-2.5 rounded-sm bg-background text-primary"
+      />
+    )}
   </span>
 );
+
+// Trigger-only state for slider values (advanced panel) that match no preset.
+const customOption = (Base: LucideIcon, value: number): IconEnumOption => ({
+  value: 'custom',
+  label: `Custom (${value})`,
+  renderIcon: () => <StateIcon Base={Base} state="custom" />,
+});
 
 const tristateOptions = (Base: LucideIcon): IconEnumOption[] => [
   {
@@ -81,9 +95,10 @@ const TOLL_OPTIONS = tristateOptions(DollarSign);
 const FERRY_OPTIONS = tristateOptions(Ship);
 
 const willingnessToOption = (value: number): string => {
-  if (value <= 0) return 'no';
-  if (value >= 1) return 'preferred';
-  return 'yes';
+  if (value === 0) return 'no';
+  if (value === 0.5) return 'yes';
+  if (value === 1) return 'preferred';
+  return 'custom';
 };
 
 const optionToWillingness = (option: string): number => {
@@ -237,6 +252,7 @@ export const QuickSettings = ({
               label="Use ferries"
               value={willingnessToOption(settings.use_ferry as number)}
               options={FERRY_OPTIONS}
+              fallbackOption={customOption(Ship, settings.use_ferry as number)}
               onValueChange={(value) =>
                 handleSettingChange('use_ferry', optionToWillingness(value))
               }
@@ -248,6 +264,10 @@ export const QuickSettings = ({
                   label="Use highways"
                   value={willingnessToOption(settings.use_highways as number)}
                   options={HIGHWAY_OPTIONS}
+                  fallbackOption={customOption(
+                    Milestone,
+                    settings.use_highways as number
+                  )}
                   onValueChange={(value) =>
                     handleSettingChange(
                       'use_highways',
@@ -260,6 +280,10 @@ export const QuickSettings = ({
                   label="Use tolls"
                   value={willingnessToOption(settings.use_tolls as number)}
                   options={TOLL_OPTIONS}
+                  fallbackOption={customOption(
+                    DollarSign,
+                    settings.use_tolls as number
+                  )}
                   onValueChange={(value) =>
                     handleSettingChange('use_tolls', optionToWillingness(value))
                   }

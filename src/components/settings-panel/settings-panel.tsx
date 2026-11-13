@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import {
   profileSettings,
   generalSettings,
-  QUICK_SETTING_PARAMS,
+  ADVANCED_PANEL_HIDDEN_PARAMS,
 } from './settings-options';
 import { filterProfileSettings } from '@/utils/filter-profile-settings';
 import type { PossibleSettings } from '@/components/types';
@@ -30,7 +30,9 @@ import { MultiSelectSetting } from '../ui/multiselect-setting';
 
 type ProfileWithSettings = Exclude<Profile, 'auto'>;
 
-const QUICK_SETTING_PARAM_SET: Set<string> = new Set(QUICK_SETTING_PARAMS);
+const ADVANCED_PANEL_HIDDEN_PARAM_SET: Set<string> = new Set(
+  ADVANCED_PANEL_HIDDEN_PARAMS
+);
 
 export const SettingsPanel = () => {
   const { profile } = useSearch({ from: '/$activeTab' });
@@ -228,7 +230,9 @@ export const SettingsPanel = () => {
           >
             <div className="space-y-1.25">
               {generalSettings[profile as ProfileWithSettings].numeric
-                .filter((option) => !QUICK_SETTING_PARAM_SET.has(option.param))
+                .filter(
+                  (option) => !ADVANCED_PANEL_HIDDEN_PARAM_SET.has(option.param)
+                )
                 .map((option, key) => (
                   <SliderSetting
                     key={key}
@@ -291,7 +295,9 @@ export const SettingsPanel = () => {
                 />
               ))}
               {generalSettings.all.numeric
-                .filter((option) => !QUICK_SETTING_PARAM_SET.has(option.param))
+                .filter(
+                  (option) => !ADVANCED_PANEL_HIDDEN_PARAM_SET.has(option.param)
+                )
                 .map((option, key) => (
                   <SliderSetting
                     key={key}

@@ -24,6 +24,8 @@ interface IconEnumButtonProps {
   label: string;
   value: string;
   options: IconEnumOption[];
+  // Shown on the trigger when `value` matches none of `options` (not selectable).
+  fallbackOption?: IconEnumOption;
   onValueChange: (value: string) => void;
 }
 
@@ -32,10 +34,12 @@ export const IconEnumButton = ({
   label,
   value,
   options,
+  fallbackOption,
   onValueChange,
 }: IconEnumButtonProps) => {
   const [open, setOpen] = useState(false);
-  const current = options.find((o) => o.value === value) ?? options[0];
+  const current =
+    options.find((o) => o.value === value) ?? fallbackOption ?? options[0];
   const currentLabel = current?.label ?? '';
 
   return (

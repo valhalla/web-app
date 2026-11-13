@@ -323,7 +323,7 @@ const useHighways = {
   name: 'Use Highways',
   param: 'use_highways',
   description:
-    'This value indicates the willingness to take highways. Checking this will favor highways whilse unchecking it will try to avoid highways. Note that sometimes highways are required to complete a route so unchecking this does not guarantee to avoid highways entirely.',
+    'This value indicates the willingness to take highways. This is a range of values between 0 and 1. Values near 0 attempt to avoid highways and values near 1 will favor highways. Note that sometimes highways are required to complete a route so values of 0 are not guaranteed to avoid highways entirely.',
   unit: 'willingness',
   settings: {
     min: 0,
@@ -349,7 +349,7 @@ const useTollways = {
   name: 'Use Tollways',
   param: 'use_tolls',
   description:
-    'This value indicates the willingness to take roads with tolls. Checking this option will not attempt to avoid them whilst unchecking this will attempt to avoid toll ways. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely.',
+    'This value indicates the willingness to take roads with tolls. This is a range of values between 0 and 1. Values near 0 attempt to avoid toll roads and values near 1 will favor them. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely.',
   unit: 'willingness',
   settings: {
     min: 0,
@@ -915,15 +915,22 @@ export type DirectionsLanguage = (typeof languageOptions)[number]['value'];
 export const DEFAULT_DIRECTIONS_LANGUAGE: DirectionsLanguage = 'en-US';
 export const DIRECTIONS_LANGUAGE_STORAGE_KEY = 'directions_language';
 
-// Settings surfaced in the QuickSettings (left sidebar) panel rather than the
-// advanced (right) panel. Keep this list in sync with what QuickSettings renders
-// — settings-panel.tsx reads it to skip these in the advanced view.
+// Settings controlled from the QuickSettings (left sidebar) panel. They're
+// cross-profile user preferences (URL-permalinked), so resetSettings preserves
+// them. use_highways / use_tolls / use_ferry are *also* sliders in the advanced
+// panel: the left-sidebar icons are just presets (0 / 0.5 / 1) that write the
+// slider value, and requests always send the slider value.
 export const QUICK_SETTING_PARAMS = [
   'use_highways',
   'use_tolls',
   'use_ferry',
   'alternates',
 ] as const;
+
+// Quick settings that are NOT repeated in the advanced (right) panel.
+export const ADVANCED_PANEL_HIDDEN_PARAMS = [
+  'alternates',
+] as const satisfies readonly (typeof QUICK_SETTING_PARAMS)[number][];
 
 // Profiles where use_highways / use_tolls are meaningful costing options.
 // Pedestrian, bicycle, motor_scooter ignore them, so the QuickSettings panel
@@ -947,7 +954,7 @@ export const settingsInit = {
   hazmat: false,
   use_highways: 0.5,
   use_tolls: 0.5,
-  use_ferry: 0,
+  use_ferry: 0.5,
   ferry_cost: 300,
   use_living_streets: 0.5,
   use_tracks: 0,
@@ -1015,8 +1022,17 @@ export const settingsInitTruckOverride = {
 const gateSettings = [maneuverPenalty, gateCost, gatePenalty] as const;
 const borderSettings = [countryCrossingCost, countryCrossingPenalty] as const;
 const serviceSettings = [servicePenalty, serviceFactor] as const;
-const tollSettings = [useTollways, tollBoothCost, tollBoothPenalty] as const;
-const ferrySettings = [useFerry, ferryCost] as const;
+// Willingness sliders first (highways/tolls/ferry mirror the QuickSettings
+// icons), then the toll booth / ferry costs.
+const roadUseSettings = [
+  useHighways,
+  useTollways,
+  useFerry,
+  useLivingStreets,
+  tollBoothCost,
+  tollBoothPenalty,
+  ferryCost,
+] as const;
 const hovFlags = [includeHOV2, includeHOV3, includeHot] as const;
 const ignoreFlags = [ignoreClosures, ignoreRestrictions, ignoreAccess] as const;
 
@@ -1040,10 +1056,7 @@ const commonVehicleProfileBoolean = [
 ] as const;
 
 const commonGeneralNumeric = [
-  useHighways,
-  ...tollSettings,
-  ...ferrySettings,
-  useLivingStreets,
+  ...roadUseSettings,
   useDistance,
   useTracks,
 ] as const;
@@ -1149,13 +1162,7 @@ export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
   car: createSettings([...commonGeneralNumeric], [...commonGeneralBoolean]),
 
   bus: createSettings(
-    [
-      useHighways,
-      useLivingStreets,
-      ...tollSettings,
-      ...ferrySettings,
-      useTracks,
-    ],
+    [...roadUseSettings, useTracks],
     [...commonGeneralBoolean]
   ),
 
