@@ -157,7 +157,6 @@ const createMockDirectionsState = (overrides = {}) => ({
   results: { data: null, show: {} },
   successful: false,
   activeRouteIndex: 0,
-  updateInclineDecline: vi.fn(),
   ...overrides,
 });
 

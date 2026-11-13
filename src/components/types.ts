@@ -134,6 +134,7 @@ export interface Leg {
   maneuvers: Maneuver[];
   summary: Summary;
   shape: string;
+  elevation?: number[];
 }
 
 export interface Maneuver {

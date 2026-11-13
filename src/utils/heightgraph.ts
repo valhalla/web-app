@@ -154,6 +154,25 @@ export const buildHeightgraphData = (
   ];
 };
 
+export const getInclineDeclineTotals = (legs: { elevation?: number[] }[]) => {
+  const elevations = legs.flatMap((leg) => leg.elevation ?? []);
+  if (elevations.length === 0) return null;
+  let inclineTotal = 0;
+  let declineTotal = 0;
+  for (let i = 1; i < elevations.length; i++) {
+    const rise = elevations[i]! - elevations[i - 1]!;
+    if (rise > 0) {
+      inclineTotal += rise;
+    } else {
+      declineTotal -= rise;
+    }
+  }
+  return {
+    inclineTotal: Math.round(inclineTotal),
+    declineTotal: Math.round(declineTotal),
+  };
+};
+
 export const colorMappings = {
   steepness: {
     '-5': {

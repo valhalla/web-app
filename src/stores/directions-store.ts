@@ -28,10 +28,6 @@ interface RouteResult {
   show: Record<string, boolean>;
 }
 
-interface InclineDeclineTotal {
-  [key: string]: unknown;
-}
-
 interface LatLng {
   lng: number;
   lat: number;
@@ -66,13 +62,11 @@ export interface DirectionsState {
   zoomObj: ZoomObj;
   selectedAddresses: string | (Waypoint | null)[];
   results: RouteResult;
-  inclineDeclineTotal?: InclineDeclineTotal;
   isOptimized: boolean;
   activeRouteIndex: number;
 }
 
 interface DirectionsActions {
-  updateInclineDecline: (inclineDeclineTotal: InclineDeclineTotal) => void;
   toggleShowOnMap: (params: { show: boolean; idx: number }) => void;
   clearRoutes: () => void;
   receiveRouteResults: (params: { data: ParsedDirectionsGeometry }) => void;
@@ -116,15 +110,6 @@ export const useDirectionsStore = create<DirectionsStore>()(
       isOptimized: false,
       activeRouteIndex: 0,
 
-      updateInclineDecline: (inclineDeclineTotal) =>
-        set(
-          (state) => {
-            state.inclineDeclineTotal = inclineDeclineTotal;
-          },
-          undefined,
-          'updateInclineDecline'
-        ),
-
       toggleShowOnMap: ({ idx, show }) =>
         set(
           (state) => {
@@ -138,7 +123,6 @@ export const useDirectionsStore = create<DirectionsStore>()(
         set(
           (state) => {
             state.successful = false;
-            state.inclineDeclineTotal = undefined;
             state.results.data = null;
             state.activeRouteIndex = 0;
           },
@@ -153,7 +137,6 @@ export const useDirectionsStore = create<DirectionsStore>()(
             data.alternates?.forEach((_, i) => (show[i + 1] = true));
 
             state.successful = true;
-            state.inclineDeclineTotal = undefined;
             state.results = { data, show };
             state.activeRouteIndex = 0;
           },
@@ -281,7 +264,6 @@ export const useDirectionsStore = create<DirectionsStore>()(
 
             if (!hasActiveRoute(state.waypoints)) {
               state.successful = false;
-              state.inclineDeclineTotal = undefined;
               state.results.data = null;
             }
           },

@@ -16,7 +16,6 @@ vi.mock('@/stores/directions-store', () => ({
   useDirectionsStore: vi.fn((selector) =>
     selector({
       results: mockResults,
-      inclineDeclineTotal: null,
       toggleShowOnMap: mockToggleShowOnMap,
       successful: true,
     })
@@ -72,7 +71,6 @@ describe('Summary', () => {
       (selector: any) =>
         selector({
           results: mockResults,
-          inclineDeclineTotal: null,
           toggleShowOnMap: mockToggleShowOnMap,
           successful: true,
         })
@@ -345,7 +343,6 @@ describe('Summary', () => {
       (selector: any) =>
         selector({
           results: mockResults,
-          inclineDeclineTotal: null,
           toggleShowOnMap: mockToggleShowOnMap,
           successful: false,
         })
@@ -416,7 +413,6 @@ describe('Summary', () => {
       (selector: any) =>
         selector({
           results: mockResults,
-          inclineDeclineTotal: null,
           toggleShowOnMap: mockToggleShowOnMap,
           successful: false,
         })
@@ -448,7 +444,6 @@ describe('Summary with incline/decline', () => {
       (selector: any) =>
         selector({
           results: { ...mockResults, data: null },
-          inclineDeclineTotal: { inclineTotal: 500, declineTotal: 450 },
           toggleShowOnMap: mockToggleShowOnMap,
           successful: true,
         })
@@ -461,6 +456,7 @@ describe('Summary with incline/decline', () => {
         title="Route"
         index={-1}
         routeCoordinates={mockRouteCoordinates}
+        legs={[{ elevation: [100, 600, 150] }]}
       />
     );
 

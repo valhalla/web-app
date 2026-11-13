@@ -120,9 +120,6 @@ export const MapComponent = () => {
   const activeRouteIndex = useDirectionsStore(
     (state) => state.activeRouteIndex
   );
-  const updateInclineDecline = useDirectionsStore(
-    (state) => state.updateInclineDecline
-  );
   const setActiveRouteIndex = useDirectionsStore(
     (state) => state.setActiveRouteIndex
   );
@@ -379,11 +376,6 @@ export const MapComponent = () => {
           reversedGeometry,
           data.range_height
         );
-        const { inclineTotal, declineTotal } = heightData[0]!.properties;
-        updateInclineDecline({
-          inclineTotal,
-          declineTotal,
-        });
         setHeightgraphData(heightData);
       } catch (error) {
         console.error(error);
@@ -391,7 +383,7 @@ export const MapComponent = () => {
         setIsHeightLoading(false);
       }
     }
-  }, [directionResults, activeRouteIndex, heightPayload, updateInclineDecline]);
+  }, [directionResults, activeRouteIndex, heightPayload]);
 
   useEffect(() => {
     if (isHeightgraphExpanded) {

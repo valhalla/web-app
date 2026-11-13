@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { buildHeightgraphData, colorMappings } from './heightgraph';
+import {
+  buildHeightgraphData,
+  colorMappings,
+  getInclineDeclineTotals,
+} from './heightgraph';
 
 type Coordinate = [number, number]; // [latitude, longitude]
 type RangeHeightPoint = [number, number]; // [distance, elevation]
@@ -240,6 +244,24 @@ describe('buildHeightgraphData', () => {
     expect(heightClasses).toContain(1); // gentle uphill
     expect(heightClasses).toContain(2); // moderate uphill
     // Note: Class 5 might not appear as a previous class if it's the final segment
+  });
+});
+
+describe('getInclineDeclineTotals', () => {
+  it('should return null when no leg has elevation', () => {
+    expect(getInclineDeclineTotals([{}])).toBeNull();
+  });
+
+  it('should sum and round the rises and drops', () => {
+    expect(
+      getInclineDeclineTotals([{ elevation: [10, 12.4, 11.2, 15.5] }])
+    ).toEqual({ inclineTotal: 7, declineTotal: 1 });
+  });
+
+  it('should join the elevation of consecutive legs', () => {
+    expect(
+      getInclineDeclineTotals([{ elevation: [10, 20] }, { elevation: [20, 5] }])
+    ).toEqual({ inclineTotal: 10, declineTotal: 15 });
   });
 });
 
