@@ -9,7 +9,7 @@ export const IsochronesControl = () => {
   return (
     <>
       <Waypoints />
-      <QuickSettings showAlternates={false} showLanguage={false} />
+      <QuickSettings showLanguage={false} />
       <SettingsFooter />
       {results.data && (
         <div>

@@ -1,10 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  profileSettings,
-  generalSettings,
-  ADVANCED_PANEL_HIDDEN_PARAMS,
-} from './settings-options';
+import { profileSettings, generalSettings } from './settings-options';
 import { filterProfileSettings } from '@/utils/filter-profile-settings';
 import type { PossibleSettings } from '@/components/types';
 
@@ -30,9 +26,8 @@ import { MultiSelectSetting } from '../ui/multiselect-setting';
 
 type ProfileWithSettings = Exclude<Profile, 'auto'>;
 
-const ADVANCED_PANEL_HIDDEN_PARAM_SET: Set<string> = new Set(
-  ADVANCED_PANEL_HIDDEN_PARAMS
-);
+// Only meaningful for /route requests, so hidden on the isochrones tab.
+const DIRECTIONS_ONLY_PARAMS: Set<string> = new Set(['alternates']);
 
 export const SettingsPanel = () => {
   const { profile } = useSearch({ from: '/$activeTab' });
@@ -229,11 +224,8 @@ export const SettingsPanel = () => {
             onOpenChange={setGeneralSettingsOpen}
           >
             <div className="space-y-1.25">
-              {generalSettings[profile as ProfileWithSettings].numeric
-                .filter(
-                  (option) => !ADVANCED_PANEL_HIDDEN_PARAM_SET.has(option.param)
-                )
-                .map((option, key) => (
+              {generalSettings[profile as ProfileWithSettings].numeric.map(
+                (option, key) => (
                   <SliderSetting
                     key={key}
                     id={option.param}
@@ -261,7 +253,8 @@ export const SettingsPanel = () => {
                       });
                     }}
                   />
-                ))}
+                )
+              )}
               {generalSettings[profile as ProfileWithSettings].boolean.map(
                 (option, key) => (
                   <CheckboxSetting
@@ -296,7 +289,9 @@ export const SettingsPanel = () => {
               ))}
               {generalSettings.all.numeric
                 .filter(
-                  (option) => !ADVANCED_PANEL_HIDDEN_PARAM_SET.has(option.param)
+                  (option) =>
+                    activeTab === 'directions' ||
+                    !DIRECTIONS_ONLY_PARAMS.has(option.param)
                 )
                 .map((option, key) => (
                   <SliderSetting

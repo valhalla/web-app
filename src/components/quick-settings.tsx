@@ -10,7 +10,6 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { CollapsibleSection } from '@/components/ui/collapsible-section';
-import { SliderSetting } from '@/components/ui/slider-setting';
 import { SelectSetting } from '@/components/ui/select-setting';
 import {
   IconEnumButton,
@@ -109,13 +108,11 @@ const optionToWillingness = (option: string): number => {
 
 interface QuickSettingsProps {
   showTravelTime?: boolean;
-  showAlternates?: boolean;
   showLanguage?: boolean;
 }
 
 export const QuickSettings = ({
   showTravelTime = true,
-  showAlternates = true,
   showLanguage = true,
 }: QuickSettingsProps) => {
   const search = useSearch({ from: '/$activeTab' });
@@ -239,7 +236,7 @@ export const QuickSettings = ({
   return (
     <div className="flex flex-col gap-2">
       <CollapsibleSection
-        title="General settings"
+        title="Quick Settings"
         icon={Settings}
         open={open}
         onOpenChange={setOpen}
@@ -300,29 +297,6 @@ export const QuickSettings = ({
               </div>
             )}
           </div>
-
-          {showAlternates && (
-            <SliderSetting
-              id="alternates"
-              label="Alternative routes"
-              description="How many alternative routes to request alongside the main route."
-              min={0}
-              max={5}
-              step={1}
-              value={(settings.alternates as number) ?? 0}
-              unit="routes"
-              onValueChange={(values) => {
-                updateSettings('alternates', values[0] ?? 0);
-              }}
-              onValueCommit={() => refetchDirections()}
-              onInputChange={(values) => {
-                let parsed = values[0] ?? 0;
-                if (isNaN(parsed)) parsed = 0;
-                parsed = Math.max(0, Math.min(parsed, 5));
-                handleSettingChange('alternates', parsed);
-              }}
-            />
-          )}
 
           {showLanguage && (
             <SelectSetting

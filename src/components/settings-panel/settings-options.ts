@@ -524,10 +524,11 @@ const useGeocoding = {
 };
 
 const alternates = {
-  name: 'Alternates',
-  description: 'You want more?',
+  name: 'Alternative Routes',
+  description:
+    'How many alternative routes to request alongside the main route.',
   param: 'alternates',
-  unit: 'alternates',
+  unit: 'routes',
   settings: {
     min: 0,
     max: 5,
@@ -915,22 +916,17 @@ export type DirectionsLanguage = (typeof languageOptions)[number]['value'];
 export const DEFAULT_DIRECTIONS_LANGUAGE: DirectionsLanguage = 'en-US';
 export const DIRECTIONS_LANGUAGE_STORAGE_KEY = 'directions_language';
 
-// Settings controlled from the QuickSettings (left sidebar) panel. They're
-// cross-profile user preferences (URL-permalinked), so resetSettings preserves
-// them. use_highways / use_tolls / use_ferry are *also* sliders in the advanced
-// panel: the left-sidebar icons are just presets (0 / 0.5 / 1) that write the
-// slider value, and requests always send the slider value.
+// Cross-profile user preferences that are URL-permalinked (by QuickSettings),
+// so resetSettings preserves them. All are sliders in the advanced panel;
+// use_highways / use_tolls / use_ferry additionally have left-sidebar icons
+// that are just presets (0 / 0.5 / 1) writing the slider value — requests
+// always send the slider value.
 export const QUICK_SETTING_PARAMS = [
   'use_highways',
   'use_tolls',
   'use_ferry',
   'alternates',
 ] as const;
-
-// Quick settings that are NOT repeated in the advanced (right) panel.
-export const ADVANCED_PANEL_HIDDEN_PARAMS = [
-  'alternates',
-] as const satisfies readonly (typeof QUICK_SETTING_PARAMS)[number][];
 
 // Profiles where use_highways / use_tolls are meaningful costing options.
 // Pedestrian, bicycle, motor_scooter ignore them, so the QuickSettings panel
