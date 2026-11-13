@@ -23,7 +23,7 @@ import {
 import { buildHeightgraphData } from '@/utils/heightgraph';
 import HeightGraph from '@/components/heightgraph';
 import { DrawControl } from './draw-control';
-import type { Summary } from '@/components/types';
+import type { ParsedDirectionsGeometry, Summary } from '@/components/types';
 import type { FeatureCollection } from 'geojson';
 import RoutingIcon from '@/images/routing_icon_minimal_bw.svg?url';
 import IsochronesIcon from '@/images/isochrones_icon_minimal_bw.svg?url';
@@ -117,6 +117,9 @@ export const MapComponent = () => {
   const waypoints = useDirectionsStore((state) => state.waypoints);
   const directionResults = useDirectionsStore((state) => state.results);
   const directionsSuccessful = useDirectionsStore((state) => state.successful);
+  const activeRouteIndex = useDirectionsStore(
+    (state) => state.activeRouteIndex
+  );
   const updateInclineDecline = useDirectionsStore(
     (state) => state.updateInclineDecline
   );
@@ -335,10 +338,16 @@ export const MapComponent = () => {
   }, [popupLngLat, updateIsoPosition]);
 
   const getHeightData = useCallback(async () => {
-    if (!directionResults.data?.decodedGeometry) return;
+    const activeRoute =
+      activeRouteIndex === 0
+        ? directionResults.data
+        : (directionResults.data?.alternates?.[activeRouteIndex - 1] as
+            | ParsedDirectionsGeometry
+            | undefined);
+    if (!activeRoute?.decodedGeometry) return;
 
     const heightPayloadNew = buildHeightRequest(
-      directionResults.data.decodedGeometry as [number, number][]
+      activeRoute.decodedGeometry as [number, number][]
     );
 
     if (JSON.stringify(heightPayload) !== JSON.stringify(heightPayloadNew)) {
@@ -362,7 +371,7 @@ export const MapComponent = () => {
         const data = await response.json();
 
         const reversedGeometry = JSON.parse(
-          JSON.stringify(directionResults.data?.decodedGeometry)
+          JSON.stringify(activeRoute.decodedGeometry)
         ).map((pair: number[]) => {
           return [...pair.reverse()];
         });
@@ -382,7 +391,7 @@ export const MapComponent = () => {
         setIsHeightLoading(false);
       }
     }
-  }, [directionResults, heightPayload, updateInclineDecline]);
+  }, [directionResults, activeRouteIndex, heightPayload, updateInclineDecline]);
 
   useEffect(() => {
     if (isHeightgraphExpanded) {
