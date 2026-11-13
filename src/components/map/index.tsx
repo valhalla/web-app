@@ -113,6 +113,7 @@ export const MapComponent = () => {
   const [heightgraphData, setHeightgraphData] = useState<FeatureCollection[]>(
     []
   );
+  const [isHeightgraphExpanded, setIsHeightgraphExpanded] = useState(false);
   const waypoints = useDirectionsStore((state) => state.waypoints);
   const directionResults = useDirectionsStore((state) => state.results);
   const directionsSuccessful = useDirectionsStore((state) => state.successful);
@@ -382,6 +383,12 @@ export const MapComponent = () => {
       }
     }
   }, [directionResults, heightPayload, updateInclineDecline]);
+
+  useEffect(() => {
+    if (isHeightgraphExpanded) {
+      getHeightData();
+    }
+  }, [isHeightgraphExpanded, getHeightData]);
 
   // Update markers when waypoints or isochrone centers change
   const geocodeResults = useIsochronesStore((state) => state.geocodeResults);
@@ -978,11 +985,7 @@ export const MapComponent = () => {
                 : window.innerWidth * 0.9
             }
             height={200}
-            onExpand={(expanded) => {
-              if (expanded) {
-                getHeightData();
-              }
-            }}
+            onExpand={setIsHeightgraphExpanded}
             onHighlight={throttledSetHeightgraphHoverDistance}
           />
           <ToolButton
