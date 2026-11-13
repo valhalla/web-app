@@ -1,6 +1,6 @@
 import { Waypoints } from './waypoints';
 import { SettingsFooter } from '@/components/settings-footer';
-import { GeneralSettings } from '@/components/general-settings';
+import { QuickSettings } from '@/components/quick-settings';
 import { useIsochronesStore } from '@/stores/isochrones-store';
 import { IsochroneCard } from './isochrone-card';
 
@@ -9,7 +9,7 @@ export const IsochronesControl = () => {
   return (
     <>
       <Waypoints />
-      <GeneralSettings showAlternates={false} showLanguage={false} />
+      <QuickSettings showAlternates={false} showLanguage={false} />
       <SettingsFooter />
       {results.data && (
         <div>
