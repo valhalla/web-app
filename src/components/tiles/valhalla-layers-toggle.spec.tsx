@@ -3,15 +3,28 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { LayerSpecification } from 'maplibre-gl';
 import { ValhallaLayersToggle } from './valhalla-layers-toggle';
+import * as valhallaLayers from './valhalla-layers';
 import {
   VALHALLA_SOURCE_ID,
-  VALHALLA_LAYERS,
+  VALHALLA_LAYER_IDS,
   VALHALLA_EDGES_LAYER_ID,
   VALHALLA_NODES_LAYER_ID,
   VALHALLA_SHORTCUTS_LAYER_ID,
   VALHALLA_ACCESS_RESTRICTIONS_PERMANENT_LAYER_ID,
   VALHALLA_ACCESS_RESTRICTIONS_TIMED_LAYER_ID,
 } from './valhalla-layers';
+
+vi.mock('./valhalla-layers', async () => {
+  const actual =
+    await vi.importActual<typeof import('./valhalla-layers')>(
+      './valhalla-layers'
+    );
+
+  return {
+    ...actual,
+    getValhallaLayers: vi.fn(),
+  };
+});
 
 const createMockMap = () => {
   const sources: Record<string, unknown> = {};
@@ -60,12 +73,35 @@ vi.mock('@/stores/common-store', () => ({
 }));
 
 const noCustomLayers: { layer: LayerSpecification; visible: boolean }[] = [];
+const mockHostedLayers: LayerSpecification[] = [
+  {
+    id: VALHALLA_EDGES_LAYER_ID,
+    type: 'line',
+    source: VALHALLA_SOURCE_ID,
+    'source-layer': 'edges',
+  } as LayerSpecification,
+  {
+    id: VALHALLA_SHORTCUTS_LAYER_ID,
+    type: 'line',
+    source: VALHALLA_SOURCE_ID,
+    'source-layer': 'shortcuts',
+  } as LayerSpecification,
+  {
+    id: VALHALLA_NODES_LAYER_ID,
+    type: 'circle',
+    source: VALHALLA_SOURCE_ID,
+    'source-layer': 'nodes',
+  } as LayerSpecification,
+];
 
 describe('ValhallaLayersToggle', () => {
   beforeEach(() => {
     mockMap = createMockMap();
     mockMapReady = true;
     vi.clearAllMocks();
+    vi.mocked(valhallaLayers.getValhallaLayers).mockResolvedValue(
+      mockHostedLayers
+    );
   });
 
   afterEach(() => {
@@ -111,13 +147,15 @@ describe('ValhallaLayersToggle', () => {
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
 
-      expect(mockMap.addSource).toHaveBeenCalledWith(
-        VALHALLA_SOURCE_ID,
-        expect.objectContaining({
-          type: 'vector',
-          tiles: expect.any(Array),
-        })
-      );
+      await waitFor(() => {
+        expect(mockMap.addSource).toHaveBeenCalledWith(
+          VALHALLA_SOURCE_ID,
+          expect.objectContaining({
+            type: 'vector',
+            tiles: expect.any(Array),
+          })
+        );
+      });
     });
 
     it('should add all layers when toggled on', async () => {
@@ -127,10 +165,18 @@ describe('ValhallaLayersToggle', () => {
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
 
-      expect(mockMap.addLayer).toHaveBeenCalledTimes(VALHALLA_LAYERS.length);
-      for (const layer of VALHALLA_LAYERS) {
-        expect(mockMap.addLayer).toHaveBeenCalledWith(layer);
-      }
+      await waitFor(() => {
+        expect(mockMap.addLayer).toHaveBeenCalledTimes(
+          VALHALLA_LAYER_IDS.length
+        );
+      });
+
+      const addLayerIds = mockMap.addLayer.mock.calls.map(
+        (call: [{ id: string }]) => call[0].id
+      );
+      expect(addLayerIds).toContain(VALHALLA_EDGES_LAYER_ID);
+      expect(addLayerIds).toContain(VALHALLA_SHORTCUTS_LAYER_ID);
+      expect(addLayerIds).toContain(VALHALLA_NODES_LAYER_ID);
     });
 
     it('should remove all layers when toggled off', async () => {
@@ -188,9 +234,11 @@ describe('ValhallaLayersToggle', () => {
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
 
-      expect(mockMap.addLayer).toHaveBeenCalledTimes(
-        VALHALLA_LAYERS.length - 1
-      );
+      await waitFor(() => {
+        expect(mockMap.addLayer).toHaveBeenCalledTimes(
+          VALHALLA_LAYER_IDS.length - 1
+        );
+      });
     });
 
     it('should update checked state when toggled', async () => {
@@ -291,9 +339,11 @@ describe('ValhallaLayersToggle', () => {
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
 
-      expect(mockMap.addLayer).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'custom-valhalla-layer' })
-      );
+      await waitFor(() => {
+        expect(mockMap.addLayer).toHaveBeenCalledWith(
+          expect.objectContaining({ id: 'custom-valhalla-layer' })
+        );
+      });
     });
 
     it('should set visibility none for an invisible custom valhalla layer when re-added', async () => {
@@ -314,11 +364,13 @@ describe('ValhallaLayersToggle', () => {
       const toggle = screen.getByRole('switch');
       await user.click(toggle);
 
-      expect(mockMap.setLayoutProperty).toHaveBeenCalledWith(
-        'custom-hidden-layer',
-        'visibility',
-        'none'
-      );
+      await waitFor(() => {
+        expect(mockMap.setLayoutProperty).toHaveBeenCalledWith(
+          'custom-hidden-layer',
+          'visibility',
+          'none'
+        );
+      });
     });
 
     it('should not re-add a custom layer that uses a different source', async () => {
