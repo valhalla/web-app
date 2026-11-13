@@ -224,6 +224,41 @@ export const SettingsPanel = () => {
             onOpenChange={setGeneralSettingsOpen}
           >
             <div className="space-y-1.25">
+              {generalSettings.all.numeric
+                .filter(
+                  (option) =>
+                    activeTab === 'directions' ||
+                    !DIRECTIONS_ONLY_PARAMS.has(option.param)
+                )
+                .map((option, key) => (
+                  <SliderSetting
+                    key={key}
+                    id={option.param}
+                    label={option.name}
+                    description={option.description}
+                    min={option.settings.min}
+                    max={option.settings.max}
+                    step={option.settings.step}
+                    value={(settings[option.param] as number) ?? 0}
+                    unit={option.unit}
+                    onValueChange={(values) => {
+                      updateSettings(option.param, values[0] ?? 0);
+                    }}
+                    onValueCommit={handleMakeRequest}
+                    onInputChange={(values) => {
+                      let value = values[0] ?? 0;
+                      if (isNaN(value)) value = option.settings.min;
+                      value = Math.max(
+                        option.settings.min,
+                        Math.min(value, option.settings.max)
+                      );
+                      handleUpdateSettings({
+                        name: option.param,
+                        value,
+                      });
+                    }}
+                  />
+                ))}
               {generalSettings[profile as ProfileWithSettings].numeric.map(
                 (option, key) => (
                   <SliderSetting
@@ -287,41 +322,6 @@ export const SettingsPanel = () => {
                   }}
                 />
               ))}
-              {generalSettings.all.numeric
-                .filter(
-                  (option) =>
-                    activeTab === 'directions' ||
-                    !DIRECTIONS_ONLY_PARAMS.has(option.param)
-                )
-                .map((option, key) => (
-                  <SliderSetting
-                    key={key}
-                    id={option.param}
-                    label={option.name}
-                    description={option.description}
-                    min={option.settings.min}
-                    max={option.settings.max}
-                    step={option.settings.step}
-                    value={(settings[option.param] as number) ?? 0}
-                    unit={option.unit}
-                    onValueChange={(values) => {
-                      updateSettings(option.param, values[0] ?? 0);
-                    }}
-                    onValueCommit={handleMakeRequest}
-                    onInputChange={(values) => {
-                      let value = values[0] ?? 0;
-                      if (isNaN(value)) value = option.settings.min;
-                      value = Math.max(
-                        option.settings.min,
-                        Math.min(value, option.settings.max)
-                      );
-                      handleUpdateSettings({
-                        name: option.param,
-                        value,
-                      });
-                    }}
-                  />
-                ))}
             </div>
           </CollapsibleSection>
 
