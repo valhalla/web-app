@@ -542,6 +542,61 @@ const ignoreHierarchies = {
   param: 'disable_hierarchy_pruning',
 };
 
+export const sendHierarchyLimits = {
+  name: 'Send Hierarchy Limits',
+  description:
+    'Sends the limits below with each request. Unless configured otherwise, a Valhalla server will ignore them and issue a warning. Values above the configured maximums are clamped. Pedestrian and bicycle routes ignore them.',
+  param: 'use_hierarchy_limits',
+};
+
+export const hierarchyLevelSettings: {
+  title: string;
+  options: NumericSetting[];
+}[] = [
+  {
+    title: 'Arterial (level 1)',
+    options: [
+      {
+        name: 'Max Up Transitions',
+        description:
+          'The maximum number of transitions from the arterial level (1) up to the highway level before the search stops expanding the arterial level.',
+        param: 'hierarchy_limits_1_max_up_transitions',
+        unit: '',
+        settings: { min: 0, max: 2000, step: 10 },
+      },
+      {
+        name: 'Expand Within Distance',
+        description:
+          'The distance from the origin or destination within which the arterial level (1) is always expanded, regardless of its up transitions.',
+        param: 'hierarchy_limits_1_expand_within_distance',
+        unit: 'm',
+        settings: { min: 0, max: 200000, step: 1000 },
+      },
+    ],
+  },
+  {
+    title: 'Local (level 2)',
+    options: [
+      {
+        name: 'Max Up Transitions',
+        description:
+          'The maximum number of transitions from the local level (2) up to the arterial level before the search stops expanding the local level.',
+        param: 'hierarchy_limits_2_max_up_transitions',
+        unit: '',
+        settings: { min: 0, max: 1000, step: 10 },
+      },
+      {
+        name: 'Expand Within Distance',
+        description:
+          'The distance from the origin or destination within which the local level (2) is always expanded, regardless of its up transitions.',
+        param: 'hierarchy_limits_2_expand_within_distance',
+        unit: 'm',
+        settings: { min: 0, max: 50000, step: 500 },
+      },
+    ],
+  },
+];
+
 const bicycleType = {
   name: 'Bicycle Type',
   description: `The type of bicycle. The default type is Hybrid.
@@ -896,6 +951,7 @@ export const settingsInit = {
   ferry_cost: 300,
   use_living_streets: 0.5,
   use_tracks: 0,
+  use_distance: 0,
   private_access_penalty: 450,
   destination_only_penalty: 300,
   elevator_penalty: 120,
@@ -943,6 +999,11 @@ export const settingsInit = {
   generalize: 0,
   alternates: 2,
   speed_types: ['current', 'freeflow', 'predicted', 'constrained'],
+  use_hierarchy_limits: false,
+  hierarchy_limits_1_max_up_transitions: 400,
+  hierarchy_limits_1_expand_within_distance: 20000,
+  hierarchy_limits_2_max_up_transitions: 100,
+  hierarchy_limits_2_expand_within_distance: 5000,
 };
 
 export const settingsInitTruckOverride = {
@@ -1115,14 +1176,7 @@ export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
   bicycle: createSettings([useFerry, useLivingStreets, ...serviceSettings], []),
 
   motorcycle: createSettings(
-    [
-      useHighways,
-      useTrails,
-      ...tollSettings,
-      ...ferrySettings,
-      useLivingStreets,
-      useTracks,
-    ],
+    [...commonGeneralNumeric, useTrails],
     [...ignoreFlags, excludeCashOnlyTolls]
   ),
 

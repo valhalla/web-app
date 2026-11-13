@@ -25,6 +25,7 @@ import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
 import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import { ServerSettings } from '@/components/settings-panel/server-settings';
+import { HierarchyLimitsSettings } from '@/components/settings-panel/hierarchy-limits-settings';
 import { MultiSelectSetting } from '../ui/multiselect-setting';
 
 type ProfileWithSettings = Exclude<Profile, 'auto'>;
@@ -322,6 +323,11 @@ export const SettingsPanel = () => {
                 ))}
             </div>
           </CollapsibleSection>
+
+          <HierarchyLimitsSettings
+            onSettingChange={handleUpdateSettings}
+            onSliderCommit={handleMakeRequest}
+          />
 
           <div className="flex gap-2 pt-1">
             <Button
