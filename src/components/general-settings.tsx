@@ -23,6 +23,7 @@ import {
 } from '@/utils/directions-language';
 import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
+import { useRoundTripQuery } from '@/hooks/use-round-trip-queries';
 import type { PossibleSettings } from '@/components/types';
 
 type WillingnessOption = typeof useHighways;
@@ -50,6 +51,7 @@ export const GeneralSettings = ({
   const updateDateTime = useCommonStore((state) => state.updateDateTime);
   const { refetch: refetchDirections } = useDirectionsQuery();
   const { refetch: refetchIsochrones } = useIsochronesQuery();
+  const { refetch: refetchRoundTrip } = useRoundTripQuery();
 
   const [open, setOpen] = useState(true);
   const [language, setLanguage] = useState<DirectionsLanguage>(() => {
@@ -128,7 +130,8 @@ export const GeneralSettings = ({
   const refetchAll = useCallback(() => {
     refetchDirections();
     refetchIsochrones();
-  }, [refetchDirections, refetchIsochrones]);
+    refetchRoundTrip();
+  }, [refetchDirections, refetchIsochrones, refetchRoundTrip]);
 
   const handleSettingChange = useCallback(
     (
@@ -159,8 +162,9 @@ export const GeneralSettings = ({
       setDirectionsLanguage(newLanguage);
       setLanguage(newLanguage);
       refetchDirections();
+      refetchRoundTrip();
     },
-    [refetchDirections]
+    [refetchDirections, refetchRoundTrip]
   );
 
   return (

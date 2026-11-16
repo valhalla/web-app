@@ -6,6 +6,7 @@ interface MapContextMenuProps {
   activeTab: string;
   onAddWaypoint: (index: number) => void;
   onAddIsoWaypoint: () => void;
+  onSetRoundTripStart: () => void;
   popupLocation: { lng: number; lat: number };
 }
 
@@ -13,6 +14,7 @@ export function MapContextMenu({
   activeTab,
   onAddWaypoint,
   onAddIsoWaypoint,
+  onSetRoundTripStart,
   popupLocation,
 }: MapContextMenuProps) {
   const waypointCount = useDirectionsStore((state) => state.waypoints.length);
@@ -48,6 +50,16 @@ export function MapContextMenu({
           onClick={() => onAddWaypoint(waypointCount - 1)}
         >
           Directions to here
+        </Button>
+      </ButtonGroup>
+    );
+  }
+
+  if (activeTab === 'round-trip') {
+    return (
+      <ButtonGroup orientation="vertical">
+        <Button variant="outline" size="sm" onClick={onSetRoundTripStart}>
+          Start round trip here
         </Button>
       </ButtonGroup>
     );

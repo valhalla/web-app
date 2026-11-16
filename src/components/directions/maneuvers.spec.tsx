@@ -7,8 +7,8 @@ import type { Leg, Maneuver } from '@/components/types';
 const mockHighlightManeuver = vi.fn();
 const mockZoomToManeuver = vi.fn();
 
-vi.mock('@/stores/directions-store', () => ({
-  useDirectionsStore: vi.fn((selector) =>
+vi.mock('@/hooks/use-active-route-store', () => ({
+  useActiveRouteStore: vi.fn((selector) =>
     selector({
       highlightManeuver: mockHighlightManeuver,
       zoomToManeuver: mockZoomToManeuver,

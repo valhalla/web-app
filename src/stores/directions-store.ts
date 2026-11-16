@@ -1,35 +1,16 @@
-import type {
-  ActiveWaypoint,
-  ParsedDirectionsGeometry,
-} from '@/components/types';
+import type { ActiveWaypoint } from '@/components/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import {
+  createRouteResultSlice,
+  type RouteResultSlice,
+} from './route-result-slice';
 
 export interface Waypoint {
   id: string;
   geocodeResults: ActiveWaypoint[];
   userInput: string;
-}
-
-interface HighlightSegment {
-  startIndex: number;
-  endIndex: number;
-  alternate: number;
-}
-
-interface ZoomObj {
-  index: number;
-  timeNow: number;
-}
-
-interface RouteResult {
-  data: ParsedDirectionsGeometry | null;
-  show: Record<string, boolean>;
-}
-
-interface InclineDeclineTotal {
-  [key: string]: unknown;
 }
 
 interface LatLng {
@@ -59,23 +40,13 @@ const hasActiveRoute = (waypoints: Waypoint[]): boolean =>
       wp.geocodeResults.length > 0 && wp.geocodeResults.some((r) => r.selected)
   ).length >= 2;
 
-export interface DirectionsState {
-  successful: boolean;
-  highlightSegment: HighlightSegment;
+interface DirectionsState {
   waypoints: Waypoint[];
-  zoomObj: ZoomObj;
   selectedAddresses: string | (Waypoint | null)[];
-  results: RouteResult;
-  inclineDeclineTotal?: InclineDeclineTotal;
   isOptimized: boolean;
-  activeRouteIndex: number;
 }
 
 interface DirectionsActions {
-  updateInclineDecline: (inclineDeclineTotal: InclineDeclineTotal) => void;
-  toggleShowOnMap: (params: { show: boolean; idx: number }) => void;
-  clearRoutes: () => void;
-  receiveRouteResults: (params: { data: ParsedDirectionsGeometry }) => void;
   receiveGeocodeResults: (params: {
     index: number;
     addresses: ActiveWaypoint[];
@@ -91,75 +62,23 @@ interface DirectionsActions {
   addWaypointAtIndex: (params: { index: number; placeholder?: LatLng }) => void;
   addEmptyWaypointToEnd: () => void;
   doRemoveWaypoint: (params: { index: number }) => void;
-  highlightManeuver: (fromTo: HighlightSegment) => void;
-  zoomToManeuver: (zoomObj: ZoomObj) => void;
   updatePlaceholderAddressAtIndex: (
     index: number,
     lng: number,
     lat: number
   ) => void;
   setIsOptimized: (isOptimized: boolean) => void;
-  setActiveRouteIndex: (index: number) => void;
 }
 
-type DirectionsStore = DirectionsState & DirectionsActions;
+type DirectionsStore = RouteResultSlice & DirectionsState & DirectionsActions;
 
 export const useDirectionsStore = create<DirectionsStore>()(
   devtools(
     immer((set) => ({
-      successful: false,
-      highlightSegment: { startIndex: -1, endIndex: -1, alternate: -1 },
+      ...createRouteResultSlice(set),
       waypoints: defaultWaypoints,
-      zoomObj: { index: -1, timeNow: -1 },
       selectedAddresses: '',
-      results: { data: null, show: { '0': true } },
       isOptimized: false,
-      activeRouteIndex: 0,
-
-      updateInclineDecline: (inclineDeclineTotal) =>
-        set(
-          (state) => {
-            state.inclineDeclineTotal = inclineDeclineTotal;
-          },
-          undefined,
-          'updateInclineDecline'
-        ),
-
-      toggleShowOnMap: ({ idx, show }) =>
-        set(
-          (state) => {
-            state.results.show[idx] = show;
-          },
-          undefined,
-          'toggleShowOnMap'
-        ),
-
-      clearRoutes: () =>
-        set(
-          (state) => {
-            state.successful = false;
-            state.inclineDeclineTotal = undefined;
-            state.results.data = null;
-            state.activeRouteIndex = 0;
-          },
-          undefined,
-          'clearRoutes'
-        ),
-
-      receiveRouteResults: ({ data }) =>
-        set(
-          (state) => {
-            const show: Record<string, boolean> = { '0': true };
-            data.alternates?.forEach((_, i) => (show[i + 1] = true));
-
-            state.successful = true;
-            state.inclineDeclineTotal = undefined;
-            state.results = { data, show };
-            state.activeRouteIndex = 0;
-          },
-          undefined,
-          'receiveRouteResults'
-        ),
 
       receiveGeocodeResults: ({ index, addresses }) =>
         set(
@@ -289,30 +208,6 @@ export const useDirectionsStore = create<DirectionsStore>()(
           'doRemoveWaypoint'
         ),
 
-      highlightManeuver: (fromTo) =>
-        set(
-          (state) => {
-            const { startIndex, endIndex } = state.highlightSegment;
-            const isToggleOff =
-              startIndex === fromTo.startIndex && endIndex === fromTo.endIndex;
-
-            state.highlightSegment = isToggleOff
-              ? { startIndex: -1, endIndex: -1, alternate: fromTo.alternate }
-              : fromTo;
-          },
-          undefined,
-          'highlightManeuver'
-        ),
-
-      zoomToManeuver: (zoomObj) =>
-        set(
-          (state) => {
-            state.zoomObj = zoomObj;
-          },
-          undefined,
-          'zoomToManeuver'
-        ),
-
       updatePlaceholderAddressAtIndex: (index, lng, lat) =>
         set(
           (state) => {
@@ -343,15 +238,6 @@ export const useDirectionsStore = create<DirectionsStore>()(
           },
           undefined,
           'setIsOptimized'
-        ),
-
-      setActiveRouteIndex: (index) =>
-        set(
-          (state) => {
-            state.activeRouteIndex = index;
-          },
-          undefined,
-          'setActiveRouteIndex'
         ),
     })),
     { name: 'directions-store' }

@@ -20,9 +20,8 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { X, Copy, RotateCcw, SlidersHorizontal, Settings2 } from 'lucide-react';
-import { useParams, useSearch } from '@tanstack/react-router';
-import { useDirectionsQuery } from '@/hooks/use-directions-queries';
-import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
+import { useSearch } from '@tanstack/react-router';
+import { useRefetchActiveTab } from '@/hooks/use-refetch-tab-queries';
 import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import { ServerSettings } from '@/components/settings-panel/server-settings';
 import { HierarchyLimitsSettings } from '@/components/settings-panel/hierarchy-limits-settings';
@@ -34,26 +33,16 @@ const QUICK_SETTING_PARAM_SET: Set<string> = new Set(QUICK_SETTING_PARAMS);
 
 export const SettingsPanel = () => {
   const { profile } = useSearch({ from: '/$activeTab' });
-  const { activeTab } = useParams({ from: '/$activeTab' });
   const settings = useCommonStore((state) => state.settings);
   const settingsPanelOpen = useCommonStore((state) => state.settingsPanelOpen);
   const updateSettings = useCommonStore((state) => state.updateSettings);
   const resetSettings = useCommonStore((state) => state.resetSettings);
   const toggleSettings = useCommonStore((state) => state.toggleSettings);
   const [copied, setCopied] = useState(false);
-  const { refetch: refetchDirections } = useDirectionsQuery();
-  const { refetch: refetchIsochrones } = useIsochronesQuery();
+  const refetchActiveTab = useRefetchActiveTab();
 
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(true);
   const [generalSettingsOpen, setGeneralSettingsOpen] = useState(true);
-
-  const handleMakeRequest = useCallback(() => {
-    if (activeTab === 'directions') {
-      refetchDirections();
-    } else {
-      refetchIsochrones();
-    }
-  }, [activeTab, refetchDirections, refetchIsochrones]);
 
   const handleUpdateSettings = useCallback(
     ({
@@ -64,14 +53,9 @@ export const SettingsPanel = () => {
       value: PossibleSettings[keyof PossibleSettings];
     }) => {
       updateSettings(name, value);
-
-      if (activeTab === 'directions') {
-        refetchDirections();
-      } else {
-        refetchIsochrones();
-      }
+      refetchActiveTab();
     },
-    [activeTab, updateSettings, refetchDirections, refetchIsochrones]
+    [updateSettings, refetchActiveTab]
   );
 
   const handleCopySettings = useCallback(async () => {
@@ -87,12 +71,8 @@ export const SettingsPanel = () => {
 
   const resetConfigSettings = useCallback(() => {
     resetSettings(profile || 'bicycle');
-    if (activeTab === 'directions') {
-      refetchDirections();
-    } else {
-      refetchIsochrones();
-    }
-  }, [activeTab, profile, resetSettings, refetchDirections, refetchIsochrones]);
+    refetchActiveTab();
+  }, [profile, resetSettings, refetchActiveTab]);
 
   const hasProfileSettings =
     profileSettings[profile as ProfileWithSettings].boolean.length > 0;
@@ -144,7 +124,7 @@ export const SettingsPanel = () => {
                       onValueChange={(values) => {
                         updateSettings(option.param, values[0] ?? 0);
                       }}
-                      onValueCommit={handleMakeRequest}
+                      onValueCommit={refetchActiveTab}
                       onInputChange={(values) => {
                         let value = values[0] ?? 0;
                         if (isNaN(value)) value = option.settings.min;
@@ -243,7 +223,7 @@ export const SettingsPanel = () => {
                     onValueChange={(values) => {
                       updateSettings(option.param, values[0] ?? 0);
                     }}
-                    onValueCommit={handleMakeRequest}
+                    onValueCommit={refetchActiveTab}
                     onInputChange={(values) => {
                       let value = values[0] ?? 0;
                       if (isNaN(value)) value = option.settings.min;
@@ -306,7 +286,7 @@ export const SettingsPanel = () => {
                     onValueChange={(values) => {
                       updateSettings(option.param, values[0] ?? 0);
                     }}
-                    onValueCommit={handleMakeRequest}
+                    onValueCommit={refetchActiveTab}
                     onInputChange={(values) => {
                       let value = values[0] ?? 0;
                       if (isNaN(value)) value = option.settings.min;
@@ -326,7 +306,7 @@ export const SettingsPanel = () => {
 
           <HierarchyLimitsSettings
             onSettingChange={handleUpdateSettings}
-            onSliderCommit={handleMakeRequest}
+            onSliderCommit={refetchActiveTab}
           />
 
           <div className="flex gap-2 pt-1">

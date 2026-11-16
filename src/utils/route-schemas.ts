@@ -25,11 +25,20 @@ export const searchParamsSchema = z.object({
   use_tolls: willingness.optional(),
   alternates: z.number().int().min(0).max(5).optional(),
   lang: languageEnum.optional(),
+  distance: z.number().positive().optional(),
+  distance_tolerance: z.number().positive().optional(),
+  heading: z.number().min(0).max(360).optional(),
+  heading_tolerance: z.number().positive().optional(),
 });
 
 export type SearchParamsSchema = z.infer<typeof searchParamsSchema>;
 
-export const VALID_TABS = ['directions', 'isochrones', 'tiles'] as const;
+export const VALID_TABS = [
+  'directions',
+  'isochrones',
+  'round-trip',
+  'tiles',
+] as const;
 export type ValidTab = (typeof VALID_TABS)[number];
 
 export function isValidTab(tab: string): tab is ValidTab {

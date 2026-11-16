@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { DirectionsControl } from './directions/directions';
 import { IsochronesControl } from './isochrones/isochrones';
+import { RoundTripControl } from './round-trip/round-trip';
 import { DataInfoTable } from './data-info-table';
 
 const TilesControl = lazy(() =>
@@ -20,10 +21,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useParams, useNavigate } from '@tanstack/react-router';
 import { ProfilePicker } from './profile-picker';
 import type { Profile } from '@/stores/common-store';
-import { useDirectionsQuery } from '@/hooks/use-directions-queries';
-import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
+import { useTabRefetchers } from '@/hooks/use-refetch-tab-queries';
 import { useDirectionsPermalink } from '@/hooks/use-directions-permalink';
 import { useIsochronesPermalink } from '@/hooks/use-isochrones-permalink';
+import { useRoundTripPermalink } from '@/hooks/use-round-trip-permalink';
 
 const TAB_CONFIG = {
   directions: {
@@ -33,6 +34,10 @@ const TAB_CONFIG = {
   isochrones: {
     title: 'Isochrones',
     description: 'Calculate reachable areas from a location',
+  },
+  'round-trip': {
+    title: 'Round Trip',
+    description: 'Plan a round trip of a given length from a location',
   },
   tiles: {
     title: 'Tiles',
@@ -46,14 +51,14 @@ export const RoutePlanner = () => {
   const directionsPanelOpen = useCommonStore(
     (state) => state.directionsPanelOpen
   );
-  const { refetch: refetchDirections } = useDirectionsQuery();
-  const { refetch: refetchIsochrones } = useIsochronesQuery();
+  const tabRefetchers = useTabRefetchers();
   const loading = useCommonStore((state) => state.loading);
   const toggleDirections = useCommonStore((state) => state.toggleDirections);
 
   // Lives here rather than in the tab panels, which unmount with the sidebar
   useDirectionsPermalink(activeTab === 'directions');
   useIsochronesPermalink(activeTab === 'isochrones');
+  useRoundTripPermalink(activeTab === 'round-trip');
 
   const tabConfig = TAB_CONFIG[activeTab as keyof typeof TAB_CONFIG];
 
@@ -67,17 +72,14 @@ export const RoutePlanner = () => {
       replace: true,
     });
 
-    if (activeTab === 'isochrones') {
-      refetchIsochrones();
-      setTimeout(() => {
-        refetchDirections();
-      }, 1000);
-    } else {
-      refetchDirections();
-      setTimeout(() => {
-        refetchIsochrones();
-      }, 1000);
-    }
+    // the active tab's result first, the others' once it's underway
+    const tabRefetchEntries = Object.entries(tabRefetchers);
+    tabRefetchEntries.find(([tab]) => tab === activeTab)?.[1]();
+    setTimeout(() => {
+      tabRefetchEntries
+        .filter(([tab]) => tab !== activeTab)
+        .forEach(([, refetch]) => refetch());
+    }, 1000);
   };
 
   return (
@@ -104,6 +106,12 @@ export const RoutePlanner = () => {
                 data-testid="isochrones-tab-button"
               >
                 Isochrones
+              </TabsTrigger>
+              <TabsTrigger
+                value="round-trip"
+                data-testid="round-trip-tab-button"
+              >
+                Round Trip
               </TabsTrigger>
               <TabsTrigger value="tiles" data-testid="tiles-tab-button">
                 Tiles
@@ -137,6 +145,9 @@ export const RoutePlanner = () => {
           </TabsContent>
           <TabsContent value="isochrones" className="flex flex-col gap-3 px-2">
             <IsochronesControl />
+          </TabsContent>
+          <TabsContent value="round-trip" className="flex flex-col gap-3 px-2">
+            <RoundTripControl />
           </TabsContent>
           <TabsContent
             value="tiles"

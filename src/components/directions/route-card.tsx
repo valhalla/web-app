@@ -27,6 +27,8 @@ interface RouteCardProps {
   index: number;
   isActive: boolean;
   onSelect: () => void;
+  title?: string;
+  exportFileName?: string;
 }
 
 export const RouteCard = ({
@@ -34,6 +36,8 @@ export const RouteCard = ({
   index,
   isActive,
   onSelect,
+  title = index === 0 ? 'Main Route' : `Alternate Route #${index}`,
+  exportFileName = 'valhalla-directions',
 }: RouteCardProps) => {
   const [showManeuvers, setShowManeuvers] = useState(false);
 
@@ -55,10 +59,10 @@ export const RouteCard = ({
     const formattedData = JSON.stringify(geoJson, null, 2);
     downloadFile({
       data: formattedData,
-      fileName: 'valhalla-directions_' + getDateTimeString() + '.geojson',
+      fileName: `${exportFileName}_${getDateTimeString()}.geojson`,
       fileType: 'text/json',
     });
-  }, [data]);
+  }, [data, exportFileName]);
 
   if (!data.trip) {
     return null;
@@ -83,7 +87,7 @@ export const RouteCard = ({
         }}
       >
         <Summary
-          title={`${index === 0 ? 'Main Route' : 'Alternate Route #' + index}`}
+          title={title}
           summary={data.trip.summary}
           index={index}
           routeCoordinates={data.decodedGeometry ?? []}
@@ -104,7 +108,7 @@ export const RouteCard = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem
-                  onClick={() => exportDataAsJson(data, 'valhalla-directions')}
+                  onClick={() => exportDataAsJson(data, exportFileName)}
                 >
                   JSON
                 </DropdownMenuItem>

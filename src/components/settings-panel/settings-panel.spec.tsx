@@ -93,6 +93,12 @@ vi.mock('@/hooks/use-isochrones-queries', () => ({
   })),
 }));
 
+vi.mock('@/hooks/use-round-trip-queries', () => ({
+  useRoundTripQuery: vi.fn(() => ({
+    refetch: vi.fn(),
+  })),
+}));
+
 const BASE_URL_STORAGE_KEY = 'valhalla_base_url';
 
 describe('SettingsPanel', () => {

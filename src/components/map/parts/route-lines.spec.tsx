@@ -16,11 +16,11 @@ vi.mock('react-map-gl/maplibre', () => ({
   },
 }));
 
-const mockUseDirectionsStore = vi.fn();
+const mockUseActiveRouteStore = vi.fn();
 
-vi.mock('@/stores/directions-store', () => ({
-  useDirectionsStore: (selector: (state: unknown) => unknown) =>
-    mockUseDirectionsStore(selector),
+vi.mock('@/hooks/use-active-route-store', () => ({
+  useActiveRouteStore: (selector: (state: unknown) => unknown) =>
+    mockUseActiveRouteStore(selector),
 }));
 
 const createMockState = (overrides = {}) => ({
@@ -44,11 +44,11 @@ describe('RouteLines', () => {
   beforeEach(() => {
     mockSource.mockClear();
     mockLayer.mockClear();
-    mockUseDirectionsStore.mockClear();
+    mockUseActiveRouteStore.mockClear();
   });
 
   it('should render nothing when results data is null', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
+    mockUseActiveRouteStore.mockImplementation((selector) => {
       const state = { results: { data: null, show: {} }, successful: false };
       return selector(state);
     });
@@ -59,7 +59,7 @@ describe('RouteLines', () => {
   });
 
   it('should render nothing when not successful', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
+    mockUseActiveRouteStore.mockImplementation((selector) => {
       const state = createMockState({ successful: false });
       return selector(state);
     });
@@ -70,7 +70,7 @@ describe('RouteLines', () => {
   });
 
   it('should render Source when data is valid', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
+    mockUseActiveRouteStore.mockImplementation((selector) => {
       const state = createMockState();
       return selector(state);
     });
@@ -83,7 +83,7 @@ describe('RouteLines', () => {
   });
 
   it('should render three layers (outline, line, hit-target)', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
+    mockUseActiveRouteStore.mockImplementation((selector) => {
       const state = createMockState();
       return selector(state);
     });
@@ -97,7 +97,7 @@ describe('RouteLines', () => {
   });
 
   it('should render outline layer with white color', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
+    mockUseActiveRouteStore.mockImplementation((selector) => {
       const state = createMockState();
       return selector(state);
     });
@@ -114,7 +114,7 @@ describe('RouteLines', () => {
   });
 
   it('should render line layer with dynamic color', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
+    mockUseActiveRouteStore.mockImplementation((selector) => {
       const state = createMockState();
       return selector(state);
     });
@@ -135,7 +135,7 @@ describe('RouteLines', () => {
   });
 
   it('should convert lat/lng to lng/lat format', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
+    mockUseActiveRouteStore.mockImplementation((selector) => {
       const state = createMockState();
       return selector(state);
     });

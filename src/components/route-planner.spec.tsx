@@ -39,6 +39,22 @@ vi.mock('@/hooks/use-isochrones-queries', () => ({
   })),
 }));
 
+vi.mock('@/hooks/use-round-trip-queries', () => ({
+  useRoundTripQuery: vi.fn(() => ({
+    refetch: vi.fn(),
+  })),
+}));
+
+vi.mock('@/hooks/use-round-trip-permalink', () => ({
+  useRoundTripPermalink: vi.fn(),
+}));
+
+vi.mock('./round-trip/round-trip', () => ({
+  RoundTripControl: vi.fn(() => (
+    <div data-testid="mock-round-trip-control">Round Trip Control</div>
+  )),
+}));
+
 vi.mock('@/hooks/use-directions-permalink', () => ({
   useDirectionsPermalink: vi.fn(),
 }));
@@ -91,6 +107,7 @@ describe('RoutePlanner', () => {
     render(<RoutePlanner />);
     expect(screen.getByTestId('directions-tab-button')).toBeInTheDocument();
     expect(screen.getByTestId('isochrones-tab-button')).toBeInTheDocument();
+    expect(screen.getByTestId('round-trip-tab-button')).toBeInTheDocument();
     expect(screen.getByTestId('tiles-tab-button')).toBeInTheDocument();
   });
 

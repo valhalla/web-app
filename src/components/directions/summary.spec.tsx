@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Summary } from './summary';
 import type { Summary as SummaryType } from '@/components/types';
-import { useDirectionsStore } from '@/stores/directions-store';
+import { useActiveRouteStore } from '@/hooks/use-active-route-store';
 
 const mockToggleShowOnMap = vi.fn();
 const mockFitBounds = vi.fn();
@@ -12,8 +12,8 @@ const mockResults = {
   show: { '-1': true, '0': true, '1': false } as Record<string, boolean>,
 };
 
-vi.mock('@/stores/directions-store', () => ({
-  useDirectionsStore: vi.fn((selector) =>
+vi.mock('@/hooks/use-active-route-store', () => ({
+  useActiveRouteStore: vi.fn((selector) =>
     selector({
       results: mockResults,
       inclineDeclineTotal: null,
@@ -67,7 +67,7 @@ describe('Summary', () => {
     vi.clearAllMocks();
     mockResults.show = { '-1': true, '0': true, '1': false };
 
-    vi.mocked(useDirectionsStore).mockImplementation(
+    vi.mocked(useActiveRouteStore).mockImplementation(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (selector: any) =>
         selector({
@@ -340,7 +340,7 @@ describe('Summary', () => {
   });
 
   it('should not render recenter button when successful is false', async () => {
-    vi.mocked(useDirectionsStore).mockImplementation(
+    vi.mocked(useActiveRouteStore).mockImplementation(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (selector: any) =>
         selector({
@@ -411,7 +411,7 @@ describe('Summary', () => {
       screen.getByRole('button', { name: /zoom to route/i })
     ).toBeInTheDocument();
 
-    vi.mocked(useDirectionsStore).mockImplementation(
+    vi.mocked(useActiveRouteStore).mockImplementation(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (selector: any) =>
         selector({
@@ -443,7 +443,7 @@ describe('Summary with incline/decline', () => {
   });
 
   it('should display incline and decline when available', async () => {
-    vi.mocked(useDirectionsStore).mockImplementation(
+    vi.mocked(useActiveRouteStore).mockImplementation(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (selector: any) =>
         selector({

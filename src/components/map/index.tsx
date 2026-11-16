@@ -61,7 +61,9 @@ import { maxBounds } from './constants';
 import { getInitialMapPosition, LAST_CENTER_KEY } from './utils';
 import { useCommonStore } from '@/stores/common-store';
 import { useDirectionsStore } from '@/stores/directions-store';
+import { useActiveRouteStore } from '@/hooks/use-active-route-store';
 import { useIsochronesStore } from '@/stores/isochrones-store';
+import { useRoundTripStore } from '@/stores/round-trip-store';
 import {
   useDirectionsQuery,
   useSetWaypointFromCoords,
@@ -70,7 +72,13 @@ import {
   useIsochronesQuery,
   useReverseGeocodeIsochrones,
 } from '@/hooks/use-isochrones-queries';
+import {
+  useRoundTripQuery,
+  useSetRoundTripStart,
+} from '@/hooks/use-round-trip-queries';
+import { useRefetchActiveTab } from '@/hooks/use-refetch-tab-queries';
 import { toast } from 'sonner';
+import { Repeat } from 'lucide-react';
 
 const { center, zoom: zoom_initial } = getInitialMapPosition();
 
@@ -78,7 +86,7 @@ interface MarkerData {
   id: string;
   lng: number;
   lat: number;
-  type: 'waypoint' | 'isocenter';
+  type: 'waypoint' | 'isocenter' | 'roundtrip-start';
   index?: number;
   title?: string;
   color?: MarkerColor;
@@ -114,17 +122,20 @@ export const MapComponent = () => {
     []
   );
   const waypoints = useDirectionsStore((state) => state.waypoints);
-  const directionResults = useDirectionsStore((state) => state.results);
-  const directionsSuccessful = useDirectionsStore((state) => state.successful);
-  const updateInclineDecline = useDirectionsStore(
+  const routeResults = useActiveRouteStore((state) => state.results);
+  const routeSuccessful = useActiveRouteStore((state) => state.successful);
+  const updateInclineDecline = useActiveRouteStore(
     (state) => state.updateInclineDecline
   );
-  const setActiveRouteIndex = useDirectionsStore(
+  const setActiveRouteIndex = useActiveRouteStore(
     (state) => state.setActiveRouteIndex
   );
 
   const { refetch: refetchDirections } = useDirectionsQuery();
   const { refetch: refetchIsochrones } = useIsochronesQuery();
+  const { refetch: refetchRoundTrip } = useRoundTripQuery();
+  const refetchActiveTab = useRefetchActiveTab();
+  const { setRoundTripStart } = useSetRoundTripStart();
   const { setWaypointFromCoords } = useSetWaypointFromCoords();
   const { reverseGeocode: reverseGeocodeIsochrones } =
     useReverseGeocodeIsochrones();
@@ -237,13 +248,8 @@ export const MapComponent = () => {
     });
 
     updateSettings('exclude_polygons', excludePolygons as unknown as string);
-
-    if (activeTab === 'directions') {
-      refetchDirections();
-    } else {
-      refetchIsochrones();
-    }
-  }, [activeTab, refetchDirections, updateSettings, refetchIsochrones]);
+    refetchActiveTab();
+  }, [updateSettings, refetchActiveTab]);
 
   const updateWaypointPosition = useCallback(
     (object: { latLng: { lat: number; lng: number }; index: number }) => {
@@ -265,6 +271,15 @@ export const MapComponent = () => {
       });
     },
     [reverseGeocodeIsochrones, refetchIsochrones]
+  );
+
+  const updateRoundTripStart = useCallback(
+    (lng: number, lat: number) => {
+      setRoundTripStart(lng, lat).then(() => {
+        refetchRoundTrip();
+      });
+    },
+    [setRoundTripStart, refetchRoundTrip]
   );
 
   const handleOpenOSM = useCallback(() => {
@@ -333,11 +348,17 @@ export const MapComponent = () => {
     updateIsoPosition(popupLngLat.lng, popupLngLat.lat);
   }, [popupLngLat, updateIsoPosition]);
 
+  const handleSetRoundTripStart = useCallback(() => {
+    if (!popupLngLat) return;
+    setShowContextPopup(false);
+    updateRoundTripStart(popupLngLat.lng, popupLngLat.lat);
+  }, [popupLngLat, updateRoundTripStart]);
+
   const getHeightData = useCallback(async () => {
-    if (!directionResults.data?.decodedGeometry) return;
+    if (!routeResults.data?.decodedGeometry) return;
 
     const heightPayloadNew = buildHeightRequest(
-      directionResults.data.decodedGeometry as [number, number][]
+      routeResults.data.decodedGeometry as [number, number][]
     );
 
     if (JSON.stringify(heightPayload) !== JSON.stringify(heightPayloadNew)) {
@@ -361,7 +382,7 @@ export const MapComponent = () => {
         const data = await response.json();
 
         const reversedGeometry = JSON.parse(
-          JSON.stringify(directionResults.data?.decodedGeometry)
+          JSON.stringify(routeResults.data?.decodedGeometry)
         ).map((pair: number[]) => {
           return [...pair.reverse()];
         });
@@ -381,10 +402,11 @@ export const MapComponent = () => {
         setIsHeightLoading(false);
       }
     }
-  }, [directionResults, heightPayload, updateInclineDecline]);
+  }, [routeResults, heightPayload, updateInclineDecline]);
 
   // Update markers when waypoints or isochrone centers change
   const geocodeResults = useIsochronesStore((state) => state.geocodeResults);
+  const roundTripStarts = useRoundTripStore((state) => state.geocodeResults);
   const markers = useMemo(() => {
     const newMarkers: MarkerData[] = [];
 
@@ -430,8 +452,23 @@ export const MapComponent = () => {
       }
     });
 
+    // Add round trip start marker
+    roundTripStarts.forEach((address) => {
+      if (address.selected) {
+        newMarkers.push({
+          id: 'roundtrip-start',
+          lng: address.displaylnglat[0],
+          lat: address.displaylnglat[1],
+          type: 'roundtrip-start',
+          title: address.title,
+          color: 'blue',
+          number: '1',
+        });
+      }
+    });
+
     return newMarkers;
-  }, [waypoints, geocodeResults]);
+  }, [waypoints, geocodeResults, roundTripStarts]);
 
   //Stores the route content
   const lastZoomedCoordKeyRef = useRef<string | null>(null);
@@ -487,7 +524,11 @@ export const MapComponent = () => {
     //Markers sit on the geocoded address, which can be off the routed
     //geometry - include the ones belonging to this tab so they stay in view
     const activeTabMarkerType =
-      activeTab === 'isochrones' ? 'isocenter' : 'waypoint';
+      activeTab === 'isochrones'
+        ? 'isocenter'
+        : activeTab === 'round-trip'
+          ? 'roundtrip-start'
+          : 'waypoint';
     const bounds = markers
       .filter((marker) => marker.type === activeTabMarkerType)
       .reduce<[[number, number], [number, number]]>(
@@ -895,6 +936,8 @@ export const MapComponent = () => {
                 });
               } else if (marker.type === 'isocenter') {
                 updateIsoPosition(e.lngLat.lng, e.lngLat.lat);
+              } else if (marker.type === 'roundtrip-start') {
+                updateRoundTripStart(e.lngLat.lng, e.lngLat.lat);
               }
             }}
           >
@@ -919,6 +962,7 @@ export const MapComponent = () => {
               activeTab={activeTab}
               onAddWaypoint={handleAddWaypoint}
               onAddIsoWaypoint={handleAddIsoWaypoint}
+              onSetRoundTripStart={handleSetRoundTripStart}
               popupLocation={popupLngLat}
             />
           </Popup>
@@ -971,7 +1015,7 @@ export const MapComponent = () => {
         <div className="absolute bottom-10 right-4 z-10 flex flex-col gap-2">
           <HeightGraph
             data={heightgraphData}
-            disabled={!directionsSuccessful}
+            disabled={!routeSuccessful}
             width={
               directionsPanelOpen
                 ? window.innerWidth * 0.75
@@ -1020,6 +1064,12 @@ export const MapComponent = () => {
           }
           onClick={() => handleNavigateToTab('isochrones')}
           data-testid="tab-isochrones-button"
+        />
+        <ToolButton
+          title="Round Trip"
+          icon={<Repeat className="size-7" strokeWidth={1.5} />}
+          onClick={() => handleNavigateToTab('round-trip')}
+          data-testid="tab-round-trip-button"
         />
         <ToolButton
           title="Tiles"

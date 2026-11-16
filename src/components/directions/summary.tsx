@@ -21,7 +21,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useDirectionsStore } from '@/stores/directions-store';
+import { useActiveRouteStore } from '@/hooks/use-active-route-store';
 import { useCommonStore } from '@/stores/common-store';
 import { useMap } from 'react-map-gl/maplibre';
 
@@ -36,12 +36,12 @@ export const Summary = ({
   index: number;
   routeCoordinates: number[][];
 }) => {
-  const results = useDirectionsStore((state) => state.results);
-  const inclineDeclineTotal = useDirectionsStore(
+  const results = useActiveRouteStore((state) => state.results);
+  const inclineDeclineTotal = useActiveRouteStore(
     (state) => state.inclineDeclineTotal
   );
-  const toggleShowOnMap = useDirectionsStore((state) => state.toggleShowOnMap);
-  const successful = useDirectionsStore((state) => state.successful);
+  const toggleShowOnMap = useActiveRouteStore((state) => state.toggleShowOnMap);
+  const successful = useActiveRouteStore((state) => state.successful);
   const isSettingsPanelOpen = useCommonStore(
     (state) => state.settingsPanelOpen
   );

@@ -9,6 +9,7 @@ import type {
   ValhallaWarning,
 } from '@/components/types';
 import { getBaseUrl } from './base-url';
+import type { RoundTripSettings } from '@/stores/round-trip-store';
 
 export const getValhallaUrl = () => getBaseUrl();
 
@@ -111,6 +112,44 @@ export const buildOptimizedRouteRequest = ({
     },
   };
   return req;
+};
+
+export const buildRoundTripRequest = ({
+  profile,
+  start,
+  settings,
+  language,
+  roundTripSettings,
+}: {
+  profile: Profile;
+  start: ActiveWaypoint;
+  settings: Settings;
+  language: string;
+  roundTripSettings: RoundTripSettings;
+}) => {
+  const valhalla_profile = profile === 'car' ? 'auto' : profile;
+  const { distance, distanceTolerance, heading, headingTolerance } =
+    roundTripSettings;
+
+  return {
+    json: {
+      costing: valhalla_profile,
+      costing_options: {
+        [valhalla_profile]: { ...settings.costing },
+      },
+      exclude_polygons: settings.directions.exclude_polygons,
+      locations: makeLocations([start]),
+      round_trip_options: {
+        distance: distance * 1000,
+        distance_tolerance: distanceTolerance / 100,
+        heading,
+        heading_tolerance: headingTolerance,
+      },
+      units: 'kilometers',
+      id: 'valhalla_round_trip',
+      language,
+    },
+  };
 };
 
 export const parseDirectionsGeometry = (data: {

@@ -157,6 +157,35 @@ vi.mock('@/stores/directions-store', () => ({
   }),
 }));
 
+vi.mock('@/hooks/use-active-route-store', () => ({
+  useActiveRouteStore: vi.fn((selector) => {
+    const state = {
+      results: { data: null, show: {} },
+      successful: false,
+      updateInclineDecline: vi.fn(),
+      setActiveRouteIndex: vi.fn(),
+    };
+    return selector(state);
+  }),
+}));
+
+vi.mock('@/stores/round-trip-store', () => ({
+  useRoundTripStore: vi.fn((selector) => selector({ geocodeResults: [] })),
+}));
+
+vi.mock('@/hooks/use-round-trip-queries', () => ({
+  useRoundTripQuery: vi.fn(() => ({
+    refetch: vi.fn(),
+  })),
+  useSetRoundTripStart: vi.fn(() => ({
+    setRoundTripStart: vi.fn().mockResolvedValue(undefined),
+  })),
+}));
+
+vi.mock('@/hooks/use-refetch-tab-queries', () => ({
+  useRefetchActiveTab: vi.fn(() => vi.fn()),
+}));
+
 vi.mock('@/stores/isochrones-store', () => ({
   useIsochronesStore: vi.fn((selector) => {
     const state = {

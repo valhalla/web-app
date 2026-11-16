@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
-import { useDirectionsStore } from '@/stores/directions-store';
+import { useActiveRouteStore } from '@/hooks/use-active-route-store';
 import type { Feature, LineString } from 'geojson';
 import type { ParsedDirectionsGeometry } from '@/components/types';
 
 export function HighlightSegment() {
-  const directionResults = useDirectionsStore((state) => state.results);
-  const highlightSegment = useDirectionsStore(
+  const directionResults = useActiveRouteStore((state) => state.results);
+  const highlightSegment = useActiveRouteStore(
     (state) => state.highlightSegment
   );
 

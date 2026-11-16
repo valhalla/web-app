@@ -16,11 +16,11 @@ vi.mock('react-map-gl/maplibre', () => ({
   },
 }));
 
-const mockUseDirectionsStore = vi.fn();
+const mockUseActiveRouteStore = vi.fn();
 
-vi.mock('@/stores/directions-store', () => ({
-  useDirectionsStore: (selector: (state: unknown) => unknown) =>
-    mockUseDirectionsStore(selector),
+vi.mock('@/hooks/use-active-route-store', () => ({
+  useActiveRouteStore: (selector: (state: unknown) => unknown) =>
+    mockUseActiveRouteStore(selector),
 }));
 
 const createMockState = (overrides = {}) => ({
@@ -47,11 +47,11 @@ describe('HighlightSegment', () => {
   beforeEach(() => {
     mockSource.mockClear();
     mockLayer.mockClear();
-    mockUseDirectionsStore.mockClear();
+    mockUseActiveRouteStore.mockClear();
   });
 
   it('should render nothing when highlightSegment is null', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
+    mockUseActiveRouteStore.mockImplementation((selector) => {
       const state = { results: { data: null }, highlightSegment: null };
       return selector(state);
     });
@@ -62,7 +62,7 @@ describe('HighlightSegment', () => {
   });
 
   it('should render nothing when results data is null', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
+    mockUseActiveRouteStore.mockImplementation((selector) => {
       const state = {
         results: { data: null },
         highlightSegment: { startIndex: 0, endIndex: 1, alternate: 0 },
@@ -76,7 +76,7 @@ describe('HighlightSegment', () => {
   });
 
   it('should render Source when data is valid', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
+    mockUseActiveRouteStore.mockImplementation((selector) => {
       const state = createMockState();
       return selector(state);
     });
@@ -89,7 +89,7 @@ describe('HighlightSegment', () => {
   });
 
   it('should render Layer with yellow color', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
+    mockUseActiveRouteStore.mockImplementation((selector) => {
       const state = createMockState();
       return selector(state);
     });
@@ -106,7 +106,7 @@ describe('HighlightSegment', () => {
   });
 
   it('should slice coordinates based on startIndex and endIndex', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
+    mockUseActiveRouteStore.mockImplementation((selector) => {
       const state = createMockState();
       return selector(state);
     });
@@ -121,7 +121,7 @@ describe('HighlightSegment', () => {
   });
 
   it('should render nothing when startIndex is -1', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
+    mockUseActiveRouteStore.mockImplementation((selector) => {
       const state = createMockState({
         highlightSegment: { startIndex: -1, endIndex: 2, alternate: 0 },
       });
@@ -134,7 +134,7 @@ describe('HighlightSegment', () => {
   });
 
   it('should render nothing when endIndex is -1', () => {
-    mockUseDirectionsStore.mockImplementation((selector) => {
+    mockUseActiveRouteStore.mockImplementation((selector) => {
       const state = createMockState({
         highlightSegment: { startIndex: 0, endIndex: -1, alternate: 0 },
       });

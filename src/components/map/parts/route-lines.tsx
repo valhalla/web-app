@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
-import { useDirectionsStore } from '@/stores/directions-store';
+import { useActiveRouteStore } from '@/hooks/use-active-route-store';
 import { routeObjects } from '../constants';
 import type { Feature, FeatureCollection, LineString } from 'geojson';
 import type { ParsedDirectionsGeometry } from '@/components/types';
 
 export function RouteLines() {
-  const directionResults = useDirectionsStore((state) => state.results);
-  const directionsSuccessful = useDirectionsStore((state) => state.successful);
-  const activeRouteIndex = useDirectionsStore(
+  const directionResults = useActiveRouteStore((state) => state.results);
+  const directionsSuccessful = useActiveRouteStore((state) => state.successful);
+  const activeRouteIndex = useActiveRouteStore(
     (state) => state.activeRouteIndex
   );
 

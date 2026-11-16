@@ -15,6 +15,7 @@ const defaultProps = {
   activeTab: 'directions',
   onAddWaypoint: vi.fn(),
   onAddIsoWaypoint: vi.fn(),
+  onSetRoundTripStart: vi.fn(),
   popupLocation: { lng: 10.5, lat: 50.5 },
 };
 
@@ -152,6 +153,30 @@ describe('MapContextMenu', () => {
       await user.click(screen.getByRole('button', { name: 'Set center here' }));
 
       expect(onAddIsoWaypoint).toHaveBeenCalled();
+    });
+  });
+
+  describe('round trip tab', () => {
+    it('should call onSetRoundTripStart when "Start round trip here" is clicked', async () => {
+      const user = userEvent.setup();
+      const onSetRoundTripStart = vi.fn();
+
+      render(
+        <MapContextMenu
+          {...defaultProps}
+          activeTab="round-trip"
+          onSetRoundTripStart={onSetRoundTripStart}
+        />
+      );
+
+      await user.click(
+        screen.getByRole('button', { name: 'Start round trip here' })
+      );
+
+      expect(onSetRoundTripStart).toHaveBeenCalled();
+      expect(
+        screen.queryByRole('button', { name: 'Set center here' })
+      ).not.toBeInTheDocument();
     });
   });
 });
