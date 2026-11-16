@@ -1,19 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
-import { Settings } from 'lucide-react';
+import {
+  Star,
+  Milestone,
+  DollarSign,
+  Ship,
+  Settings,
+  SlidersHorizontal,
+  type LucideIcon,
+} from 'lucide-react';
 import { CollapsibleSection } from '@/components/ui/collapsible-section';
-import { SliderSetting } from '@/components/ui/slider-setting';
 import { SelectSetting } from '@/components/ui/select-setting';
+import {
+  IconEnumButton,
+  type IconEnumOption,
+} from '@/components/ui/icon-enum-setting';
 import { DateTimeButton } from '@/components/ui/date-time-button';
 import { SettingsButton } from '@/components/settings-button';
+import { cn } from '@/lib/utils';
 import { useCommonStore } from '@/stores/common-store';
 import {
   languageOptions,
   settingsInit,
   HIGHWAY_TOLL_PROFILES,
-  useFerry,
-  useHighways,
-  useTollways,
   DEFAULT_DIRECTIONS_LANGUAGE,
   type DirectionsLanguage,
 } from '@/components/settings-panel/settings-options';
@@ -25,22 +34,87 @@ import { useDirectionsQuery } from '@/hooks/use-directions-queries';
 import { useIsochronesQuery } from '@/hooks/use-isochrones-queries';
 import type { PossibleSettings } from '@/components/types';
 
-type WillingnessOption = typeof useHighways;
+type IconState = 'no' | 'yes' | 'preferred' | 'custom';
 
-const clampWillingness = (value: number | undefined) =>
-  value === undefined || isNaN(value) ? 0 : Math.max(0, Math.min(value, 1));
+const StateIcon = ({ Base, state }: { Base: LucideIcon; state: IconState }) => (
+  <span className="relative inline-block size-5 shrink-0">
+    <Base
+      className={cn('size-5', state === 'no' && 'text-muted-foreground/60')}
+    />
+    {state === 'no' && (
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+      >
+        <span className="block h-[2px] w-[140%] rotate-45 rounded-full bg-destructive" />
+      </span>
+    )}
+    {state === 'preferred' && (
+      <Star
+        aria-hidden
+        className="absolute -top-1 -right-1 size-2.5 fill-amber-400 text-amber-500"
+      />
+    )}
+    {state === 'custom' && (
+      <SlidersHorizontal
+        aria-hidden
+        className="absolute -top-1 -right-1.5 size-2.5 rounded-sm bg-background text-primary"
+      />
+    )}
+  </span>
+);
 
-interface GeneralSettingsProps {
+// Trigger-only state for slider values (advanced panel) that match no preset.
+const customOption = (Base: LucideIcon, value: number): IconEnumOption => ({
+  value: 'custom',
+  label: `Custom (${value})`,
+  renderIcon: () => <StateIcon Base={Base} state="custom" />,
+});
+
+const tristateOptions = (Base: LucideIcon): IconEnumOption[] => [
+  {
+    value: 'no',
+    label: 'No',
+    renderIcon: () => <StateIcon Base={Base} state="no" />,
+  },
+  {
+    value: 'yes',
+    label: 'Yes',
+    renderIcon: () => <StateIcon Base={Base} state="yes" />,
+  },
+  {
+    value: 'preferred',
+    label: 'Preferred',
+    renderIcon: () => <StateIcon Base={Base} state="preferred" />,
+  },
+];
+
+const HIGHWAY_OPTIONS = tristateOptions(Milestone);
+const TOLL_OPTIONS = tristateOptions(DollarSign);
+const FERRY_OPTIONS = tristateOptions(Ship);
+
+const willingnessToOption = (value: number): string => {
+  if (value === 0) return 'no';
+  if (value === 0.5) return 'yes';
+  if (value === 1) return 'preferred';
+  return 'custom';
+};
+
+const optionToWillingness = (option: string): number => {
+  if (option === 'no') return 0;
+  if (option === 'preferred') return 1;
+  return 0.5;
+};
+
+interface QuickSettingsProps {
   showTravelTime?: boolean;
-  showAlternates?: boolean;
   showLanguage?: boolean;
 }
 
-export const GeneralSettings = ({
+export const QuickSettings = ({
   showTravelTime = true,
-  showAlternates = true,
   showLanguage = true,
-}: GeneralSettingsProps) => {
+}: QuickSettingsProps) => {
   const search = useSearch({ from: '/$activeTab' });
   const navigate = useNavigate({ from: '/$activeTab' });
   const { profile } = search;
@@ -141,10 +215,6 @@ export const GeneralSettings = ({
     [updateSettings, refetchAll]
   );
 
-  const willingnessOptions: WillingnessOption[] = supportsHighwayToll
-    ? [useFerry, useHighways, useTollways]
-    : [useFerry];
-
   const handleDateTimeChange = useCallback(
     (field: 'type' | 'value', value: string) => {
       updateDateTime(field, value);
@@ -166,66 +236,67 @@ export const GeneralSettings = ({
   return (
     <div className="flex flex-col gap-2">
       <CollapsibleSection
-        title="General settings"
+        title="Quick Settings"
         icon={Settings}
         open={open}
         onOpenChange={setOpen}
         className="bg-muted/60 rounded-md px-3 py-2"
       >
         <div className="space-y-1.25">
-          {showTravelTime && (
-            <div className="flex justify-end py-1">
-              <DateTimeButton
-                type={dateTime.type}
-                value={dateTime.value}
-                onChange={handleDateTimeChange}
-              />
-            </div>
-          )}
-
-          {willingnessOptions.map((option) => (
-            <SliderSetting
-              key={option.param}
-              id={option.param}
-              label={option.name}
-              description={option.description}
-              min={option.settings.min}
-              max={option.settings.max}
-              step={option.settings.step}
-              value={(settings[option.param] as number) ?? 0}
-              unit={option.unit}
-              onValueChange={(values) => {
-                updateSettings(option.param, values[0] ?? 0);
-              }}
-              onValueCommit={refetchAll}
-              onInputChange={(values) => {
-                handleSettingChange(option.param, clampWillingness(values[0]));
-              }}
+          <div className="flex flex-wrap items-center gap-2 py-1">
+            <IconEnumButton
+              id="use_ferry"
+              label="Use ferries"
+              value={willingnessToOption(settings.use_ferry as number)}
+              options={FERRY_OPTIONS}
+              fallbackOption={customOption(Ship, settings.use_ferry as number)}
+              onValueChange={(value) =>
+                handleSettingChange('use_ferry', optionToWillingness(value))
+              }
             />
-          ))}
-
-          {showAlternates && (
-            <SliderSetting
-              id="alternates"
-              label="Alternative routes"
-              description="How many alternative routes to request alongside the main route."
-              min={0}
-              max={5}
-              step={1}
-              value={(settings.alternates as number) ?? 0}
-              unit="routes"
-              onValueChange={(values) => {
-                updateSettings('alternates', values[0] ?? 0);
-              }}
-              onValueCommit={() => refetchDirections()}
-              onInputChange={(values) => {
-                let parsed = values[0] ?? 0;
-                if (isNaN(parsed)) parsed = 0;
-                parsed = Math.max(0, Math.min(parsed, 5));
-                handleSettingChange('alternates', parsed);
-              }}
-            />
-          )}
+            {supportsHighwayToll && (
+              <>
+                <IconEnumButton
+                  id="use_highways"
+                  label="Use highways"
+                  value={willingnessToOption(settings.use_highways as number)}
+                  options={HIGHWAY_OPTIONS}
+                  fallbackOption={customOption(
+                    Milestone,
+                    settings.use_highways as number
+                  )}
+                  onValueChange={(value) =>
+                    handleSettingChange(
+                      'use_highways',
+                      optionToWillingness(value)
+                    )
+                  }
+                />
+                <IconEnumButton
+                  id="use_tolls"
+                  label="Use tolls"
+                  value={willingnessToOption(settings.use_tolls as number)}
+                  options={TOLL_OPTIONS}
+                  fallbackOption={customOption(
+                    DollarSign,
+                    settings.use_tolls as number
+                  )}
+                  onValueChange={(value) =>
+                    handleSettingChange('use_tolls', optionToWillingness(value))
+                  }
+                />
+              </>
+            )}
+            {showTravelTime && (
+              <div className="ml-auto">
+                <DateTimeButton
+                  type={dateTime.type}
+                  value={dateTime.value}
+                  onChange={handleDateTimeChange}
+                />
+              </div>
+            )}
+          </div>
 
           {showLanguage && (
             <SelectSetting

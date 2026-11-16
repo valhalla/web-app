@@ -1,10 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  profileSettings,
-  generalSettings,
-  QUICK_SETTING_PARAMS,
-} from './settings-options';
+import { profileSettings, generalSettings } from './settings-options';
 import { filterProfileSettings } from '@/utils/filter-profile-settings';
 import type { PossibleSettings } from '@/components/types';
 
@@ -30,7 +26,8 @@ import { MultiSelectSetting } from '../ui/multiselect-setting';
 
 type ProfileWithSettings = Exclude<Profile, 'auto'>;
 
-const QUICK_SETTING_PARAM_SET: Set<string> = new Set(QUICK_SETTING_PARAMS);
+// Only meaningful for /route requests, so hidden on the isochrones tab.
+const DIRECTIONS_ONLY_PARAMS: Set<string> = new Set(['alternates']);
 
 export const SettingsPanel = () => {
   const { profile } = useSearch({ from: '/$activeTab' });
@@ -227,8 +224,12 @@ export const SettingsPanel = () => {
             onOpenChange={setGeneralSettingsOpen}
           >
             <div className="space-y-1.25">
-              {generalSettings[profile as ProfileWithSettings].numeric
-                .filter((option) => !QUICK_SETTING_PARAM_SET.has(option.param))
+              {generalSettings.all.numeric
+                .filter(
+                  (option) =>
+                    activeTab === 'directions' ||
+                    !DIRECTIONS_ONLY_PARAMS.has(option.param)
+                )
                 .map((option, key) => (
                   <SliderSetting
                     key={key}
@@ -258,6 +259,37 @@ export const SettingsPanel = () => {
                     }}
                   />
                 ))}
+              {generalSettings[profile as ProfileWithSettings].numeric.map(
+                (option, key) => (
+                  <SliderSetting
+                    key={key}
+                    id={option.param}
+                    label={option.name}
+                    description={option.description}
+                    min={option.settings.min}
+                    max={option.settings.max}
+                    step={option.settings.step}
+                    value={(settings[option.param] as number) ?? 0}
+                    unit={option.unit}
+                    onValueChange={(values) => {
+                      updateSettings(option.param, values[0] ?? 0);
+                    }}
+                    onValueCommit={handleMakeRequest}
+                    onInputChange={(values) => {
+                      let value = values[0] ?? 0;
+                      if (isNaN(value)) value = option.settings.min;
+                      value = Math.max(
+                        option.settings.min,
+                        Math.min(value, option.settings.max)
+                      );
+                      handleUpdateSettings({
+                        name: option.param,
+                        value,
+                      });
+                    }}
+                  />
+                )
+              )}
               {generalSettings[profile as ProfileWithSettings].boolean.map(
                 (option, key) => (
                   <CheckboxSetting
@@ -290,37 +322,6 @@ export const SettingsPanel = () => {
                   }}
                 />
               ))}
-              {generalSettings.all.numeric
-                .filter((option) => !QUICK_SETTING_PARAM_SET.has(option.param))
-                .map((option, key) => (
-                  <SliderSetting
-                    key={key}
-                    id={option.param}
-                    label={option.name}
-                    description={option.description}
-                    min={option.settings.min}
-                    max={option.settings.max}
-                    step={option.settings.step}
-                    value={(settings[option.param] as number) ?? 0}
-                    unit={option.unit}
-                    onValueChange={(values) => {
-                      updateSettings(option.param, values[0] ?? 0);
-                    }}
-                    onValueCommit={handleMakeRequest}
-                    onInputChange={(values) => {
-                      let value = values[0] ?? 0;
-                      if (isNaN(value)) value = option.settings.min;
-                      value = Math.max(
-                        option.settings.min,
-                        Math.min(value, option.settings.max)
-                      );
-                      handleUpdateSettings({
-                        name: option.param,
-                        value,
-                      });
-                    }}
-                  />
-                ))}
             </div>
           </CollapsibleSection>
 

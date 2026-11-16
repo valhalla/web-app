@@ -319,7 +319,7 @@ const hazardousMaterials = {
   param: 'hazmat',
 };
 
-export const useHighways = {
+const useHighways = {
   name: 'Use Highways',
   param: 'use_highways',
   description:
@@ -345,7 +345,7 @@ const useDistance = {
   },
 };
 
-export const useTollways = {
+const useTollways = {
   name: 'Use Tollways',
   param: 'use_tolls',
   description:
@@ -357,7 +357,7 @@ export const useTollways = {
     step: 0.1,
   },
 };
-export const useFerry = {
+const useFerry = {
   name: 'Use Ferries',
   param: 'use_ferry',
   description:
@@ -524,10 +524,11 @@ const useGeocoding = {
 };
 
 const alternates = {
-  name: 'Alternates',
-  description: 'You want more?',
+  name: 'Alternative Routes',
+  description:
+    'How many alternative routes to request alongside the main route.',
   param: 'alternates',
-  unit: 'alternates',
+  unit: 'routes',
   settings: {
     min: 0,
     max: 5,
@@ -915,9 +916,11 @@ export type DirectionsLanguage = (typeof languageOptions)[number]['value'];
 export const DEFAULT_DIRECTIONS_LANGUAGE: DirectionsLanguage = 'en-US';
 export const DIRECTIONS_LANGUAGE_STORAGE_KEY = 'directions_language';
 
-// Settings surfaced in the GeneralSettings (left sidebar) panel rather than the
-// advanced (right) panel. Keep this list in sync with what GeneralSettings renders
-// — settings-panel.tsx reads it to skip these in the advanced view.
+// Cross-profile user preferences that are URL-permalinked (by QuickSettings),
+// so resetSettings preserves them. All are sliders in the advanced panel;
+// use_highways / use_tolls / use_ferry additionally have left-sidebar icons
+// that are just presets (0 / 0.5 / 1) writing the slider value — requests
+// always send the slider value.
 export const QUICK_SETTING_PARAMS = [
   'use_highways',
   'use_tolls',
@@ -926,7 +929,7 @@ export const QUICK_SETTING_PARAMS = [
 ] as const;
 
 // Profiles where use_highways / use_tolls are meaningful costing options.
-// Pedestrian, bicycle, motor_scooter ignore them, so the GeneralSettings panel
+// Pedestrian, bicycle, motor_scooter ignore them, so the QuickSettings panel
 // only renders those two controls when the active profile is in this list.
 export const HIGHWAY_TOLL_PROFILES = [
   'car',
@@ -947,7 +950,7 @@ export const settingsInit = {
   hazmat: false,
   use_highways: 0.5,
   use_tolls: 0.5,
-  use_ferry: 0,
+  use_ferry: 0.5,
   ferry_cost: 300,
   use_living_streets: 0.5,
   use_tracks: 0,
@@ -1015,8 +1018,17 @@ export const settingsInitTruckOverride = {
 const gateSettings = [maneuverPenalty, gateCost, gatePenalty] as const;
 const borderSettings = [countryCrossingCost, countryCrossingPenalty] as const;
 const serviceSettings = [servicePenalty, serviceFactor] as const;
-const tollSettings = [useTollways, tollBoothCost, tollBoothPenalty] as const;
-const ferrySettings = [useFerry, ferryCost] as const;
+// Willingness sliders first (highways/tolls/ferry mirror the QuickSettings
+// icons), then the toll booth / ferry costs.
+const roadUseSettings = [
+  useHighways,
+  useTollways,
+  useFerry,
+  useLivingStreets,
+  tollBoothCost,
+  tollBoothPenalty,
+  ferryCost,
+] as const;
 const hovFlags = [includeHOV2, includeHOV3, includeHot] as const;
 const ignoreFlags = [ignoreClosures, ignoreRestrictions, ignoreAccess] as const;
 
@@ -1040,10 +1052,7 @@ const commonVehicleProfileBoolean = [
 ] as const;
 
 const commonGeneralNumeric = [
-  useHighways,
-  ...tollSettings,
-  ...ferrySettings,
-  useLivingStreets,
+  ...roadUseSettings,
   useDistance,
   useTracks,
 ] as const;
@@ -1149,13 +1158,7 @@ export const generalSettings: Record<SettingsProfile, SettingsGroup> & {
   car: createSettings([...commonGeneralNumeric], [...commonGeneralBoolean]),
 
   bus: createSettings(
-    [
-      useHighways,
-      useLivingStreets,
-      ...tollSettings,
-      ...ferrySettings,
-      useTracks,
-    ],
+    [...roadUseSettings, useTracks],
     [...commonGeneralBoolean]
   ),
 
