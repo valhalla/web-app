@@ -2,6 +2,7 @@ import React from 'react';
 
 import { formatDuration } from '@/utils/date-time';
 import type { Summary as SummaryType } from '@/components/types';
+import { getInclineDeclineTotals } from '@/utils/heightgraph';
 import {
   ArrowUp,
   Clock,
@@ -30,16 +31,16 @@ export const Summary = ({
   title,
   index,
   routeCoordinates,
+  legs = [],
 }: {
   summary: SummaryType;
   title: string;
   index: number;
   routeCoordinates: number[][];
+  legs?: { elevation?: number[] }[];
 }) => {
   const results = useDirectionsStore((state) => state.results);
-  const inclineDeclineTotal = useDirectionsStore(
-    (state) => state.inclineDeclineTotal
-  );
+  const inclineDeclineTotal = getInclineDeclineTotals(legs);
   const toggleShowOnMap = useDirectionsStore((state) => state.toggleShowOnMap);
   const successful = useDirectionsStore((state) => state.successful);
   const isSettingsPanelOpen = useCommonStore(

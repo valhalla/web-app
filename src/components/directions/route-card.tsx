@@ -87,6 +87,7 @@ export const RouteCard = ({
           summary={data.trip.summary}
           index={index}
           routeCoordinates={data.decodedGeometry ?? []}
+          legs={data.trip.legs}
         />
         <Collapsible open={showManeuvers} onOpenChange={setShowManeuvers}>
           <div className="flex justify-between">
