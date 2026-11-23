@@ -126,6 +126,7 @@ describe('RoutePlanner', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith({
       params: { activeTab: 'isochrones' },
+      hash: true,
     });
   });
 
@@ -137,6 +138,7 @@ describe('RoutePlanner', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith({
       search: expect.any(Function),
+      hash: true,
       replace: true,
     });
     expect(mockRefetchDirections).toHaveBeenCalled();
@@ -170,6 +172,7 @@ describe('RoutePlanner', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith({
       params: { activeTab: 'tiles' },
+      hash: true,
     });
   });
 

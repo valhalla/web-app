@@ -58,7 +58,7 @@ import {
 } from '@/components/tiles/valhalla-layers';
 import { MarkerIcon, type MarkerColor } from './parts/marker-icon';
 import { maxBounds } from './constants';
-import { getInitialMapPosition, LAST_CENTER_KEY } from './utils';
+import { formatMapHash, getInitialMapPosition, LAST_CENTER_KEY } from './utils';
 import { useCommonStore } from '@/stores/common-store';
 import { useDirectionsStore } from '@/stores/directions-store';
 import { useIsochronesStore } from '@/stores/isochrones-store';
@@ -71,8 +71,6 @@ import {
   useReverseGeocodeIsochrones,
 } from '@/hooks/use-isochrones-queries';
 import { toast } from 'sonner';
-
-const { center, zoom: zoom_initial } = getInitialMapPosition();
 
 interface MarkerData {
   id: string;
@@ -96,7 +94,7 @@ export const MapComponent = () => {
   const toggleDirections = useCommonStore((state) => state.toggleDirections);
   const updateSettings = useCommonStore((state) => state.updateSettings);
   const setMapReady = useCommonStore((state) => state.setMapReady);
-  const { style } = useSearch({ from: '/$activeTab' });
+  const { style, wps } = useSearch({ from: '/$activeTab' });
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [showContextPopup, setShowContextPopup] = useState(false);
   const [isHeightLoading, setIsHeightLoading] = useState(false);
@@ -143,10 +141,12 @@ export const MapComponent = () => {
     lat: number;
     features: MapGeoJSONFeature[];
   } | null>(null);
-  const [viewState, setViewState] = useState({
-    longitude: center[0],
-    latitude: center[1],
-    zoom: zoom_initial,
+  const [viewState, setViewState] = useState(() => {
+    const { center, zoom } = getInitialMapPosition({
+      mapHash: window.location.hash,
+      hasWaypoints: Boolean(wps),
+    });
+    return { longitude: center[0], latitude: center[1], zoom };
   });
   const [currentMapStyle, setCurrentMapStyle] = useState<MapStyleType>(
     getInitialMapStyle(style)
@@ -281,7 +281,7 @@ export const MapComponent = () => {
       if (!directionsPanelOpen) {
         toggleDirections();
       }
-      navigate({ params: { activeTab: tab } });
+      navigate({ params: { activeTab: tab }, hash: true });
     },
     [directionsPanelOpen, toggleDirections, navigate]
   );
@@ -669,7 +669,7 @@ export const MapComponent = () => {
     [activeTab]
   );
 
-  // Handle move end to save position
+  // Persist the position to localStorage and the `#map=` URL hash
   const handleMoveEnd = useCallback(() => {
     if (!mapRef.current) return;
     const { lng, lat } = mapRef.current.getCenter();
@@ -680,7 +680,14 @@ export const MapComponent = () => {
       zoom_level: zoom,
     });
     localStorage.setItem(LAST_CENTER_KEY, last_center);
-  }, []);
+
+    navigate({
+      search: true,
+      hash: formatMapHash(zoom, lat, lng),
+      hashScrollIntoView: false,
+      replace: true,
+    });
+  }, [navigate]);
 
   const handleTouchStart = useCallback(
     (event: maplibregl.MapTouchEvent) => {

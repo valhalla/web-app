@@ -66,6 +66,7 @@ export function useDirectionsPermalink(enabled: boolean) {
         ...prev,
         wps: wps.length > 0 ? wps.join(',') : undefined,
       }),
+      hash: true,
       replace: true,
     });
   }, [enabled, waypoints, navigate]);

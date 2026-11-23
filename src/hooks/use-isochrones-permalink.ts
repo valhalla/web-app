@@ -67,6 +67,7 @@ export function useIsochronesPermalink(enabled: boolean) {
 
     navigate({
       search: (prev) => ({ ...prev, wps: center || undefined }),
+      hash: true,
       replace: true,
     });
   }, [enabled, geocodeResults, navigate]);

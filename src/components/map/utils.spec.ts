@@ -5,8 +5,116 @@ import {
   getMapStyleUrl,
   getInitialMapStyle,
   getCustomStyle,
+  formatMapHash,
+  parseMapHash,
+  getInitialMapPosition,
+  LAST_CENTER_KEY,
 } from './utils';
-import { MAP_STYLE_STORAGE_KEY, CUSTOM_STYLE_STORAGE_KEY } from './constants';
+import {
+  MAP_STYLE_STORAGE_KEY,
+  CUSTOM_STYLE_STORAGE_KEY,
+  DEFAULT_CENTER,
+  DEFAULT_ZOOM,
+} from './constants';
+
+describe('formatMapHash', () => {
+  it('should format as map=zoom/lat/lng with trimmed precision', () => {
+    expect(formatMapHash(12.3456, 52.518311234, 13.393707891)).toBe(
+      'map=12.35/52.51831/13.39371'
+    );
+  });
+
+  it('should drop trailing zeros', () => {
+    expect(formatMapHash(10, 52.5, 13)).toBe('map=10/52.5/13');
+  });
+});
+
+describe('parseMapHash', () => {
+  it('should parse zoom/lat/lng into lng/lat center', () => {
+    expect(parseMapHash('map=12.5/52.5/13.4')).toEqual({
+      center: [13.4, 52.5],
+      zoom: 12.5,
+    });
+  });
+
+  it('should accept a leading #', () => {
+    expect(parseMapHash('#map=12.5/52.5/13.4')).toEqual({
+      center: [13.4, 52.5],
+      zoom: 12.5,
+    });
+  });
+
+  it('should round-trip formatMapHash', () => {
+    expect(parseMapHash(formatMapHash(8, -33.9, 151.2))).toEqual({
+      center: [151.2, -33.9],
+      zoom: 8,
+    });
+  });
+
+  it.each([
+    undefined,
+    '',
+    '#',
+    '12/52.5/13.4',
+    'foo=12/52.5/13.4',
+    'map=12/52.5',
+    'map=12/52.5/13.4/0',
+    'map=12//13.4',
+    'map=a/52.5/13.4',
+    'map=12/95/13.4',
+    'map=12/52.5/181',
+    'map=-1/52.5/13.4',
+    'map=30/52.5/13.4',
+  ])('should reject %j', (mapHash) => {
+    expect(parseMapHash(mapHash)).toBeNull();
+  });
+});
+
+describe('getInitialMapPosition', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  const storeLastCenter = () =>
+    localStorage.setItem(
+      LAST_CENTER_KEY,
+      JSON.stringify({ center: [48.1, 11.5], zoom_level: 9 })
+    );
+
+  it('should prefer the map hash over localStorage', () => {
+    storeLastCenter();
+    expect(
+      getInitialMapPosition({
+        mapHash: '#map=14/52.5/13.4',
+        hasWaypoints: false,
+      })
+    ).toEqual({ center: [13.4, 52.5], zoom: 14 });
+  });
+
+  it('should ignore the map hash when waypoints are set', () => {
+    storeLastCenter();
+    expect(
+      getInitialMapPosition({
+        mapHash: '#map=14/52.5/13.4',
+        hasWaypoints: true,
+      })
+    ).toEqual({ center: [11.5, 48.1], zoom: 9 });
+  });
+
+  it('should fall back to localStorage for an invalid map hash', () => {
+    storeLastCenter();
+    expect(
+      getInitialMapPosition({ mapHash: '#garbage', hasWaypoints: false })
+    ).toEqual({ center: [11.5, 48.1], zoom: 9 });
+  });
+
+  it('should fall back to defaults without map hash or localStorage', () => {
+    expect(getInitialMapPosition({ hasWaypoints: false })).toEqual({
+      center: DEFAULT_CENTER,
+      zoom: DEFAULT_ZOOM,
+    });
+  });
+});
 
 describe('convertDDToDMS', () => {
   it('should convert zero degrees correctly', () => {

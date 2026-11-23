@@ -30,6 +30,7 @@ export const indexRoute = createRoute({
       search: {
         profile: defaultProfile,
       },
+      hash: true,
     });
   },
 });
@@ -60,6 +61,7 @@ const activeTabRoute = createRoute({
         search: {
           profile: defaultProfile,
         },
+        hash: true,
       });
     }
     if (!search.profile) {
@@ -70,6 +72,7 @@ const activeTabRoute = createRoute({
           ...search,
           profile: defaultProfile,
         },
+        hash: true,
       });
     }
   },

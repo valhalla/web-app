@@ -286,6 +286,7 @@ vi.mock('./utils', () => ({
     center: [13.4, 52.5],
     zoom: 10,
   })),
+  formatMapHash: vi.fn(() => 'map=10/52.5/13.4'),
   LAST_CENTER_KEY: 'last_center',
 }));
 
@@ -422,6 +423,7 @@ describe('MapComponent', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith({
       params: { activeTab: 'directions' },
+      hash: true,
     });
   });
 

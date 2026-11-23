@@ -159,6 +159,7 @@ describe('useDirectionsPermalink', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith({
       search: expect.any(Function),
+      hash: true,
       replace: true,
     });
 
