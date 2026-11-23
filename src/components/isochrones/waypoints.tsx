@@ -102,6 +102,7 @@ export const Waypoints = () => {
         denoise: denoise,
         generalize: generalize,
       }),
+      hash: true,
       replace: true,
     });
   }, [maxRange, interval, denoise, generalize, navigate]);

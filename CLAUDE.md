@@ -59,6 +59,10 @@ src/index.tsx                      Mounts <RouterProvider> wrapped in TanStackQu
 
 URL search params are the source of truth for `profile` (costing model) and `style` (map style); a `retainSearchParams` middleware keeps them across tab switches. Schema is in `src/utils/route-schemas.ts`.
 
+The map view is permalinked in the URL hash as `#map=zoom/lat/lng` (OSM format; `formatMapHash` / `parseMapHash` in `src/components/map/utils.ts`), written on every `moveEnd`. Initial view precedence: `#map=` > `localStorage['last_center']` > `VITE_CENTER_COORDS`. **The hash is ignored when `wps` is set**: the map fits to the response extent instead.
+
+**Every `navigate()` / `redirect()` must pass `hash: true`**: TanStack Router drops the hash on any navigation that omits it, which silently wipes `#map=`. Navigations that only touch the hash must pass `search: true`, otherwise all non-retained search params (incl. `wps`) are dropped.
+
 The Vite `base` is derived from `package.json` `homepage` (see `vite.config.ts → getBaseUrl()`), and the router uses `import.meta.env.BASE_URL`. The PR-preview workflow rewrites `homepage` before building so the bundle is served from `/{PR_NUMBER}/`.
 
 ### State

@@ -129,6 +129,7 @@ describe('useIsochronesPermalink', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith({
       search: expect.any(Function),
+      hash: true,
       replace: true,
     });
     expect(lastSearchFn()({}).wps).toBe('13.4,52.5');

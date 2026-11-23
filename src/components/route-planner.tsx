@@ -58,12 +58,13 @@ export const RoutePlanner = () => {
   const tabConfig = TAB_CONFIG[activeTab as keyof typeof TAB_CONFIG];
 
   const handleTabChange = (value: string) => {
-    navigate({ params: { activeTab: value } });
+    navigate({ params: { activeTab: value }, hash: true });
   };
 
   const handleProfileChange = (value: Profile) => {
     navigate({
       search: (prev) => ({ ...prev, profile: value }),
+      hash: true,
       replace: true,
     });
 

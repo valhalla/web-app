@@ -188,6 +188,7 @@ export const QuickSettings = ({
             : (settings.alternates as number),
         lang: language === DEFAULT_DIRECTIONS_LANGUAGE ? undefined : language,
       }),
+      hash: true,
       replace: true,
     });
   }, [

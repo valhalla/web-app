@@ -96,11 +96,59 @@ const parseLastCenter = (
   };
 };
 
-export const getInitialMapPosition = (): {
+interface MapPosition {
   center: [number, number];
   zoom: number;
-} => {
+}
+
+const MAX_ZOOM = 24;
+const MAP_HASH_PREFIX = 'map=';
+
+/**
+ * URL hash (without `#`) in OSM's `map=zoom/lat/lng` format,
+ * e.g. `map=12.5/52.51831/13.39371`
+ */
+export const formatMapHash = (zoom: number, lat: number, lng: number) =>
+  MAP_HASH_PREFIX +
+  [zoom.toFixed(2), lat.toFixed(5), lng.toFixed(5)]
+    .map((part) => String(Number(part)))
+    .join('/');
+
+/** Accepts the hash with or without the leading `#` */
+export const parseMapHash = (mapHash?: string): MapPosition | null => {
+  const hashBody = mapHash?.replace(/^#/, '');
+  if (!hashBody?.startsWith(MAP_HASH_PREFIX)) return null;
+
+  const parts = hashBody.slice(MAP_HASH_PREFIX.length).split('/');
+  if (parts.length !== 3 || parts.some((part) => part.trim() === '')) {
+    return null;
+  }
+
+  const [zoom, lat, lng] = parts.map(Number) as [number, number, number];
+  if (!isValidCoordinates(lng, lat)) return null;
+  if (!Number.isFinite(zoom) || zoom < 0 || zoom > MAX_ZOOM) return null;
+
+  return { center: [lng, lat], zoom };
+};
+
+/**
+ * Precedence: `#map=` URL hash > last position in localStorage > defaults.
+ * The hash is skipped when the URL carries waypoints: the map fits to the
+ * response extent instead.
+ */
+export const getInitialMapPosition = ({
+  mapHash,
+  hasWaypoints,
+}: {
+  mapHash?: string;
+  hasWaypoints: boolean;
+}): MapPosition => {
   const defaults = { center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM };
+
+  if (!hasWaypoints) {
+    const urlPosition = parseMapHash(mapHash);
+    if (urlPosition) return urlPosition;
+  }
 
   try {
     const stored = localStorage.getItem(LAST_CENTER_KEY);
