@@ -3,9 +3,6 @@ import {
   getBaseUrl,
   setBaseUrl,
   getDefaultBaseUrl,
-  getSavedBaseUrls,
-  saveBaseUrl,
-  removeSavedBaseUrl,
   validateBaseUrl,
   normalizeBaseUrl,
   testConnection,
@@ -65,54 +62,6 @@ describe('base-url', () => {
     it('should trim whitespace from URL', () => {
       setBaseUrl('  ' + TEST_CUSTOM_URL + '  ');
       expect(localStorage.getItem(STORAGE_KEY)).toBe(TEST_CUSTOM_URL);
-    });
-  });
-
-  describe('saved base URLs', () => {
-    const OTHER_URL = 'https://other.valhalla.com';
-
-    it('should always list the default URL first', () => {
-      expect(getSavedBaseUrls()).toEqual([getDefaultBaseUrl()]);
-    });
-
-    it('should include the active URL even if it was never saved', () => {
-      localStorage.setItem(STORAGE_KEY, TEST_CUSTOM_URL);
-      expect(getSavedBaseUrls()).toEqual([
-        getDefaultBaseUrl(),
-        TEST_CUSTOM_URL,
-      ]);
-    });
-
-    it('should save URLs in insertion order without duplicates', () => {
-      saveBaseUrl(TEST_CUSTOM_URL);
-      saveBaseUrl(OTHER_URL);
-      saveBaseUrl(TEST_CUSTOM_URL);
-      saveBaseUrl(getDefaultBaseUrl());
-      expect(getSavedBaseUrls()).toEqual([
-        getDefaultBaseUrl(),
-        TEST_CUSTOM_URL,
-        OTHER_URL,
-      ]);
-    });
-
-    it('should ignore corrupt storage', () => {
-      localStorage.setItem('valhalla_saved_base_urls', '{not json');
-      expect(getSavedBaseUrls()).toEqual([getDefaultBaseUrl()]);
-    });
-
-    it('should remove a saved URL', () => {
-      saveBaseUrl(TEST_CUSTOM_URL);
-      saveBaseUrl(OTHER_URL);
-      removeSavedBaseUrl(TEST_CUSTOM_URL);
-      expect(getSavedBaseUrls()).toEqual([getDefaultBaseUrl(), OTHER_URL]);
-    });
-
-    it('should fall back to the default when removing the active URL', () => {
-      saveBaseUrl(TEST_CUSTOM_URL);
-      setBaseUrl(TEST_CUSTOM_URL);
-      removeSavedBaseUrl(TEST_CUSTOM_URL);
-      expect(getBaseUrl()).toBe(getDefaultBaseUrl());
-      expect(getSavedBaseUrls()).toEqual([getDefaultBaseUrl()]);
     });
   });
 

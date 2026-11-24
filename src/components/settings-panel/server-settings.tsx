@@ -1,39 +1,17 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from '@/components/ui/input-group';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import {
   getBaseUrl,
   setBaseUrl,
   getDefaultBaseUrl,
-  getSavedBaseUrls,
-  saveBaseUrl,
-  removeSavedBaseUrl,
   validateBaseUrl,
   normalizeBaseUrl,
   testConnection,
 } from '@/utils/base-url';
 import { CollapsibleSection } from '@/components/ui/collapsible-section';
-import {
-  Server,
-  RotateCcw,
-  Loader2,
-  ChevronDown,
-  Check,
-  Trash2,
-} from 'lucide-react';
+import { Server, RotateCcw, Loader2 } from 'lucide-react';
 import {
   Field,
   FieldLabel,
@@ -43,9 +21,6 @@ import {
 
 export const ServerSettings = () => {
   const [baseUrl, setBaseUrlState] = useState<string>(() => getBaseUrl());
-  const [savedUrls, setSavedUrls] = useState<string[]>(() =>
-    getSavedBaseUrls()
-  );
   const [isOpen, setIsOpen] = useState(false);
 
   const connectionMutation = useMutation({
@@ -54,9 +29,7 @@ export const ServerSettings = () => {
       if (result.reachable) {
         const normalizedUrl = normalizeBaseUrl(url);
         setBaseUrl(normalizedUrl);
-        saveBaseUrl(normalizedUrl);
         setBaseUrlState(normalizedUrl);
-        setSavedUrls(getSavedBaseUrls());
       }
     },
   });
@@ -114,31 +87,6 @@ export const ServerSettings = () => {
     connectionMutation.reset();
   };
 
-  const handleSelectSavedUrl = (url: string) => {
-    setBaseUrlState(url);
-    connectionMutation.reset();
-
-    if (url === getDefaultBaseUrl()) {
-      setBaseUrl(url);
-      return;
-    }
-
-    connectionMutation.mutate(url);
-  };
-
-  const handleRemoveSavedUrl = (url: string) => {
-    const wasActive = url === getBaseUrl();
-    removeSavedBaseUrl(url);
-    setSavedUrls(getSavedBaseUrls());
-
-    if (wasActive) {
-      setBaseUrlState(getDefaultBaseUrl());
-      connectionMutation.reset();
-    }
-  };
-
-  const activeUrl = getBaseUrl();
-
   return (
     <CollapsibleSection
       title="Server Settings"
@@ -150,79 +98,32 @@ export const ServerSettings = () => {
         <Field data-invalid={!!errorMessage}>
           <FieldLabel htmlFor="base-url-input">Base URL</FieldLabel>
           <FieldDescription>
-            The Valhalla server URL for routing and isochrone requests. Working
-            URLs are saved for quick switching.
+            The Valhalla server URL for routing and isochrone requests
           </FieldDescription>
-          <InputGroup>
-            <InputGroupInput
-              id="base-url-input"
-              type="url"
-              placeholder="https://valhalla.example.com"
-              value={baseUrl}
-              onChange={handleBaseUrlChange}
-              onBlur={handleBaseUrlBlur}
-              disabled={connectionMutation.isPending}
-              aria-invalid={!!errorMessage}
-            />
-            <InputGroupAddon align="inline-end">
+          <div className="flex gap-2">
+            <div className="flex-1 relative">
+              <Input
+                id="base-url-input"
+                type="url"
+                placeholder="https://valhalla.example.com"
+                value={baseUrl}
+                onChange={handleBaseUrlChange}
+                onBlur={handleBaseUrlBlur}
+                disabled={connectionMutation.isPending}
+                aria-invalid={!!errorMessage}
+                className={
+                  errorMessage
+                    ? 'border-destructive focus-visible:ring-destructive/50'
+                    : ''
+                }
+              />
               {connectionMutation.isPending && (
-                <Loader2 className="size-4 animate-spin" />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                </div>
               )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <InputGroupButton
-                    size="icon-xs"
-                    aria-label="Saved servers"
-                    disabled={connectionMutation.isPending}
-                  >
-                    <ChevronDown />
-                  </InputGroupButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72">
-                  <DropdownMenuLabel>Saved servers</DropdownMenuLabel>
-                  {savedUrls.map((url) => {
-                    const isDefault = url === getDefaultBaseUrl();
-                    return (
-                      <DropdownMenuItem
-                        key={url}
-                        onSelect={() => handleSelectSavedUrl(url)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Delete' && !isDefault) {
-                            handleRemoveSavedUrl(url);
-                          }
-                        }}
-                      >
-                        <Check
-                          className={url === activeUrl ? '' : 'invisible'}
-                        />
-                        <span className="flex-1 truncate" title={url}>
-                          {url}
-                        </span>
-                        {isDefault ? (
-                          <span className="text-muted-foreground text-xs">
-                            default
-                          </span>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            aria-label={`Remove ${url}`}
-                            onClick={(e) => {
-                              // keep the menu open and don't select the row
-                              e.stopPropagation();
-                              handleRemoveSavedUrl(url);
-                            }}
-                          >
-                            <Trash2 />
-                          </Button>
-                        )}
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </InputGroupAddon>
-          </InputGroup>
+            </div>
+          </div>
           <FieldError>{errorMessage}</FieldError>
         </Field>
         <Button

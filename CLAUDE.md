@@ -87,7 +87,7 @@ Server-state lives in TanStack Query. The global `QueryClient` (`src/lib/tanstac
 
 ### Backend integration
 
-- **Valhalla base URL**: `getBaseUrl()` in `src/utils/base-url.ts` reads `localStorage['valhalla_base_url']` first, then falls back to `VITE_VALHALLA_URL`. The settings panel lets users override and `testConnection()` validates by hitting `/status` and checking `available_actions` includes `route` and `isochrone`. Every URL that passes `testConnection()` is also appended to `localStorage['valhalla_saved_base_urls']` (JSON array); `ServerSettings` (`src/components/settings-panel/server-settings.tsx`) exposes them as a dropdown on the URL input for quick switching (default always listed and not removable; removing the active URL falls back to the default).
+- **Valhalla base URL**: `getBaseUrl()` in `src/utils/base-url.ts` reads `localStorage['valhalla_base_url']` first, then falls back to `VITE_VALHALLA_URL`. The settings panel lets users override and `testConnection()` validates by hitting `/status` and checking `available_actions` includes `route` and `isochrone`.
 - **Client ID header**: Valhalla requests to the **default** server send `X-Client-Id: ${VITE_CLIENT_ID}` (via `getValhallaHeaders()` in `src/utils/valhalla.ts`). Requests to any custom server send no custom headers and no `Content-Type`, so they stay CORS-"simple": a bare `valhalla_service` (e.g. `localhost:8002`) answers OPTIONS preflights with 405; production only works because nginx answers them. `src/index.tsx` warns at startup if it's unset or `unknown-web-app`. Production CI sets it to `public-web-app`.
 - **Nominatim**: `src/utils/nominatim.ts`, base URL from `VITE_NOMINATIM_URL`.
 
