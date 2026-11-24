@@ -54,6 +54,78 @@ export function getDefaultBaseUrl(): string {
   return DEFAULT_BASE_URL;
 }
 
+const SAVED_BASE_URLS_STORAGE_KEY = 'valhalla_saved_base_urls';
+
+const savedBaseUrlsSchema = z.array(z.string());
+
+function readStoredBaseUrls(): string[] {
+  const stored = localStorage.getItem(SAVED_BASE_URLS_STORAGE_KEY);
+  if (!stored) {
+    return [];
+  }
+
+  try {
+    const parsed = savedBaseUrlsSchema.safeParse(JSON.parse(stored));
+    return parsed.success ? parsed.data : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredBaseUrls(urls: string[]): void {
+  if (urls.length === 0) {
+    localStorage.removeItem(SAVED_BASE_URLS_STORAGE_KEY);
+  } else {
+    localStorage.setItem(SAVED_BASE_URLS_STORAGE_KEY, JSON.stringify(urls));
+  }
+}
+
+/**
+ * All server URLs the user can pick from: the default first, then every
+ * user-saved URL. The active URL is always included, so a URL set before
+ * saved URLs existed still shows up.
+ */
+export function getSavedBaseUrls(): string[] {
+  if (typeof window === 'undefined') {
+    return [DEFAULT_BASE_URL];
+  }
+
+  return [
+    ...new Set([DEFAULT_BASE_URL, ...readStoredBaseUrls(), getBaseUrl()]),
+  ];
+}
+
+export function saveBaseUrl(url: string): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const trimmedUrl = url.trim();
+  const storedUrls = readStoredBaseUrls();
+
+  if (
+    trimmedUrl === '' ||
+    trimmedUrl === DEFAULT_BASE_URL ||
+    storedUrls.includes(trimmedUrl)
+  ) {
+    return;
+  }
+
+  writeStoredBaseUrls([...storedUrls, trimmedUrl]);
+}
+
+export function removeSavedBaseUrl(url: string): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  writeStoredBaseUrls(readStoredBaseUrls().filter((saved) => saved !== url));
+
+  if (getBaseUrl() === url) {
+    setBaseUrl(DEFAULT_BASE_URL);
+  }
+}
+
 export interface UrlValidationResult {
   valid: boolean;
   error?: string;

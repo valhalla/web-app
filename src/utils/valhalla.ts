@@ -8,13 +8,19 @@ import type {
   Settings,
   ValhallaWarning,
 } from '@/components/types';
-import { getBaseUrl } from './base-url';
+import { getBaseUrl, getDefaultBaseUrl, normalizeBaseUrl } from './base-url';
 
 export const getValhallaUrl = () => getBaseUrl();
 
-export const VALHALLA_CLIENT_HEADERS = {
-  'X-Client-Id': import.meta.env.VITE_CLIENT_ID ?? 'unknown-web-app',
-} as const;
+/**
+ * X-Client-Id is only meant for the default (public) server. A custom header
+ * forces a CORS preflight, which a bare valhalla_service answers with 405, so
+ * requests to any other server (e.g. localhost) are kept preflight-free.
+ */
+export const getValhallaHeaders = (): Record<string, string> =>
+  normalizeBaseUrl(getBaseUrl()) === normalizeBaseUrl(getDefaultBaseUrl())
+    ? { 'X-Client-Id': import.meta.env.VITE_CLIENT_ID ?? 'unknown-web-app' }
+    : {};
 
 export const buildLocateRequest = (
   latLng: { lat: number; lng: number },

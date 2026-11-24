@@ -18,7 +18,7 @@ import { throttle } from 'throttle-debounce';
 import {
   getValhallaUrl,
   buildHeightRequest,
-  VALHALLA_CLIENT_HEADERS,
+  getValhallaHeaders,
 } from '@/utils/valhalla';
 import { buildHeightgraphData } from '@/utils/heightgraph';
 import HeightGraph from '@/components/heightgraph';
@@ -292,10 +292,7 @@ export const MapComponent = () => {
     try {
       const response = await fetch(`${getValhallaUrl()}/height`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...VALHALLA_CLIENT_HEADERS,
-        },
+        headers: getValhallaHeaders(),
         body: JSON.stringify(buildHeightRequest([[lat, lng]])),
       });
 
@@ -354,10 +351,7 @@ export const MapComponent = () => {
       try {
         const response = await fetch(`${getValhallaUrl()}/height`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...VALHALLA_CLIENT_HEADERS,
-          },
+          headers: getValhallaHeaders(),
           body: JSON.stringify(heightPayloadNew),
         });
 

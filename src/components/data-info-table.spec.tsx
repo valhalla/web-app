@@ -11,7 +11,7 @@ vi.mock('@tanstack/react-query', () => ({
 
 vi.mock('@/utils/valhalla', () => ({
   getValhallaUrl: () => 'https://valhalla.example',
-  VALHALLA_CLIENT_HEADERS: {},
+  getValhallaHeaders: () => ({}),
 }));
 
 describe('DataInfoTable', () => {

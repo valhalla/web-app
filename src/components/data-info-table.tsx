@@ -6,7 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { getValhallaUrl, VALHALLA_CLIENT_HEADERS } from '@/utils/valhalla';
+import { getValhallaUrl, getValhallaHeaders } from '@/utils/valhalla';
 
 const VALHALLA_REPO_URL = 'https://github.com/valhalla/valhalla';
 
@@ -47,7 +47,7 @@ export const DataInfoTable = () => {
     queryKey: ['valhallaStatus'],
     queryFn: async (): Promise<ValhallaStatus> => {
       const response = await fetch(`${getValhallaUrl()}/status`, {
-        headers: VALHALLA_CLIENT_HEADERS,
+        headers: getValhallaHeaders(),
       });
       const statusResponse = await response.json();
       return {

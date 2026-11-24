@@ -6,7 +6,7 @@ import {
   buildOptimizedRouteRequest,
   parseDirectionsGeometry,
   showValhallaWarnings,
-  VALHALLA_CLIENT_HEADERS,
+  getValhallaHeaders,
 } from '@/utils/valhalla';
 import { filterProfileSettings } from '@/utils/filter-profile-settings';
 import { useCommonStore } from '@/stores/common-store';
@@ -58,7 +58,7 @@ export function useOptimizedRouteQuery() {
       const response = await fetch(
         `${getValhallaUrl()}/optimized_route?${params}`,
         {
-          headers: VALHALLA_CLIENT_HEADERS,
+          headers: getValhallaHeaders(),
         }
       );
 
